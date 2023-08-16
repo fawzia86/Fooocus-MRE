@@ -109,6 +109,15 @@ Note that some of these tricks are currently (2023 Aug 11) impossible to reprodu
 
 [Click here to browse the advanced features.](https://github.com/lllyasviel/Fooocus/discussions/117)
 
+## MoonRide Fork Features
+
+1. Additional samplers (you can choose the default dpmpp_2m_sde_gpu, but also dpmpp_2m_sde, dpmpp_3m_sde_gpu, dpmpp_3m_sde).
+2. Customizable step values, and base / refiner switch point.
+3. Customizable CFG.
+4. Ability to save full metadata for generated images (as JSON or embedded in PNG - but disabled by default).
+5. Customizable CLIP Skip.
+6. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+
 ## Thanks
 
 The codebase starts from an odd mixture of [Automatic1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) and [ComfyUI](https://github.com/comfyanonymous/ComfyUI). (And they both use GPL license.)
