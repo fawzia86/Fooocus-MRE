@@ -64,7 +64,7 @@ with shared.gradio_root:
             with gr.Tab(label='Style'):
                 style_selction = gr.Radio(show_label=False, container=True,
                                           choices=style_keys, value='cinematic-default')
-            with gr.Tab(label='Advanced'):
+            with gr.Tab(label='Models'):
                 with gr.Row():
                     base_model = gr.Dropdown(label='SDXL Base Model', choices=modules.path.model_filenames, value=modules.path.default_base_model_name, show_label=True)
                     refiner_model = gr.Dropdown(label='SDXL Refiner', choices=['None'] + modules.path.model_filenames, value=modules.path.default_refiner_model_name, show_label=True)
@@ -77,15 +77,15 @@ with shared.gradio_root:
                             lora_ctrls += [lora_model, lora_weight]
                 with gr.Row():
                     model_refresh = gr.Button(label='Refresh', value='\U0001f504 Refresh All Files', variant='secondary', elem_classes='refresh_button')
-                with gr.Accordion(label='Advanced', open=False):
-                    cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=7.0)
-                    sampler_selection = gr.Dropdown(label='Sampler', choices=['dpmpp_2m_sde_gpu', 'dpmpp_2m_sde', 'dpmpp_3m_sde_gpu', 'dpmpp_3m_sde'], value='dpmpp_2m_sde_gpu')
-                    sampler_steps_speed = gr.Slider(label='Sampler Steps (Speed)', minimum=10, maximum=100, step=1, value=30)
-                    switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.5, maximum=1.0, step=0.01, value=0.67)
-                    sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=60)
-                    switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.5, maximum=1.0, step=0.01, value=0.67)
-                    sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=2.0)
-                    gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
+            with gr.Tab(label='Advanced'):
+                cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=7.0)
+                sampler_selection = gr.Dropdown(label='Sampler', choices=['dpmpp_2m_sde_gpu', 'dpmpp_2m_sde', 'dpmpp_3m_sde_gpu', 'dpmpp_3m_sde'], value='dpmpp_2m_sde_gpu')
+                sampler_steps_speed = gr.Slider(label='Sampler Steps (Speed)', minimum=10, maximum=100, step=1, value=30)
+                switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.5, maximum=1.0, step=0.01, value=0.67)
+                sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=60)
+                switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.5, maximum=1.0, step=0.01, value=0.67)
+                sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=2.0)
+                gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
 
                 def model_refresh_clicked():
                     modules.path.update_all_model_names()
