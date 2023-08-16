@@ -119,9 +119,12 @@ def clean_prompt_cond_caches():
 
 
 @torch.no_grad()
-def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, cfg, callback):
+def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, cfg, base_clip_skip, refiner_clip_skip, callback):
     global positive_conditions_cache, negative_conditions_cache, \
         positive_conditions_refiner_cache, negative_conditions_refiner_cache
+
+    xl_base_patched.clip.clip_layer(base_clip_skip)
+    xl_refiner.clip.clip_layer(refiner_clip_skip)
 
     positive_conditions = core.encode_prompt_condition(clip=xl_base_patched.clip, prompt=positive_prompt) if positive_conditions_cache is None else positive_conditions_cache
     negative_conditions = core.encode_prompt_condition(clip=xl_base_patched.clip, prompt=negative_prompt) if negative_conditions_cache is None else negative_conditions_cache

@@ -36,7 +36,8 @@ def worker():
         prompt, negative_prompt, style_selction, performance_selction, \
         aspect_ratios_selction, image_number, image_seed, sharpness, save_metadata, sampler_name, \
         sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg, \
-        base_model_name, refiner_model_name, l1, w1, l2, w2, l3, w3, l4, w4, l5, w5 = task
+        base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
+        l1, w1, l2, w2, l3, w3, l4, w4, l5, w5 = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
 
@@ -73,7 +74,7 @@ def worker():
                 y)])
 
         for i in range(image_number):
-            imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, cfg, callback=callback)
+            imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, cfg, base_clip_skip, refiner_clip_skip, callback=callback)
 
             pnginfo = None
             if save_metadata != 'Disabled':
@@ -81,6 +82,7 @@ def worker():
                     'p_txt': p_txt, 'n_txt': n_txt, 'steps': steps, 'switch': switch, 'cfg': cfg,
                     'width': width, 'height': height, 'seed': seed, 'sampler_name': sampler_name,
                     'base_model_name': base_model_name, 'refiner_model_name': refiner_model_name,
+                    'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
                     'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
                     'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5,
                     'sharpness': sharpness, 'software': 'Fooocus ' + fooocus_version.version
