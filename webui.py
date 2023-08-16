@@ -78,7 +78,12 @@ with shared.gradio_root:
                 with gr.Row():
                     model_refresh = gr.Button(label='Refresh', value='\U0001f504 Refresh All Files', variant='secondary', elem_classes='refresh_button')
                 with gr.Accordion(label='Advanced', open=False):
+                    cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=7.0)
                     sampler_selection = gr.Dropdown(label='Sampler', choices=['dpmpp_2m_sde_gpu', 'dpmpp_2m_sde', 'dpmpp_3m_sde_gpu', 'dpmpp_3m_sde'], value='dpmpp_2m_sde_gpu')
+                    sampler_steps_speed = gr.Slider(label='Sampler Steps (Speed)', minimum=10, maximum=100, step=1, value=30)
+                    switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.5, maximum=1.0, step=0.01, value=0.67)
+                    sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=60)
+                    switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.5, maximum=1.0, step=0.01, value=0.67)
                     sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=2.0)
                     gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
 
@@ -95,7 +100,8 @@ with shared.gradio_root:
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col)
         ctrls = [
             prompt, negative_prompt, style_selction,
-            performance_selction, aspect_ratios_selction, image_number, image_seed, sharpness, sampler_selection
+            performance_selction, aspect_ratios_selction, image_number, image_seed, sharpness, sampler_selection,
+            sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg
         ]
         ctrls += [base_model, refiner_model] + lora_ctrls
         run_button.click(fn=generate_clicked, inputs=ctrls, outputs=[run_button, progress_html, progress_window, gallery])

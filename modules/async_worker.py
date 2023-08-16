@@ -31,8 +31,9 @@ def worker():
 
     def handler(task):
         prompt, negative_prompt, style_selction, performance_selction, \
-        aspect_ratios_selction, image_number, image_seed, sharpness, sampler_selection, base_model_name, refiner_model_name, \
-        l1, w1, l2, w2, l3, w3, l4, w4, l5, w5 = task
+        aspect_ratios_selction, image_number, image_seed, sharpness, sampler_selection, \
+        sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg, \
+        base_model_name, refiner_model_name, l1, w1, l2, w2, l3, w3, l4, w4, l5, w5 = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
 
@@ -46,11 +47,11 @@ def worker():
         p_txt, n_txt = apply_style(style_selction, prompt, negative_prompt)
 
         if performance_selction == 'Speed':
-            steps = 30
-            switch = 20
+            steps = sampler_steps_speed
+            switch = round(sampler_steps_speed * switch_step_speed)
         else:
-            steps = 60
-            switch = 40
+            steps = sampler_steps_quality
+            switch = round(sampler_steps_quality * switch_step_quality)
 
         width, height = aspect_ratios[aspect_ratios_selction]
 
@@ -69,7 +70,7 @@ def worker():
                 y)])
 
         for i in range(image_number):
-            imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_selection, callback=callback)
+            imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_selection, cfg, callback=callback)
 
             for x in imgs:
                 local_temp_filename = generate_temp_filename(folder=modules.path.temp_outputs_path, extension='png')
