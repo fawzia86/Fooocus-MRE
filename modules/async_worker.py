@@ -30,7 +30,7 @@ def worker():
 
     def handler(task):
         prompt, negative_prompt, style_selection, performance_selection, \
-        aspect_ratios_selection, image_number, image_seed, sharpness, save_metadata, sampler_name, \
+        aspect_ratios_selection, image_number, image_seed, sharpness, save_metadata, sampler_name, scheduler, \
         sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5 = task
@@ -70,7 +70,7 @@ def worker():
                 y)])
 
         for i in range(image_number):
-            imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, cfg, base_clip_skip, refiner_clip_skip, callback=callback)
+            imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip, callback=callback)
 
             if save_metadata == 'Disabled':
                 metadata = None
@@ -78,8 +78,8 @@ def worker():
                 metadata = {
                     'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style_selection,
                     'seed': seed, 'width': width, 'height': height, 'p_txt': p_txt, 'n_txt': n_txt,
-                    'sampler': sampler_name, 'performance': performance_selection, 'steps': steps,
-                    'switch': switch, 'sharpness': sharpness, 'cfg': cfg,
+                    'sampler': sampler_name, 'scheduler': scheduler, 'performance': performance_selection,
+                    'steps': steps, 'switch': switch, 'sharpness': sharpness, 'cfg': cfg,
                     'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
                     'base_model': base_model_name, 'refiner_model': refiner_model_name,
                     'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
@@ -95,7 +95,7 @@ def worker():
                     ('Seed', seed),
                     ('Resolution', str((width, height))),
                     ('Performance', performance_selection),
-                    ('Sampler & Steps', str((sampler_name, steps, switch))),
+                    ('Sampler & Scheduler & Steps', str((sampler_name, scheduler, steps, switch))),
                     ('Sharpness', sharpness),
                     ('CFG & CLIP Skips', str((cfg, base_clip_skip, refiner_clip_skip))),
                     ('Base Model', base_model_name),

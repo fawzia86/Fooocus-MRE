@@ -66,50 +66,52 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[9] = metadata['sampler_name']
     elif 'sampler' in metadata:
         ctrls[9] = metadata['sampler']
+    if 'scheduler' in metadata:
+        ctrls[10] = metadata['scheduler']
     if 'steps' in metadata:
         if ctrls[3] == 'Speed':
-            ctrls[10] = metadata['steps']
+            ctrls[11] = metadata['steps']
         else:
-            ctrls[12] = metadata['steps']
+            ctrls[13] = metadata['steps']
     if 'switch' in metadata:
         if ctrls[3] == 'Speed':
-           ctrls[11] = round(metadata['switch'] / ctrls[10], 2)
+           ctrls[12] = round(metadata['switch'] / ctrls[10], 2)
         else:
-            ctrls[13] = round(metadata['switch'] / ctrls[12], 2)
+            ctrls[14] = round(metadata['switch'] / ctrls[12], 2)
     if 'cfg' in metadata:
-        ctrls[14] = metadata['cfg']
+        ctrls[15] = metadata['cfg']
     if 'base_model' in metadata:
-        ctrls[15] = metadata['base_model']
+        ctrls[16] = metadata['base_model']
     elif 'base_model_name' in metadata:
-        ctrls[15] = metadata['base_model_name']
+        ctrls[16] = metadata['base_model_name']
     if 'refiner_model' in metadata:
-        ctrls[16] = metadata['refiner_model']
+        ctrls[17] = metadata['refiner_model']
     elif 'refiner_model_name' in metadata:
-        ctrls[16] = metadata['refiner_model_name']
+        ctrls[17] = metadata['refiner_model_name']
     if 'base_clip_skip' in metadata:
-        ctrls[17] = metadata['base_clip_skip']
+        ctrls[18] = metadata['base_clip_skip']
     if 'refiner_clip_skip' in metadata:
-        ctrls[18] = metadata['refiner_clip_skip']
+        ctrls[19] = metadata['refiner_clip_skip']
     if 'l1' in metadata:
-        ctrls[19] = metadata['l1']
+        ctrls[20] = metadata['l1']
     if 'w1' in metadata:
-        ctrls[20] = metadata['w1']
+        ctrls[21] = metadata['w1']
     if 'l2' in metadata:
-        ctrls[21] = metadata['l2']
+        ctrls[22] = metadata['l2']
     if 'w2' in metadata:
-        ctrls[22] = metadata['w2']
+        ctrls[23] = metadata['w2']
     if 'l3' in metadata:
-        ctrls[23] = metadata['l3']
+        ctrls[24] = metadata['l3']
     if 'w3' in metadata:
-        ctrls[24] = metadata['w3']
+        ctrls[25] = metadata['w3']
     if 'l4' in metadata:
-        ctrls[25] = metadata['l4']
+        ctrls[26] = metadata['l4']
     if 'w4' in metadata:
-        ctrls[26] = metadata['w4']
+        ctrls[27] = metadata['w4']
     if 'l5' in metadata:
-        ctrls[27] = metadata['l5']
+        ctrls[28] = metadata['l5']
     if 'w5' in metadata:
-        ctrls[28] = metadata['w5']
+        ctrls[29] = metadata['w5']
 
     return ctrls    
 
@@ -185,6 +187,7 @@ with shared.gradio_root:
                 base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
                 refiner_clip_skip = gr.Slider(label='Refiner CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
                 sampler_name = gr.Dropdown(label='Sampler', choices=['dpmpp_2m_sde_gpu', 'dpmpp_2m_sde', 'dpmpp_3m_sde_gpu', 'dpmpp_3m_sde'], value='dpmpp_2m_sde_gpu')
+                scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'simple', 'ddim_uniform'], value='karras')
                 sampler_steps_speed = gr.Slider(label='Sampler Steps (Speed)', minimum=10, maximum=100, step=1, value=30)
                 switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.5, maximum=1.0, step=0.01, value=0.67)
                 sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=60)
@@ -205,7 +208,7 @@ with shared.gradio_root:
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col)
         ctrls = [
             prompt, negative_prompt, style_selection,
-            performance_selection, aspect_ratios_selection, image_number, image_seed, sharpness, save_metadata, sampler_name,
+            performance_selection, aspect_ratios_selection, image_number, image_seed, sharpness, save_metadata, sampler_name, scheduler,
             sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls

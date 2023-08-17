@@ -111,13 +111,14 @@ Note that some of these tricks are currently (2023 Aug 11) impossible to reprodu
 
 ## MoonRide Fork Features
 
-1. Additional samplers (you can choose the default dpmpp_2m_sde_gpu, but also dpmpp_2m_sde, dpmpp_3m_sde_gpu, dpmpp_3m_sde).
-2. Customizable step values, and base / refiner switch point.
-3. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
-4. Ability to load prompt information from JSON and PNG files.
-5. Customizable CFG.
-6. Customizable CLIP Skip.
-7. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+1. Customizable samplers (you can choose the default dpmpp_2m_sde_gpu, but also dpmpp_2m_sde, dpmpp_3m_sde_gpu, or dpmpp_3m_sde).
+2. Customizable schedulers (you can choose the default karras, but also exponential, simple, or ddim_uniform).
+3. Customizable step values, and base / refiner switch point.
+4. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
+5. Ability to load prompt information from JSON and PNG files.
+6. Customizable CFG.
+7. Customizable CLIP Skip.
+8. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
 
 ## Thanks
 
