@@ -111,8 +111,8 @@ Note that some of these tricks are currently (2023 Aug 11) impossible to reprodu
 
 ## MoonRide Fork Features
 
-1. Customizable samplers (you can choose the default dpmpp_2m_sde_gpu, but also dpmpp_2m_sde, dpmpp_3m_sde_gpu, or dpmpp_3m_sde).
-2. Customizable schedulers (you can choose the default karras, but also exponential, simple, or ddim_uniform).
+1. Customizable samplers.
+2. Customizable schedulers.
 3. Customizable step values, and base / refiner switch point.
 4. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
 5. Ability to load prompt information from JSON and PNG files.
