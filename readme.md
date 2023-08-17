@@ -113,10 +113,11 @@ Note that some of these tricks are currently (2023 Aug 11) impossible to reprodu
 
 1. Additional samplers (you can choose the default dpmpp_2m_sde_gpu, but also dpmpp_2m_sde, dpmpp_3m_sde_gpu, dpmpp_3m_sde).
 2. Customizable step values, and base / refiner switch point.
-3. Customizable CFG.
-4. Ability to save full metadata for generated images (as JSON or embedded in PNG - but disabled by default).
-5. Customizable CLIP Skip.
-6. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+3. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
+4. Ability to load prompt information from JSON and PNG files.
+5. Customizable CFG.
+6. Customizable CLIP Skip.
+7. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
 
 ## Thanks
 
