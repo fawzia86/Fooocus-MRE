@@ -46,14 +46,6 @@ def metadata_to_ctrls(metadata, ctrls):
     if not isinstance(metadata, Mapping):
         return ctrls
 
-        ctrls = [
-            prompt, negative_prompt, style_selection,
-            performance_selection, aspect_ratios_selection, image_number, image_seed, sharpness, save_metadata, sampler_name,
-            sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg
-        ]
-        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls
-
-
     if 'prompt' in metadata:
         ctrls[0] = metadata['prompt']
     if 'negative_prompt' in metadata:
@@ -81,9 +73,9 @@ def metadata_to_ctrls(metadata, ctrls):
             ctrls[12] = metadata['steps']
     if 'switch' in metadata:
         if ctrls[3] == 'Speed':
-           ctrls[11] = metadata['switch']
+           ctrls[11] = round(metadata['switch'] / ctrls[10], 2)
         else:
-            ctrls[13] = metadata['switch']
+            ctrls[13] = round(metadata['switch'] / ctrls[12], 2)
     if 'cfg' in metadata:
         ctrls[14] = metadata['cfg']
     if 'base_model' in metadata:
