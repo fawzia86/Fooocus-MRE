@@ -7,8 +7,11 @@ import modules.path
 import fooocus_version
 import modules.html
 import modules.async_worker as worker
+import json
 
 from modules.sdxl_styles import style_keys, aspect_ratios
+from collections.abc import Mapping
+from PIL import Image
 
 
 def generate_clicked(*args):
@@ -39,6 +42,112 @@ def generate_clicked(*args):
     return
 
 
+def metadata_to_ctrls(metadata, ctrls):
+    if not isinstance(metadata, Mapping):
+        return ctrls
+
+        ctrls = [
+            prompt, negative_prompt, style_selection,
+            performance_selection, aspect_ratios_selection, image_number, image_seed, sharpness, save_metadata, sampler_name,
+            sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg
+        ]
+        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls
+
+
+    if 'prompt' in metadata:
+        ctrls[0] = metadata['prompt']
+    if 'negative_prompt' in metadata:
+        ctrls[1] = metadata['negative_prompt']
+    if 'style' in metadata:
+        ctrls[2] = metadata['style']
+    if 'performance' in metadata:
+        ctrls[3] = metadata['performance']
+    if 'resolution' in metadata:
+        ctrls[4] = metadata['resolution']
+    elif 'width' in metadata and 'height' in metadata:
+        ctrls[4] = str(metadata['width'])+'×'+str(metadata['height'])
+    if 'seed' in metadata:
+        ctrls[6] = metadata['seed']
+    if 'sharpness' in metadata:
+        ctrls[7] = metadata['sharpness']
+    if 'sampler_name' in metadata:
+        ctrls[9] = metadata['sampler_name']
+    elif 'sampler' in metadata:
+        ctrls[9] = metadata['sampler']
+    if 'steps' in metadata:
+        if ctrls[3] == 'Speed':
+            ctrls[10] = metadata['steps']
+        else:
+            ctrls[12] = metadata['steps']
+    if 'switch' in metadata:
+        if ctrls[3] == 'Speed':
+           ctrls[11] = metadata['switch']
+        else:
+            ctrls[13] = metadata['switch']
+    if 'cfg' in metadata:
+        ctrls[14] = metadata['cfg']
+    if 'base_model' in metadata:
+        ctrls[15] = metadata['base_model']
+    elif 'base_model_name' in metadata:
+        ctrls[15] = metadata['base_model_name']
+    if 'refiner_model' in metadata:
+        ctrls[16] = metadata['refiner_model']
+    elif 'refiner_model_name' in metadata:
+        ctrls[16] = metadata['refiner_model_name']
+    if 'base_clip_skip' in metadata:
+        ctrls[17] = metadata['base_clip_skip']
+    if 'refiner_clip_skip' in metadata:
+        ctrls[18] = metadata['refiner_clip_skip']
+    if 'l1' in metadata:
+        ctrls[19] = metadata['l1']
+    if 'w1' in metadata:
+        ctrls[20] = metadata['w1']
+    if 'l2' in metadata:
+        ctrls[21] = metadata['l2']
+    if 'w2' in metadata:
+        ctrls[22] = metadata['w2']
+    if 'l3' in metadata:
+        ctrls[23] = metadata['l3']
+    if 'w3' in metadata:
+        ctrls[24] = metadata['w3']
+    if 'l4' in metadata:
+        ctrls[25] = metadata['l4']
+    if 'w4' in metadata:
+        ctrls[26] = metadata['w4']
+    if 'l5' in metadata:
+        ctrls[27] = metadata['l5']
+    if 'w5' in metadata:
+        ctrls[28] = metadata['w5']
+
+    return ctrls    
+
+
+def load_handler(files, *args):
+    ctrls=list(args)
+    if len(files) > 0:
+        path = files[0].name
+        if path.endswith('.json'):
+            with open(path) as json_file:
+                try:
+                    json_obj = json.load(json_file)
+                    metadata_to_ctrls(json_obj, ctrls)
+                except Exception:
+                    pass
+                finally:
+                    json_file.close()
+        elif path.endswith('.png'):
+            with open(path, 'rb') as png_file:
+                image = Image.open(png_file)
+                png_file.close()
+                if 'Comment' in image.info:
+                    try:
+                        metadata = json.loads(image.info['Comment'])
+                        metadata_to_ctrls(metadata, ctrls)
+                    except Exception:
+                        pass
+    return ctrls
+
+
 shared.gradio_root = gr.Blocks(title=fooocus_version.full_version, css=modules.html.css).queue()
 with shared.gradio_root:
     with gr.Row():
@@ -47,17 +156,18 @@ with shared.gradio_root:
             progress_html = gr.HTML(value=modules.html.make_progress_html(32, 'Progress 32%'), visible=False, elem_id='progress-bar', elem_classes='progress-bar')
             gallery = gr.Gallery(label='Gallery', show_label=False, object_fit='contain', height=720, visible=True)
             with gr.Row(elem_classes='type_row'):
-                with gr.Column(scale=0.85):
-                    prompt = gr.Textbox(show_label=False, placeholder="Type prompt here.", container=False, autofocus=True, elem_classes='type_row', lines=1024)
+                with gr.Column(scale=0.7):
+                    prompt = gr.Textbox(show_label=False, placeholder='Type prompt here.', container=False, autofocus=True, elem_classes='type_row', lines=1024)
                 with gr.Column(scale=0.15, min_width=0):
-                    run_button = gr.Button(label="Generate", value="Generate", elem_classes='type_row')
+                    load_button = gr.UploadButton(label='Load Prompt', elem_classes='type_row', file_count=1, file_types=['.json', '.png'])
+                with gr.Column(scale=0.15, min_width=0):
+                    run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_row')
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=False, container=False)
         with gr.Column(scale=0.5, visible=False) as right_col:
             with gr.Tab(label='Setting'):
                 performance_selection = gr.Radio(label='Performance', choices=['Speed', 'Quality'], value='Speed')
-                aspect_ratios_selection = gr.Radio(label='Aspect Ratios (width × height)', choices=list(aspect_ratios.keys()),
-                                                  value='1152×896')
+                aspect_ratios_selection = gr.Radio(label='Aspect Ratios (width × height)', choices=list(aspect_ratios.keys()), value='1152×896')
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=2)
                 image_seed = gr.Number(label='Random Seed', value=-1, precision=0)
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.")
@@ -108,7 +218,7 @@ with shared.gradio_root:
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls
         run_button.click(fn=generate_clicked, inputs=ctrls, outputs=[run_button, progress_html, progress_window, gallery])
-
+        load_button.upload(fn=load_handler, inputs=[load_button] + ctrls, outputs=ctrls)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default=None, help="Set the listen port.")

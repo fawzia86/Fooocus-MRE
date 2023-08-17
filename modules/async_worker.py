@@ -78,9 +78,10 @@ def worker():
                 metadata = {
                     'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style_selection,
                     'seed': seed, 'width': width, 'height': height, 'p_txt': p_txt, 'n_txt': n_txt,
-                    'sampler_name': sampler_name, 'steps': steps, 'switch': switch, 'sharpness': sharpness,
-                    'cfg': cfg, 'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
-                    'base_model_name': base_model_name, 'refiner_model_name': refiner_model_name,
+                    'sampler': sampler_name, 'performance': performance_selection, 'steps': steps,
+                    'switch': switch, 'sharpness': sharpness, 'cfg': cfg,
+                    'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
+                    'base_model': base_model_name, 'refiner_model': refiner_model_name,
                     'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
                     'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5,
                     'software': fooocus_version.full_version
