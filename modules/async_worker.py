@@ -29,8 +29,8 @@ def worker():
         print(e)
 
     def handler(task):
-        prompt, negative_prompt, style_selction, performance_selction, \
-        aspect_ratios_selction, image_number, image_seed, sharpness, save_metadata, sampler_name, \
+        prompt, negative_prompt, style_selection, performance_selection, \
+        aspect_ratios_selection, image_number, image_seed, sharpness, save_metadata, sampler_name, \
         sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5 = task
@@ -44,16 +44,16 @@ def worker():
         pipeline.refresh_loras(loras)
         pipeline.clean_prompt_cond_caches()
 
-        p_txt, n_txt = apply_style(style_selction, prompt, negative_prompt)
+        p_txt, n_txt = apply_style(style_selection, prompt, negative_prompt)
 
-        if performance_selction == 'Speed':
+        if performance_selection == 'Speed':
             steps = sampler_steps_speed
             switch = round(sampler_steps_speed * switch_step_speed)
         else:
             steps = sampler_steps_quality
             switch = round(sampler_steps_quality * switch_step_quality)
 
-        width, height = aspect_ratios[aspect_ratios_selction]
+        width, height = aspect_ratios[aspect_ratios_selection]
 
         results = []
         seed = image_seed
@@ -76,7 +76,7 @@ def worker():
                 metadata = None
             else:
                 metadata = {
-                    'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style_selction,
+                    'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style_selection,
                     'seed': seed, 'width': width, 'height': height, 'p_txt': p_txt, 'n_txt': n_txt,
                     'sampler_name': sampler_name, 'steps': steps, 'switch': switch, 'sharpness': sharpness,
                     'cfg': cfg, 'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
@@ -90,10 +90,10 @@ def worker():
                 d = [
                     ('Prompt', prompt),
                     ('Negative Prompt', negative_prompt),
-                    ('Style', style_selction),
+                    ('Style', style_selection),
                     ('Seed', seed),
                     ('Resolution', str((width, height))),
-                    ('Performance', performance_selction),
+                    ('Performance', performance_selection),
                     ('Sampler & Steps', str((sampler_name, steps, switch))),
                     ('Sharpness', sharpness),
                     ('CFG & CLIP Skips', str((cfg, base_clip_skip, refiner_clip_skip))),
