@@ -1,7 +1,9 @@
 __pycache__
-*.ckpt
-*.safetensors
-*.pth
+**/*.ckpt
+**/*.safetensors
+**/*.pth
+**/*.pt
+**/*.yaml
 !taesdxl_decoder.pth
 /repositories
 /venv
@@ -32,3 +34,4 @@ notification.mp3
 /node_modules
 /package-lock.json
 /.coverage*
+/settings.json
