@@ -152,6 +152,7 @@ def load_settings():
     image_number = 2
     save_metadata_json = False
     save_metadata_png = False
+    seed_random = True
 
     if exists('settings.json'):
         with open('settings.json') as settings_file:
@@ -165,15 +166,17 @@ def load_settings():
                     save_metadata_json = stored_settings['save_metadata_json']
                 if 'save_metadata_png' in stored_settings:
                     save_metadata_png = stored_settings['save_metadata_png']
+                if 'seed_random' in stored_settings:
+                    seed_random = stored_settings['seed_random']
             except Exception:
                 pass
             finally:
                 settings_file.close()
 
-    return advanced_mode, image_number, save_metadata_json, save_metadata_png
+    return advanced_mode, image_number, save_metadata_json, save_metadata_png, seed_random
 
 
-advanced_mode_value, image_number_value, save_metadata_json_value, save_metadata_png_value = load_settings()
+advanced_mode_value, image_number_value, save_metadata_json_value, save_metadata_png_value, seed_random_value = load_settings()
 
 shared.gradio_root = gr.Blocks(title=fooocus_version.full_version, css=modules.html.css).queue()
 with shared.gradio_root:
@@ -197,8 +200,8 @@ with shared.gradio_root:
                 aspect_ratios_selection = gr.Radio(label='Aspect Ratios (width × height)', choices=list(aspect_ratios.keys()), value='1152×896')
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=image_number_value)
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.")
-                seed_random = gr.Checkbox(label='Random', value=True)
-                image_seed = gr.Number(label='Seed', value=0, precision=0, visible=False)
+                seed_random = gr.Checkbox(label='Random', value=seed_random_value)
+                image_seed = gr.Number(label='Seed', value=0, precision=0, visible=not seed_random_value)
 
                 def random_checked(r):
                     return gr.update(visible=not r)
