@@ -63,8 +63,10 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[4] = metadata['resolution']
     elif 'width' in metadata and 'height' in metadata:
         ctrls[4] = str(metadata['width'])+'×'+str(metadata['height'])
+    # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
+        ctrls[31] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -117,6 +119,9 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[27] = metadata['l5']
     if 'w5' in metadata:
         ctrls[28] = metadata['w5']
+    # save_metadata_json
+    # save_metadata_png
+    # seed_random
 
     return ctrls    
 
@@ -268,7 +273,7 @@ with shared.gradio_root:
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png]
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed)\
             .then(fn=generate_clicked, inputs=ctrls, outputs=[run_button, progress_html, progress_window, gallery, metadata_viewer])
-        load_button.upload(fn=load_handler, inputs=[load_button] + ctrls, outputs=ctrls)
+        load_button.upload(fn=load_handler, inputs=[load_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default=None, help="Set the listen port.")
