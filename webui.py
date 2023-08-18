@@ -12,7 +12,7 @@ import json
 from modules.sdxl_styles import style_keys, aspect_ratios
 from collections.abc import Mapping
 from PIL import Image
-
+from os.path import exists
 
 def generate_clicked(*args):
     yield gr.update(interactive=False), \
@@ -147,6 +147,34 @@ def load_handler(files, *args):
     return ctrls
 
 
+def load_settings():
+    advanced_mode = False
+    image_number = 2
+    save_metadata_json = False
+    save_metadata_png = False
+
+    if exists('settings.json'):
+        with open('settings.json') as settings_file:
+            try:
+                stored_settings = json.load(settings_file)
+                if 'advanced_mode' in stored_settings:
+                    advanced_mode = stored_settings['advanced_mode']
+                if 'image_number' in stored_settings:
+                    image_number = stored_settings['image_number']
+                if 'save_metadata_json' in stored_settings:
+                    save_metadata_json = stored_settings['save_metadata_json']
+                if 'save_metadata_png' in stored_settings:
+                    save_metadata_png = stored_settings['save_metadata_png']
+            except Exception:
+                pass
+            finally:
+                settings_file.close()
+
+    return advanced_mode, image_number, save_metadata_json, save_metadata_png
+
+
+advanced_mode_value, image_number_value, save_metadata_json_value, save_metadata_png_value = load_settings()
+
 shared.gradio_root = gr.Blocks(title=fooocus_version.full_version, css=modules.html.css).queue()
 with shared.gradio_root:
     with gr.Row():
@@ -162,12 +190,12 @@ with shared.gradio_root:
                 with gr.Column(scale=0.15, min_width=0):
                     run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_row')
             with gr.Row():
-                advanced_checkbox = gr.Checkbox(label='Advanced', value=False, container=False)
-        with gr.Column(scale=0.52, visible=False) as right_col:
+                advanced_checkbox = gr.Checkbox(label='Advanced', value=advanced_mode_value, container=False)
+        with gr.Column(scale=0.52, visible=advanced_mode_value) as right_col:
             with gr.Tab(label='Setting'):
                 performance_selection = gr.Radio(label='Performance', choices=['Speed', 'Quality'], value='Speed')
                 aspect_ratios_selection = gr.Radio(label='Aspect Ratios (width × height)', choices=list(aspect_ratios.keys()), value='1152×896')
-                image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=2)
+                image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=image_number_value)
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.")
                 seed_random = gr.Checkbox(label='Random', value=True)
                 image_seed = gr.Number(label='Seed', value=0, precision=0, visible=False)
@@ -201,8 +229,8 @@ with shared.gradio_root:
                     model_refresh = gr.Button(label='Refresh', value='\U0001f504 Refresh All Files', variant='secondary', elem_classes='refresh_button')
             with gr.Tab(label='Advanced'):
                 with gr.Row():
-                    save_metadata_json = gr.Checkbox(label='Save Metadata in JSON')
-                    save_metadata_png = gr.Checkbox(label='Save Metadata in PNG')
+                    save_metadata_json = gr.Checkbox(label='Save Metadata in JSON', value=save_metadata_json_value)
+                    save_metadata_png = gr.Checkbox(label='Save Metadata in PNG', value=save_metadata_png_value)
                 cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=7.0)
                 base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
                 refiner_clip_skip = gr.Slider(label='Refiner CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
