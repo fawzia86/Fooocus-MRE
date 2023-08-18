@@ -236,9 +236,6 @@ with shared.gradio_root:
                 with gr.Row():
                     model_refresh = gr.Button(label='Refresh', value='\U0001f504 Refresh All Files', variant='secondary', elem_classes='refresh_button')
             with gr.Tab(label='Advanced'):
-                with gr.Row():
-                    save_metadata_json = gr.Checkbox(label='Save Metadata in JSON', value=save_metadata_json_value)
-                    save_metadata_png = gr.Checkbox(label='Save Metadata in PNG', value=save_metadata_png_value)
                 cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=7.0)
                 base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
                 refiner_clip_skip = gr.Slider(label='Refiner CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
@@ -262,6 +259,9 @@ with shared.gradio_root:
 
                 model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls)
             with gr.Tab(label='Metadata'):
+                with gr.Row():
+                    save_metadata_json = gr.Checkbox(label='Save Metadata in JSON', value=save_metadata_json_value)
+                    save_metadata_png = gr.Checkbox(label='Save Metadata in PNG', value=save_metadata_png_value)
                 metadata_viewer = gr.JSON(label='Metadata')
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col)
