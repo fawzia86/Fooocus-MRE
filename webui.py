@@ -131,7 +131,7 @@ def load_handler(files, *args):
     if len(files) > 0:
         path = files[0].name
         if path.endswith('.json'):
-            with open(path) as json_file:
+            with open(path, encoding='utf-8') as json_file:
                 try:
                     json_obj = json.load(json_file)
                     metadata_to_ctrls(json_obj, ctrls)

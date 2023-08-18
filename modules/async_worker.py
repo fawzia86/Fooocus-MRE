@@ -90,7 +90,7 @@ def worker():
                 'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5,
                 'software': fooocus_version.full_version
             }
-            metadata_string = json.dumps(metadata)
+            metadata_string = json.dumps(metadata, ensure_ascii=False)
             metadata_strings.append(metadata_string)
 
             for x in imgs:

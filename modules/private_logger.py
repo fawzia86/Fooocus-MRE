@@ -12,7 +12,7 @@ def log(img, dic, metadata=None, save_metadata_json=False, save_metadata_png=Fal
 
     if save_metadata_json:
         json_path = local_temp_filename.replace('.png', '.json')
-        with open(json_path, 'w') as json_file:
+        with open(json_path, 'w', encoding='utf-8') as json_file:
             json_file.write(metadata)
             json_file.close()
     
