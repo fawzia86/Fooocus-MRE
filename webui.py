@@ -158,7 +158,7 @@ with shared.gradio_root:
                     run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_row')
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=False, container=False)
-        with gr.Column(scale=0.5, visible=False) as right_col:
+        with gr.Column(scale=0.52, visible=False) as right_col:
             with gr.Tab(label='Setting'):
                 performance_selection = gr.Radio(label='Performance', choices=['Speed', 'Quality'], value='Speed')
                 aspect_ratios_selection = gr.Radio(label='Aspect Ratios (width × height)', choices=list(aspect_ratios.keys()), value='1152×896')
