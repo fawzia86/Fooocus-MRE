@@ -1,6 +1,5 @@
 import os
 import modules.path
-import json
 
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
@@ -14,12 +13,12 @@ def log(img, dic, save_metadata, metadata):
     if save_metadata == 'JSON':
         json_path = local_temp_filename.replace('.png', '.json')
         with open(json_path, 'w') as json_file:
-            json.dump(metadata, json_file)
+            json_file.write(metadata)
             json_file.close()
     
     if save_metadata == 'PNG':
         pnginfo = PngInfo()
-        pnginfo.add_text("Comment", json.dumps(metadata))
+        pnginfo.add_text("Comment", metadata)
     else:
         pnginfo = None
 

@@ -1,4 +1,5 @@
 import threading
+import json
 
 
 buffer = []
@@ -56,9 +57,10 @@ def worker():
         width, height = aspect_ratios[aspect_ratios_selection]
 
         results = []
+        metadata_strings = []
+
         seed = image_seed
         max_seed = 2**63 - 1
-
         if not isinstance(seed, int):
             seed = random.randint(0, max_seed)
         if seed < 0:
@@ -77,20 +79,19 @@ def worker():
         for i in range(image_number):
             imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip, callback=callback)
 
-            if save_metadata == 'Disabled':
-                metadata = None
-            else:
-                metadata = {
-                    'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style_selection,
-                    'seed': seed, 'width': width, 'height': height, 'p_txt': p_txt, 'n_txt': n_txt,
-                    'sampler': sampler_name, 'scheduler': scheduler, 'performance': performance_selection,
-                    'steps': steps, 'switch': switch, 'sharpness': sharpness, 'cfg': cfg,
-                    'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
-                    'base_model': base_model_name, 'refiner_model': refiner_model_name,
-                    'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
-                    'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5,
-                    'software': fooocus_version.full_version
-                }
+            metadata = {
+                'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style_selection,
+                'seed': seed, 'width': width, 'height': height, 'p_txt': p_txt, 'n_txt': n_txt,
+                'sampler': sampler_name, 'scheduler': scheduler, 'performance': performance_selection,
+                'steps': steps, 'switch': switch, 'sharpness': sharpness, 'cfg': cfg,
+                'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
+                'base_model': base_model_name, 'refiner_model': refiner_model_name,
+                'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
+                'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5,
+                'software': fooocus_version.full_version
+            }
+            metadata_string = json.dumps(metadata)
+            metadata_strings.append(metadata_string)
 
             for x in imgs:
                 d = [
@@ -110,12 +111,13 @@ def worker():
                     if n != 'None':
                         d.append((f'LoRA [{n}] weight', w))
                 d.append(('Software', fooocus_version.full_version))
-                log(x, d, save_metadata, metadata)
+                log(x, d, save_metadata, metadata_string)
 
             seed += 1
             results += imgs
 
         outputs.append(['results', results])
+        outputs.append(['metadatas', metadata_strings])
         return
 
     while True:

@@ -114,11 +114,12 @@ Note that some of these tricks are currently (2023 Aug 11) impossible to reprodu
 1. Customizable samplers.
 2. Customizable schedulers.
 3. Customizable step values, and base / refiner switch point.
-4. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
-5. Ability to load prompt information from JSON and PNG files.
-6. Customizable CFG.
-7. Customizable CLIP Skip.
-8. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+4. Customizable CFG.
+5. Customizable CLIP Skip.
+6. Displaying full metadata for generated images in the UI.
+7. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
+8. Ability to load prompt information from JSON and PNG files.
+9. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
 
 ## Thanks
 

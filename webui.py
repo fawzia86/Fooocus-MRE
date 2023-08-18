@@ -18,7 +18,8 @@ def generate_clicked(*args):
     yield gr.update(interactive=False), \
         gr.update(visible=True, value=modules.html.make_progress_html(1, 'Processing text encoding ...')), \
         gr.update(visible=True, value=None), \
-        gr.update(visible=False)
+        gr.update(visible=False), \
+        gr.update(value=None)
 
     worker.buffer.append(list(args))
     finished = False
@@ -32,12 +33,16 @@ def generate_clicked(*args):
                 yield gr.update(interactive=False), \
                     gr.update(visible=True, value=modules.html.make_progress_html(percentage, title)), \
                     gr.update(visible=True, value=image) if image is not None else gr.update(), \
-                    gr.update(visible=False)
+                    gr.update(visible=False), \
+                    gr.update()
             if flag == 'results':
                 yield gr.update(interactive=True), \
                     gr.update(visible=False), \
                     gr.update(visible=False), \
-                    gr.update(visible=True, value=product)
+                    gr.update(visible=True, value=product), \
+                    gr.update()
+            if flag == 'metadatas':
+                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product)
                 finished = True
     return
 
@@ -218,6 +223,8 @@ with shared.gradio_root:
                     return results
 
                 model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls)
+            with gr.Tab(label='Metadata'):
+                metadata_viewer = gr.JSON(label='Metadata')
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col)
         ctrls = [
@@ -227,7 +234,7 @@ with shared.gradio_root:
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed)\
-            .then(fn=generate_clicked, inputs=ctrls, outputs=[run_button, progress_html, progress_window, gallery])
+            .then(fn=generate_clicked, inputs=ctrls, outputs=[run_button, progress_html, progress_window, gallery, metadata_viewer])
         load_button.upload(fn=load_handler, inputs=[load_button] + ctrls, outputs=ctrls)
 
 parser = argparse.ArgumentParser()
