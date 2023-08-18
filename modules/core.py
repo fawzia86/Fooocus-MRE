@@ -100,7 +100,7 @@ def ksampler(model, positive, negative, latent, seed=None, steps=30, cfg=7.0, sa
     #             "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_sde_gpu",
     #             "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddim", "uni_pc", "uni_pc_bh2"]
 
-    seed = seed if isinstance(seed, int) else random.randint(1, 2 ** 64)
+    seed = seed if isinstance(seed, int) else random.randint(0, 2**63 - 1)
 
     device = comfy.model_management.get_torch_device()
     latent_image = latent["samples"]
@@ -172,7 +172,7 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
     #             "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_sde_gpu",
     #             "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddim", "uni_pc", "uni_pc_bh2"]
 
-    seed = seed if isinstance(seed, int) else random.randint(1, 2 ** 64)
+    seed = seed if isinstance(seed, int) else random.randint(0, 2**63 - 1)
 
     device = comfy.model_management.get_torch_device()
     latent_image = latent["samples"]

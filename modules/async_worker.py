@@ -57,8 +57,13 @@ def worker():
 
         results = []
         seed = image_seed
-        if not isinstance(seed, int) or seed < 0 or seed > 2**31 - 1:
-            seed = random.randint(0, 2**31 - 1)
+        max_seed = 2**63 - 1
+
+        if not isinstance(seed, int):
+            seed = random.randint(0, max_seed)
+        if seed < 0:
+            seed = - seed
+        seed = seed % max_seed
 
         all_steps = steps * image_number
 
