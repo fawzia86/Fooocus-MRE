@@ -68,55 +68,55 @@ def metadata_to_ctrls(metadata, ctrls):
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
-        ctrls[9] = metadata['sampler_name']
+        ctrls[8] = metadata['sampler_name']
     elif 'sampler' in metadata:
-        ctrls[9] = metadata['sampler']
+        ctrls[8] = metadata['sampler']
     if 'scheduler' in metadata:
-        ctrls[10] = metadata['scheduler']
+        ctrls[9] = metadata['scheduler']
     if 'steps' in metadata:
         if ctrls[3] == 'Speed':
-            ctrls[11] = metadata['steps']
+            ctrls[10] = metadata['steps']
         else:
-            ctrls[13] = metadata['steps']
+            ctrls[12] = metadata['steps']
     if 'switch' in metadata:
         if ctrls[3] == 'Speed':
-           ctrls[12] = round(metadata['switch'] / ctrls[10], 2)
+           ctrls[11] = round(metadata['switch'] / ctrls[10], 2)
         else:
-            ctrls[14] = round(metadata['switch'] / ctrls[12], 2)
+            ctrls[13] = round(metadata['switch'] / ctrls[12], 2)
     if 'cfg' in metadata:
-        ctrls[15] = metadata['cfg']
+        ctrls[14] = metadata['cfg']
     if 'base_model' in metadata:
-        ctrls[16] = metadata['base_model']
+        ctrls[15] = metadata['base_model']
     elif 'base_model_name' in metadata:
-        ctrls[16] = metadata['base_model_name']
+        ctrls[15] = metadata['base_model_name']
     if 'refiner_model' in metadata:
-        ctrls[17] = metadata['refiner_model']
+        ctrls[16] = metadata['refiner_model']
     elif 'refiner_model_name' in metadata:
-        ctrls[17] = metadata['refiner_model_name']
+        ctrls[16] = metadata['refiner_model_name']
     if 'base_clip_skip' in metadata:
-        ctrls[18] = metadata['base_clip_skip']
+        ctrls[17] = metadata['base_clip_skip']
     if 'refiner_clip_skip' in metadata:
-        ctrls[19] = metadata['refiner_clip_skip']
+        ctrls[18] = metadata['refiner_clip_skip']
     if 'l1' in metadata:
-        ctrls[20] = metadata['l1']
+        ctrls[19] = metadata['l1']
     if 'w1' in metadata:
-        ctrls[21] = metadata['w1']
+        ctrls[20] = metadata['w1']
     if 'l2' in metadata:
-        ctrls[22] = metadata['l2']
+        ctrls[21] = metadata['l2']
     if 'w2' in metadata:
-        ctrls[23] = metadata['w2']
+        ctrls[22] = metadata['w2']
     if 'l3' in metadata:
-        ctrls[24] = metadata['l3']
+        ctrls[23] = metadata['l3']
     if 'w3' in metadata:
-        ctrls[25] = metadata['w3']
+        ctrls[24] = metadata['w3']
     if 'l4' in metadata:
-        ctrls[26] = metadata['l4']
+        ctrls[25] = metadata['l4']
     if 'w4' in metadata:
-        ctrls[27] = metadata['w4']
+        ctrls[26] = metadata['w4']
     if 'l5' in metadata:
-        ctrls[28] = metadata['l5']
+        ctrls[27] = metadata['l5']
     if 'w5' in metadata:
-        ctrls[29] = metadata['w5']
+        ctrls[28] = metadata['w5']
 
     return ctrls    
 
@@ -200,7 +200,9 @@ with shared.gradio_root:
                 with gr.Row():
                     model_refresh = gr.Button(label='Refresh', value='\U0001f504 Refresh All Files', variant='secondary', elem_classes='refresh_button')
             with gr.Tab(label='Advanced'):
-                save_metadata = gr.Radio(label='Save Metadata', choices=['Disabled', 'JSON', 'PNG'], value='Disabled')
+                with gr.Row():
+                    save_metadata_json = gr.Checkbox(label='Save Metadata in JSON')
+                    save_metadata_png = gr.Checkbox(label='Save Metadata in PNG')
                 cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=7.0)
                 base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
                 refiner_clip_skip = gr.Slider(label='Refiner CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
@@ -229,10 +231,10 @@ with shared.gradio_root:
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col)
         ctrls = [
             prompt, negative_prompt, style_selection,
-            performance_selection, aspect_ratios_selection, image_number, image_seed, sharpness, save_metadata, sampler_name, scheduler,
+            performance_selection, aspect_ratios_selection, image_number, image_seed, sharpness, sampler_name, scheduler,
             sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg
         ]
-        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls
+        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png]
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed)\
             .then(fn=generate_clicked, inputs=ctrls, outputs=[run_button, progress_html, progress_window, gallery, metadata_viewer])
         load_button.upload(fn=load_handler, inputs=[load_button] + ctrls, outputs=ctrls)

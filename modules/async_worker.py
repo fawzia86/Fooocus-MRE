@@ -31,10 +31,10 @@ def worker():
 
     def handler(task):
         prompt, negative_prompt, style_selection, performance_selection, \
-        aspect_ratios_selection, image_number, image_seed, sharpness, save_metadata, sampler_name, scheduler, \
+        aspect_ratios_selection, image_number, image_seed, sharpness, sampler_name, scheduler, \
         sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
-        l1, w1, l2, w2, l3, w3, l4, w4, l5, w5 = task
+        l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_png = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
 
@@ -111,7 +111,7 @@ def worker():
                     if n != 'None':
                         d.append((f'LoRA [{n}] weight', w))
                 d.append(('Software', fooocus_version.full_version))
-                log(x, d, save_metadata, metadata_string)
+                log(x, d, metadata_string, save_metadata_json, save_metadata_png)
 
             seed += 1
             results += imgs
