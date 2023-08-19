@@ -123,7 +123,7 @@ Note that some of these tricks are currently (2023 Aug 11) impossible to reprodu
 
 ## Thanks
 
-The codebase starts from an odd mixture of [Automatic1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) and [ComfyUI](https://github.com/comfyanonymous/ComfyUI). (And they both use GPL license.) MoonRide Edition is based on the [original Fooocus](https://github.com/lllyasviel/Fooocus). Big thanks to [AUTOMATIC1111](https://github.com/AUTOMATIC1111), [comfyanonymous](https://github.com/comfyanonymous), and [lllyasviel](https://github.com/lllyasviel) for providing those fantastic tools.
+The codebase starts from an odd mixture of [Stable Diffusion web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) and [ComfyUI](https://github.com/comfyanonymous/ComfyUI). (And they both use GPL license.) MoonRide Edition is based on the [original Fooocus](https://github.com/lllyasviel/Fooocus). Big thanks to [AUTOMATIC1111](https://github.com/AUTOMATIC1111), [comfyanonymous](https://github.com/comfyanonymous), and [lllyasviel](https://github.com/lllyasviel) for providing those fantastic tools.
 
 Thanks to [Stability AI](https://github.com/Stability-AI) for researching and opening their Stable Diffusion model series, [OpenAI](https://github.com/openai) for CLIP and [mlfoundations](https://github.com/mlfoundations) for OpenCLIP, and [LAION AI](https://github.com/LAION-AI) for data sets on which those models could learn.
 
