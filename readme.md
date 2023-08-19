@@ -109,7 +109,7 @@ Note that some of these tricks are currently (2023 Aug 11) impossible to reprodu
 
 [Click here to browse the advanced features.](https://github.com/lllyasviel/Fooocus/discussions/117)
 
-## MoonRide Fork Features
+## MoonRide Edition Features
 
 1. Customizable samplers.
 2. Customizable schedulers.
