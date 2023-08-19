@@ -4,6 +4,7 @@ __pycache__
 **/*.pth
 **/*.pt
 **/*.yaml
+**/*.png
 !taesdxl_decoder.pth
 /repositories
 /venv
