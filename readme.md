@@ -70,7 +70,7 @@ Thanks to [camenduru](https://github.com/camenduru)'s codes!
 
 The command lines are
 
-    git clone https://github.com/MoonRide303/Fooocus.git
+    git clone https://github.com/MoonRide303/Fooocus-MRE.git
     cd Fooocus
     conda env create -f environment.yaml
     conda activate fooocus
