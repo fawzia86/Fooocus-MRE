@@ -9,10 +9,11 @@ import comfy.utils
 
 from comfy.sd import load_checkpoint_guess_config
 from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode
-from comfy.sample import prepare_mask, broadcast_cond, load_additional_models, cleanup_additional_models
+from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cleanup_additional_models
 from modules.samplers_advanced import KSampler, KSamplerWithRefiner
 from modules.patch import patch_all
 
+comfy.model_management.DISABLE_SMART_MEMORY = True
 
 patch_all()
 opCLIPTextEncode = CLIPTextEncode()
@@ -133,7 +134,9 @@ def ksampler(model, positive, negative, latent, seed=None, steps=30, cfg=7.0, sa
     if noise_mask is not None:
         noise_mask = prepare_mask(noise_mask, noise.shape, device)
 
-    comfy.model_management.load_model_gpu(model)
+    real_model = None
+    models = get_additional_models(positive, negative)
+    comfy.model_management.load_models_gpu([model] + models, comfy.model_management.batch_area_memory(noise.shape[0] * noise.shape[2] * noise.shape[3]))
     real_model = model.model
 
     noise = noise.to(device)
@@ -141,8 +144,6 @@ def ksampler(model, positive, negative, latent, seed=None, steps=30, cfg=7.0, sa
 
     positive_copy = broadcast_cond(positive, noise.shape[0], device)
     negative_copy = broadcast_cond(negative, noise.shape[0], device)
-
-    models = load_additional_models(positive, negative, model.model_dtype())
 
     sampler = KSampler(real_model, steps=steps, device=device, sampler=sampler_name, scheduler=scheduler,
                        denoise=denoise, model_options=model.model_options)
@@ -216,7 +217,7 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
     refiner_positive_copy = broadcast_cond(refiner_positive, noise.shape[0], device)
     refiner_negative_copy = broadcast_cond(refiner_negative, noise.shape[0], device)
 
-    models = load_additional_models(positive, negative, model.model_dtype())
+    models = get_additional_models(positive, negative)
 
     sampler = KSamplerWithRefiner(model=model, refiner_model=refiner, steps=steps, device=device,
                                   sampler=sampler_name, scheduler=scheduler,
