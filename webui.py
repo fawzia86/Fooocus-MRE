@@ -158,6 +158,7 @@ def load_settings():
     save_metadata_json = False
     save_metadata_png = False
     seed_random = True
+    switch_step = 0.5
 
     if exists('settings.json'):
         with open('settings.json') as settings_file:
@@ -173,15 +174,17 @@ def load_settings():
                     save_metadata_png = stored_settings['save_metadata_png']
                 if 'seed_random' in stored_settings:
                     seed_random = stored_settings['seed_random']
+                if 'switch_step' in stored_settings:
+                    switch_step = stored_settings['switch_step']
             except Exception:
                 pass
             finally:
                 settings_file.close()
 
-    return advanced_mode, image_number, save_metadata_json, save_metadata_png, seed_random
+    return advanced_mode, image_number, save_metadata_json, save_metadata_png, seed_random, switch_step
 
 
-advanced_mode_value, image_number_value, save_metadata_json_value, save_metadata_png_value, seed_random_value = load_settings()
+advanced_mode_value, image_number_value, save_metadata_json_value, save_metadata_png_value, seed_random_value, switch_step_value = load_settings()
 
 shared.gradio_root = gr.Blocks(title=fooocus_version.full_version, css=modules.html.css).queue()
 with shared.gradio_root:
@@ -243,9 +246,9 @@ with shared.gradio_root:
                     'dpmpp_sde_gpu', 'dpmpp_sde', 'dpmpp_2s_ancestral', 'euler', 'euler_ancestral', 'heun', 'dpm_2', 'dpm_2_ancestral'], value='dpmpp_2m_sde_gpu')
                 scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'simple', 'ddim_uniform'], value='karras')
                 sampler_steps_speed = gr.Slider(label='Sampler Steps (Speed)', minimum=10, maximum=100, step=1, value=30)
-                switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.5, maximum=1.0, step=0.01, value=0.67)
+                switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.2, maximum=1.0, step=0.01, value=switch_step_value)
                 sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=60)
-                switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.5, maximum=1.0, step=0.01, value=0.67)
+                switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.2, maximum=1.0, step=0.01, value=switch_step_value)
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=2.0)
                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
 
