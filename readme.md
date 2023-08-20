@@ -119,7 +119,8 @@ Note that some of these tricks are currently (2023 Aug 11) impossible to reprodu
 6. Displaying full metadata for generated images in the UI.
 7. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
 8. Ability to load prompt information from JSON and PNG files.
-9. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+9. Ability to change default values of some UI settings (loaded from settings.json file - you can use settings-example.json as a template, and adjust it to your needs).
+10. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
 
 ## Thanks
 
