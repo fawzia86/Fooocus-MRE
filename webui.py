@@ -158,7 +158,7 @@ def load_settings():
     save_metadata_json = False
     save_metadata_png = False
     seed_random = True
-    switch_step = 0.5
+    switch_step = 0.67
 
     if exists('settings.json'):
         with open('settings.json') as settings_file:
