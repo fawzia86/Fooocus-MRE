@@ -1,10 +1,11 @@
 import modules.core as core
 import os
+import gc
 import torch
 import modules.path
 
 from comfy.model_base import SDXL, SDXLRefiner
-
+from comfy.model_management import soft_empty_cache
 
 xl_base: core.StableDiffusionModel = None
 xl_base_hash = ''
@@ -177,5 +178,8 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
     decoded_latent = core.decode_vae(vae=xl_base_patched.vae, latent_image=sampled_latent)
 
     images = core.image_to_numpy(decoded_latent)
+
+    gc.collect()
+    soft_empty_cache()
 
     return images
