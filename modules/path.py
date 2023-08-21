@@ -1,8 +1,37 @@
 import os
+import json
 
-modelfile_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../models/checkpoints/'))
-lorafile_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../models/loras/'))
-temp_outputs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../outputs/'))
+from os.path import exists
+
+
+def load_paths():
+    path_checkpoints = '../models/checkpoints/'
+    path_loras = '../models/loras/'
+    path_outputs = '../outputs/'
+
+    if exists('paths.json'):
+        with open('paths.json', encoding='utf-8') as paths_file:
+            try:
+                paths_obj = json.load(paths_file)
+                if 'path_checkpoints' in paths_obj:
+                    path_checkpoints = paths_obj['path_checkpoints']
+                if 'path_loras' in paths_obj:
+                    path_loras = paths_obj['path_loras']
+                if 'path_outputs' in paths_obj:
+                    path_outputs = paths_obj['path_outputs']
+            except Exception:
+                pass
+            finally:
+                paths_file.close()
+
+    return path_checkpoints, path_loras, path_outputs
+
+
+path_checkpoints, path_loras, path_outputs = load_paths()
+
+modelfile_path = path_checkpoints if os.path.isabs(path_checkpoints) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_checkpoints))
+lorafile_path = path_loras if os.path.isabs(path_loras) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_loras))
+temp_outputs_path = path_outputs if os.path.isabs(path_outputs) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_outputs))
 
 os.makedirs(temp_outputs_path, exist_ok=True)
 

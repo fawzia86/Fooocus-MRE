@@ -119,8 +119,9 @@ Below things are already inside the software, and **users do not need to do anyt
 6. Displaying full metadata for generated images in the UI.
 7. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
 8. Ability to load prompt information from JSON and PNG files.
-9. Ability to change default values of some UI settings (loaded from settings.json file - you can use settings-example.json as a template, and adjust it to your needs).
-10. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+9. Ability to change default values of some UI settings (loaded from settings.json file - you can use settings-example.json as a template).
+10. Ability to change default paths (loaded from paths.json file - you can use paths-example.json as a template).
+11. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
 
 ## Thanks
 

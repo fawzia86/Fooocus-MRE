@@ -1,0 +1,5 @@
+{
+    "path_checkpoints": "../models/checkpoints/",
+    "path_loras": "../models/loras/",
+    "path_outputs": "../outputs/"
+}
