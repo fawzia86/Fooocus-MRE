@@ -206,7 +206,8 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
     if noise_mask is not None:
         noise_mask = prepare_mask(noise_mask, noise.shape, device)
 
-    comfy.model_management.load_model_gpu(model)
+    models = get_additional_models(positive, negative)
+    comfy.model_management.load_models_gpu([model] + models, comfy.model_management.batch_area_memory(noise.shape[0] * noise.shape[2] * noise.shape[3]))
 
     noise = noise.to(device)
     latent_image = latent_image.to(device)
@@ -216,8 +217,6 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
 
     refiner_positive_copy = broadcast_cond(refiner_positive, noise.shape[0], device)
     refiner_negative_copy = broadcast_cond(refiner_negative, noise.shape[0], device)
-
-    models = get_additional_models(positive, negative)
 
     sampler = KSamplerWithRefiner(model=model, refiner_model=refiner, steps=steps, device=device,
                                   sampler=sampler_name, scheduler=scheduler,
