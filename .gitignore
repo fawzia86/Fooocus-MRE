@@ -36,3 +36,4 @@ notification.mp3
 /package-lock.json
 /.coverage*
 /settings.json
+/paths.json

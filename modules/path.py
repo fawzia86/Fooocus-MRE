@@ -19,7 +19,8 @@ def load_paths():
                     path_loras = paths_obj['path_loras']
                 if 'path_outputs' in paths_obj:
                     path_outputs = paths_obj['path_outputs']
-            except Exception:
+            except Exception as e:
+                print(e)
                 pass
             finally:
                 paths_file.close()

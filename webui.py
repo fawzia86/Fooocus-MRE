@@ -135,7 +135,8 @@ def load_handler(files, *args):
                 try:
                     json_obj = json.load(json_file)
                     metadata_to_ctrls(json_obj, ctrls)
-                except Exception:
+                except Exception as e:
+                    print(e)
                     pass
                 finally:
                     json_file.close()
@@ -147,44 +148,65 @@ def load_handler(files, *args):
                     try:
                         metadata = json.loads(image.info['Comment'])
                         metadata_to_ctrls(metadata, ctrls)
-                    except Exception:
+                    except Exception as e:
+                        print(e)
                         pass
     return ctrls
 
 
 def load_settings():
-    advanced_mode = False
-    image_number = 2
-    save_metadata_json = False
-    save_metadata_png = False
-    seed_random = True
-    switch_step = 0.67
+    settings = {}
+    settings['advanced_mode'] = False
+    settings['image_number'] = 2
+    settings['save_metadata_json'] = False
+    settings['save_metadata_png'] = False
+    settings['seed_random'] = True
+    settings['seed'] = 0
+    settings['style'] = 'cinematic-default'
+    settings['prompt'] = ''
+    settings['negative_prompt'] = ''
+    settings['steps_speed'] = 30
+    settings['steps_quality'] = 60
+    settings['switch_step'] = 0.67
+    settings['performance'] = 'Speed'
+    settings['resolution'] = '1152×896'
+    settings['sampler'] = 'dpmpp_2m_sde_gpu'
+    settings['scheduler'] = 'karras'
+    settings['cfg'] = 7.0
+    settings['base_clip_skip'] = -2
+    settings['refiner_clip_skip'] = -2
+    settings['sharpness'] = 2.0
+    settings['base_model'] = modules.path.default_base_model_name
+    settings['refiner_model'] = modules.path.default_refiner_model_name
+    settings['lora_1_model'] = modules.path.default_lora_name
+    settings['lora_1_weight'] = modules.path.default_lora_weight
+    settings['lora_2_model'] = 'None'
+    settings['lora_2_weight'] = modules.path.default_lora_weight
+    settings['lora_3_model'] = 'None'
+    settings['lora_3_weight'] = modules.path.default_lora_weight
+    settings['lora_4_model'] = 'None'
+    settings['lora_4_weight'] = modules.path.default_lora_weight
+    settings['lora_5_model'] = 'None'
+    settings['lora_5_weight'] = modules.path.default_lora_weight
 
     if exists('settings.json'):
         with open('settings.json') as settings_file:
             try:
-                stored_settings = json.load(settings_file)
-                if 'advanced_mode' in stored_settings:
-                    advanced_mode = stored_settings['advanced_mode']
-                if 'image_number' in stored_settings:
-                    image_number = stored_settings['image_number']
-                if 'save_metadata_json' in stored_settings:
-                    save_metadata_json = stored_settings['save_metadata_json']
-                if 'save_metadata_png' in stored_settings:
-                    save_metadata_png = stored_settings['save_metadata_png']
-                if 'seed_random' in stored_settings:
-                    seed_random = stored_settings['seed_random']
-                if 'switch_step' in stored_settings:
-                    switch_step = stored_settings['switch_step']
-            except Exception:
+                settings_obj = json.load(settings_file)
+                counter = 0;
+                for k in settings.keys():
+                    if k in settings_obj:
+                        settings[k] = settings_obj[k]
+            except Exception as e:
+                print(e)
                 pass
             finally:
                 settings_file.close()
 
-    return advanced_mode, image_number, save_metadata_json, save_metadata_png, seed_random, switch_step
+    return settings
 
 
-advanced_mode_value, image_number_value, save_metadata_json_value, save_metadata_png_value, seed_random_value, switch_step_value = load_settings()
+settings = load_settings()
 
 shared.gradio_root = gr.Blocks(title=fooocus_version.full_version, css=modules.html.css).queue()
 with shared.gradio_root:
@@ -195,21 +217,21 @@ with shared.gradio_root:
             gallery = gr.Gallery(label='Gallery', show_label=False, object_fit='contain', height=720, visible=True)
             with gr.Row(elem_classes='type_row'):
                 with gr.Column(scale=0.7):
-                    prompt = gr.Textbox(show_label=False, placeholder='Type prompt here.', container=False, autofocus=True, elem_classes='type_row', lines=1024)
+                    prompt = gr.Textbox(show_label=False, placeholder='Type prompt here.', container=False, autofocus=True, elem_classes='type_row', lines=1024, value=settings['prompt'])
                 with gr.Column(scale=0.15, min_width=0):
                     load_button = gr.UploadButton(label='Load Prompt', elem_classes='type_row', file_count=1, file_types=['.json', '.png'])
                 with gr.Column(scale=0.15, min_width=0):
                     run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_row')
             with gr.Row():
-                advanced_checkbox = gr.Checkbox(label='Advanced', value=advanced_mode_value, container=False)
-        with gr.Column(scale=0.52, visible=advanced_mode_value) as right_col:
+                advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
+        with gr.Column(scale=0.52, visible=settings['advanced_mode']) as right_col:
             with gr.Tab(label='Setting'):
-                performance_selection = gr.Radio(label='Performance', choices=['Speed', 'Quality'], value='Speed')
-                aspect_ratios_selection = gr.Radio(label='Aspect Ratios (width × height)', choices=list(aspect_ratios.keys()), value='1152×896')
-                image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=image_number_value)
-                negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.")
-                seed_random = gr.Checkbox(label='Random', value=seed_random_value)
-                image_seed = gr.Number(label='Seed', value=0, precision=0, visible=not seed_random_value)
+                performance_selection = gr.Radio(label='Performance', choices=['Speed', 'Quality'], value=settings['performance'])
+                aspect_ratios_selection = gr.Radio(label='Aspect Ratios (width × height)', choices=list(aspect_ratios.keys()), value=settings['resolution'])
+                image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=settings['image_number'])
+                negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.", value=settings['negative_prompt'])
+                seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
+                image_seed = gr.Number(label='Seed', value=settings['seed'], precision=0, visible=not settings['seed_random'])
 
                 def random_checked(r):
                     return gr.update(visible=not r)
@@ -223,33 +245,32 @@ with shared.gradio_root:
                 seed_random.change(random_checked, inputs=[seed_random], outputs=[image_seed])
 
             with gr.Tab(label='Style'):
-                style_selection = gr.Radio(show_label=False, container=True,
-                                          choices=style_keys, value='cinematic-default')
+                style_selection = gr.Radio(show_label=False, container=True, choices=style_keys, value=settings['style'])
             with gr.Tab(label='Models'):
                 with gr.Row():
-                    base_model = gr.Dropdown(label='SDXL Base Model', choices=modules.path.model_filenames, value=modules.path.default_base_model_name, show_label=True)
-                    refiner_model = gr.Dropdown(label='SDXL Refiner', choices=['None'] + modules.path.model_filenames, value=modules.path.default_refiner_model_name, show_label=True)
+                    base_model = gr.Dropdown(label='SDXL Base Model', choices=modules.path.model_filenames, value=settings['base_model'], show_label=True)
+                    refiner_model = gr.Dropdown(label='SDXL Refiner', choices=['None'] + modules.path.model_filenames, value=settings['refiner_model'], show_label=True)
                 with gr.Accordion(label='LoRAs', open=True):
                     lora_ctrls = []
                     for i in range(5):
                         with gr.Row():
-                            lora_model = gr.Dropdown(label=f'SDXL LoRA {i+1}', choices=['None'] + modules.path.lora_filenames, value=modules.path.default_lora_name if i == 0 else 'None')
-                            lora_weight = gr.Slider(label='Weight', minimum=-2, maximum=2, step=0.01, value=modules.path.default_lora_weight)
+                            lora_model = gr.Dropdown(label=f'SDXL LoRA {i+1}', choices=['None'] + modules.path.lora_filenames, value=settings[f'lora_{i+1}_model'])
+                            lora_weight = gr.Slider(label='Weight', minimum=-2, maximum=2, step=0.01, value=settings[f'lora_{i+1}_weight'])
                             lora_ctrls += [lora_model, lora_weight]
                 with gr.Row():
                     model_refresh = gr.Button(label='Refresh', value='\U0001f504 Refresh All Files', variant='secondary', elem_classes='refresh_button')
             with gr.Tab(label='Advanced'):
-                cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=7.0)
-                base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
-                refiner_clip_skip = gr.Slider(label='Refiner CLIP Skip', minimum=-10, maximum=-1, step=1, value=-2)
+                cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=settings['cfg'])
+                base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=settings['base_clip_skip'])
+                refiner_clip_skip = gr.Slider(label='Refiner CLIP Skip', minimum=-10, maximum=-1, step=1, value=settings['refiner_clip_skip'])
                 sampler_name = gr.Dropdown(label='Sampler', choices=['dpmpp_2m_sde_gpu', 'dpmpp_2m_sde', 'dpmpp_3m_sde_gpu', 'dpmpp_3m_sde',
-                    'dpmpp_sde_gpu', 'dpmpp_sde', 'dpmpp_2s_ancestral', 'euler', 'euler_ancestral', 'heun', 'dpm_2', 'dpm_2_ancestral'], value='dpmpp_2m_sde_gpu')
-                scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'simple', 'ddim_uniform'], value='karras')
-                sampler_steps_speed = gr.Slider(label='Sampler Steps (Speed)', minimum=10, maximum=100, step=1, value=30)
-                switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.2, maximum=1.0, step=0.01, value=switch_step_value)
-                sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=60)
-                switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.2, maximum=1.0, step=0.01, value=switch_step_value)
-                sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=2.0)
+                    'dpmpp_sde_gpu', 'dpmpp_sde', 'dpmpp_2s_ancestral', 'euler', 'euler_ancestral', 'heun', 'dpm_2', 'dpm_2_ancestral'], value=settings['sampler'])
+                scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'simple', 'ddim_uniform'], value=settings['scheduler'])
+                sampler_steps_speed = gr.Slider(label='Sampler Steps (Speed)', minimum=10, maximum=100, step=1, value=settings['steps_speed'])
+                switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.2, maximum=1.0, step=0.01, value=settings['switch_step'])
+                sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=settings['steps_quality'])
+                switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.2, maximum=1.0, step=0.01, value=settings['switch_step'])
+                sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=settings['sharpness'])
                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
 
                 def model_refresh_clicked():
@@ -263,8 +284,8 @@ with shared.gradio_root:
                 model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls)
             with gr.Tab(label='Metadata'):
                 with gr.Row():
-                    save_metadata_json = gr.Checkbox(label='Save Metadata in JSON', value=save_metadata_json_value)
-                    save_metadata_png = gr.Checkbox(label='Save Metadata in PNG', value=save_metadata_png_value)
+                    save_metadata_json = gr.Checkbox(label='Save Metadata in JSON', value=settings['save_metadata_json'])
+                    save_metadata_png = gr.Checkbox(label='Save Metadata in PNG', value=settings['save_metadata_png'])
                 metadata_viewer = gr.JSON(label='Metadata')
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col)
