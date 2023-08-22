@@ -69,7 +69,11 @@ progress::after {
 }
 
 .type_row{
-  height: 80px !important;
+  height: 96px !important;
+}
+
+.type_small_row{
+  height: 40px !important;
 }
 
 .scroll-hide{

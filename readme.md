@@ -111,17 +111,18 @@ Below things are already inside the software, and **users do not need to do anyt
 
 ## MoonRide Edition Features
 
-1. Customizable samplers.
-2. Customizable schedulers.
-3. Customizable step values, and base / refiner switch point.
-4. Customizable CFG.
-5. Customizable CLIP Skip.
-6. Displaying full metadata for generated images in the UI.
-7. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
-8. Ability to load prompt information from JSON and PNG files.
-9. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
-10. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
-11. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+1. Support for img2img mode.
+2. Customizable samplers.
+3. Customizable schedulers.
+4. Customizable step values, and base / refiner switch point.
+5. Customizable CFG.
+6. Customizable CLIP Skip.
+7. Displaying full metadata for generated images in the UI.
+8. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
+9. Ability to load prompt information from JSON and PNG files.
+10. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
+11. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
+12. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
 
 ## Thanks
 

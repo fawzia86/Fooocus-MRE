@@ -121,12 +121,20 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[28] = metadata['w5']
     # save_metadata_json
     # save_metadata_png
-    # seed_random
+    if 'img2img' in metadata:
+        ctrls[31] = metadata['img2img']
+        if 'start_step' in metadata:
+            if ctrls[3] == 'Speed':
+               ctrls[32] = round(metadata['start_step'] / ctrls[10], 2)
+            else:
+                ctrls[32] = round(metadata['start_step'] / ctrls[12], 2)
+        if 'denoise' in metadata:
+            ctrls[33] = metadata['denoise']
 
     return ctrls    
 
 
-def load_handler(files, *args):
+def load_prompt_handler(files, *args):
     ctrls=list(args)
     if len(files) > 0:
         path = files[0].name
@@ -153,6 +161,11 @@ def load_handler(files, *args):
                         pass
     return ctrls
 
+def load_image_handler(files):
+    if len(files) > 0:
+        path = files[0].name
+    return [path]
+
 
 def load_settings():
     settings = {}
@@ -168,6 +181,9 @@ def load_settings():
     settings['steps_speed'] = 30
     settings['steps_quality'] = 60
     settings['switch_step'] = 0.67
+    settings['img2img_mode'] = False
+    settings['img2img_start_step'] = 0.06
+    settings['img2img_denoise'] = 0.94
     settings['performance'] = 'Speed'
     settings['resolution'] = '1152×896'
     settings['sampler'] = 'dpmpp_2m_sde_gpu'
@@ -219,9 +235,15 @@ with shared.gradio_root:
                 with gr.Column(scale=0.7):
                     prompt = gr.Textbox(show_label=False, placeholder='Type prompt here.', container=False, autofocus=True, elem_classes='type_row', lines=1024, value=settings['prompt'])
                 with gr.Column(scale=0.15, min_width=0):
-                    load_button = gr.UploadButton(label='Load Prompt', elem_classes='type_row', file_count=1, file_types=['.json', '.png'])
+                    with gr.Row():
+                        img2img_mode = gr.Checkbox(label='img2img', value=settings['img2img_mode'], elem_classes='type_small_row')
+                    with gr.Row():
+                        load_image_button = gr.UploadButton(label='Load Image', file_count=1, file_types=["image"], elem_classes='type_small_row')
                 with gr.Column(scale=0.15, min_width=0):
-                    run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_row')
+                    with gr.Row():
+                        load_prompt_button = gr.UploadButton(label='Load Prompt', file_count=1, file_types=['.json', '.png'], elem_classes='type_small_row')
+                    with gr.Row():
+                        run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row')
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
         with gr.Column(scale=0.52, visible=settings['advanced_mode']) as right_col:
@@ -270,6 +292,8 @@ with shared.gradio_root:
                 switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.2, maximum=1.0, step=0.01, value=settings['switch_step'])
                 sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=settings['steps_quality'])
                 switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.2, maximum=1.0, step=0.01, value=settings['switch_step'])
+                img2img_start_step = gr.Slider(label='Img2img Start Step', minimum=0.0, maximum=0.5, step=0.01, value=settings['img2img_start_step'])
+                img2img_denoise = gr.Slider(label='Img2img Denoise', minimum=0.5, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=settings['sharpness'])
                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
 
@@ -294,10 +318,11 @@ with shared.gradio_root:
             performance_selection, aspect_ratios_selection, image_number, image_seed, sharpness, sampler_name, scheduler,
             sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg
         ]
-        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png]
+        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png, img2img_mode, img2img_start_step, img2img_denoise]
+        load_image_button.upload(fn=load_image_handler, inputs=[load_image_button], outputs=gallery)
+        load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed)\
-            .then(fn=generate_clicked, inputs=ctrls, outputs=[run_button, progress_html, progress_window, gallery, metadata_viewer])
-        load_button.upload(fn=load_handler, inputs=[load_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
+            .then(fn=generate_clicked, inputs=ctrls + [gallery], outputs=[run_button, progress_html, progress_window, gallery, metadata_viewer])
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default=None, help="Set the listen port.")

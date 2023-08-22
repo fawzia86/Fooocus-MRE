@@ -1,5 +1,8 @@
+import os
 import threading
 import json
+
+import modules.core as core
 
 
 buffer = []
@@ -34,7 +37,8 @@ def worker():
         aspect_ratios_selection, image_number, image_seed, sharpness, sampler_name, scheduler, \
         sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
-        l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_png = task
+        l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_png, \
+        img2img_mode, img2img_start_step, img2img_denoise, gallery = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
 
@@ -77,7 +81,18 @@ def worker():
                 y)])
 
         for i in range(image_number):
-            imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip, callback=callback)
+            if img2img_mode and len(gallery) > 0:
+                start_step = round(steps * img2img_start_step)
+                denoise = img2img_denoise
+                gallery_entry = gallery[0]
+                input_image_path = gallery_entry['name']
+            else:
+                start_step = 0
+                denoise = None
+                input_image_path = None
+
+            imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
+                cfg, base_clip_skip, refiner_clip_skip, input_image_path, start_step, denoise, callback=callback)
 
             metadata = {
                 'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style_selection,
@@ -87,7 +102,8 @@ def worker():
                 'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
                 'base_model': base_model_name, 'refiner_model': refiner_model_name,
                 'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
-                'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5,
+                'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode,
+                'start_step': start_step, 'denoise': denoise, 'input_image': None if input_image_path == None else os.path.basename(input_image_path),
                 'software': fooocus_version.full_version
             }
             metadata_string = json.dumps(metadata, ensure_ascii=False)

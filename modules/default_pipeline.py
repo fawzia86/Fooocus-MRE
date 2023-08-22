@@ -2,10 +2,13 @@ import modules.core as core
 import os
 import gc
 import torch
+import numpy as np
 import modules.path
 
 from comfy.model_base import SDXL, SDXLRefiner
 from comfy.model_management import soft_empty_cache
+from PIL import Image, ImageOps
+
 
 xl_base: core.StableDiffusionModel = None
 xl_base_hash = ''
@@ -120,7 +123,7 @@ def clean_prompt_cond_caches():
 
 
 @torch.no_grad()
-def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip, callback):
+def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip, input_image_path, start_step, denoise, callback):
     global positive_conditions_cache, negative_conditions_cache, \
         positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
@@ -132,7 +135,21 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
     positive_conditions_cache = positive_conditions
     negative_conditions_cache = negative_conditions
 
-    empty_latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
+    if input_image_path == None:
+        latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
+        force_full_denoise = True
+        denoise = None
+    else:
+        with open(input_image_path, 'rb') as image_file:
+            pil_image = Image.open(image_file)
+            image = ImageOps.exif_transpose(pil_image)
+            image_file.close()
+            image = image.convert("RGB")
+            image = np.array(image).astype(np.float32) / 255.0
+            image = torch.from_numpy(image)[None,]
+            input_image = core.upscale(image)
+            latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
+            force_full_denoise = False
 
     if xl_refiner is not None:
 
@@ -152,8 +169,9 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
             refiner_positive=positive_conditions_refiner,
             refiner_negative=negative_conditions_refiner,
             refiner_switch_step=switch,
-            latent=empty_latent,
-            steps=steps, start_step=0, last_step=steps, disable_noise=False, force_full_denoise=True,
+            latent=latent,
+            steps=steps, start_step=start_step, last_step=steps,
+            disable_noise=False, force_full_denoise=force_full_denoise, denoise=denoise,
             seed=image_seed,
             sampler_name=sampler_name,
             scheduler=scheduler,
@@ -166,8 +184,9 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
             model=xl_base_patched.unet,
             positive=positive_conditions,
             negative=negative_conditions,
-            latent=empty_latent,
-            steps=steps, start_step=0, last_step=steps, disable_noise=False, force_full_denoise=True,
+            latent=latent,
+            steps=steps, start_step=start_step, last_step=steps,
+            disable_noise=False, force_full_denoise=force_full_denoise, denoise=denoise,
             seed=image_seed,
             sampler_name=sampler_name,
             scheduler=scheduler,
