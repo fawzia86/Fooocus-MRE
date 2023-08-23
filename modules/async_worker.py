@@ -3,6 +3,7 @@ import threading
 import json
 
 import modules.core as core
+import modules.constants as constants
 
 
 buffer = []
@@ -34,9 +35,9 @@ def worker():
         print(e)
 
     def handler(task):
-        prompt, negative_prompt, style_selection, performance_selection, \
+        prompt, negative_prompt, style, performance, \
         resolution, image_number, image_seed, sharpness, sampler_name, scheduler, \
-        sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg, \
+        custom_steps, custom_switch, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_png, \
         img2img_mode, img2img_start_step, img2img_denoise, gallery = task
@@ -50,14 +51,17 @@ def worker():
         pipeline.refresh_loras(loras)
         pipeline.clean_prompt_cond_caches()
 
-        p_txt, n_txt = apply_style(style_selection, prompt, negative_prompt)
+        p_txt, n_txt = apply_style(style, prompt, negative_prompt)
 
-        if performance_selection == 'Speed':
-            steps = sampler_steps_speed
-            switch = round(sampler_steps_speed * switch_step_speed)
+        if performance == 'Speed':
+            steps = constants.STEPS_SPEED
+            switch = constants.SWITCH_SPEED
+        elif performance == 'Quality':
+            steps = constants.STEPS_QUALITY
+            switch = constants.SWITCH_QUALITY
         else:
-            steps = sampler_steps_quality
-            switch = round(sampler_steps_quality * switch_step_quality)
+            steps = custom_steps
+            switch = round(custom_steps * custom_switch)
 
         width, height = resolutions[resolution]
 
@@ -97,9 +101,9 @@ def worker():
                 cfg, base_clip_skip, refiner_clip_skip, input_image_path, start_step, denoise, callback=callback)
 
             metadata = {
-                'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style_selection,
+                'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style,
                 'seed': seed, 'width': width, 'height': height, 'p_txt': p_txt, 'n_txt': n_txt,
-                'sampler': sampler_name, 'scheduler': scheduler, 'performance': performance_selection,
+                'sampler': sampler_name, 'scheduler': scheduler, 'performance': performance,
                 'steps': steps, 'switch': switch, 'sharpness': sharpness, 'cfg': cfg,
                 'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
                 'base_model': base_model_name, 'refiner_model': refiner_model_name,
@@ -115,11 +119,11 @@ def worker():
                 d = [
                     ('Prompt', prompt),
                     ('Negative Prompt', negative_prompt),
-                    ('Style', style_selection),
+                    ('Style', style),
                     ('Seed', seed),
                     ('Resolution', get_resolution_string(width, height)),
-                    ('Performance', performance_selection),
-                    ('Sampler & Scheduler & Steps', str((sampler_name, scheduler, steps, switch))),
+                    ('Performance', str((performance, steps, switch))),
+                    ('Sampler & Scheduler', str((sampler_name, scheduler))),
                     ('Sharpness', sharpness),
                     ('CFG & CLIP Skips', str((cfg, base_clip_skip, refiner_clip_skip))),
                     ('Base Model', base_model_name),

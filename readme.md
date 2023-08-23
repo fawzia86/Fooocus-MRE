@@ -114,7 +114,7 @@ Below things are already inside the software, and **users do not need to do anyt
 1. Support for img2img mode.
 2. Customizable samplers.
 3. Customizable schedulers.
-4. Customizable step values, and base / refiner switch point.
+4. Customizable steps, and base / refiner switch point.
 5. Customizable CFG.
 6. Customizable CLIP Skip.
 7. Displaying full metadata for generated images in the UI.

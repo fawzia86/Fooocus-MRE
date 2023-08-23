@@ -7,6 +7,7 @@ import modules.path
 import fooocus_version
 import modules.html
 import modules.async_worker as worker
+import modules.constants as constants
 import json
 
 from modules.resolutions import get_resolution_string, resolutions
@@ -77,60 +78,64 @@ def metadata_to_ctrls(metadata, ctrls):
     if 'scheduler' in metadata:
         ctrls[9] = metadata['scheduler']
     if 'steps' in metadata:
-        if ctrls[3] == 'Speed':
-            ctrls[10] = metadata['steps']
+        ctrls[10] = metadata['steps']
+        if ctrls[10] == constants.STEPS_SPEED:
+            ctrls[3] = 'Speed'
+        elif ctrls[10] == constants.STEPS_QUALITY:
+            ctrls[3] = 'Quality'
         else:
-            ctrls[12] = metadata['steps']
+            ctrls[3] = 'Custom'
     if 'switch' in metadata:
-        if ctrls[3] == 'Speed':
-           ctrls[11] = round(metadata['switch'] / ctrls[10], 2)
-        else:
-            ctrls[13] = round(metadata['switch'] / ctrls[12], 2)
+        ctrls[11] = round(metadata['switch'] / ctrls[10], 2)
+        if ctrls[11] != round(constants.SWITCH_SPEED / constants.STEPS_SPEED, 2):
+            ctrls[3] = 'Custom'
     if 'cfg' in metadata:
-        ctrls[14] = metadata['cfg']
+        ctrls[12] = metadata['cfg']
     if 'base_model' in metadata:
-        ctrls[15] = metadata['base_model']
+        ctrls[13] = metadata['base_model']
     elif 'base_model_name' in metadata:
-        ctrls[15] = metadata['base_model_name']
+        ctrls[13] = metadata['base_model_name']
     if 'refiner_model' in metadata:
-        ctrls[16] = metadata['refiner_model']
+        ctrls[14] = metadata['refiner_model']
     elif 'refiner_model_name' in metadata:
-        ctrls[16] = metadata['refiner_model_name']
+        ctrls[14] = metadata['refiner_model_name']
     if 'base_clip_skip' in metadata:
-        ctrls[17] = metadata['base_clip_skip']
+        ctrls[15] = metadata['base_clip_skip']
     if 'refiner_clip_skip' in metadata:
-        ctrls[18] = metadata['refiner_clip_skip']
+        ctrls[16] = metadata['refiner_clip_skip']
     if 'l1' in metadata:
-        ctrls[19] = metadata['l1']
+        ctrls[17] = metadata['l1']
     if 'w1' in metadata:
-        ctrls[20] = metadata['w1']
+        ctrls[18] = metadata['w1']
     if 'l2' in metadata:
-        ctrls[21] = metadata['l2']
+        ctrls[19] = metadata['l2']
     if 'w2' in metadata:
-        ctrls[22] = metadata['w2']
+        ctrls[20] = metadata['w2']
     if 'l3' in metadata:
-        ctrls[23] = metadata['l3']
+        ctrls[21] = metadata['l3']
     if 'w3' in metadata:
-        ctrls[24] = metadata['w3']
+        ctrls[22] = metadata['w3']
     if 'l4' in metadata:
-        ctrls[25] = metadata['l4']
+        ctrls[23] = metadata['l4']
     if 'w4' in metadata:
-        ctrls[26] = metadata['w4']
+        ctrls[24] = metadata['w4']
     if 'l5' in metadata:
-        ctrls[27] = metadata['l5']
+        ctrls[25] = metadata['l5']
     if 'w5' in metadata:
-        ctrls[28] = metadata['w5']
+        ctrls[26] = metadata['w5']
     # save_metadata_json
     # save_metadata_png
     if 'img2img' in metadata:
-        ctrls[31] = metadata['img2img']
+        ctrls[29] = metadata['img2img']
         if 'start_step' in metadata:
             if ctrls[3] == 'Speed':
-               ctrls[32] = round(metadata['start_step'] / ctrls[10], 2)
+                ctrls[30] = round(metadata['start_step'] / constants.STEPS_SPEED, 2)
+            elif ctrls[3] == 'Quality':
+                ctrls[30] = round(metadata['start_step'] / constants.STEPS_QUALITY, 2)
             else:
-                ctrls[32] = round(metadata['start_step'] / ctrls[12], 2)
+                ctrls[30] = round(metadata['start_step'] / ctrls[10], 2)
         if 'denoise' in metadata:
-            ctrls[33] = metadata['denoise']
+            ctrls[31] = metadata['denoise']
 
     return ctrls    
 
@@ -177,13 +182,12 @@ def load_settings():
     settings['style'] = 'cinematic-default'
     settings['prompt'] = ''
     settings['negative_prompt'] = ''
-    settings['steps_speed'] = 30
-    settings['steps_quality'] = 60
-    settings['switch_step'] = 0.67
+    settings['performance'] = 'Speed'
+    settings['custom_steps'] = 24
+    settings['custom_switch'] = 0.75
     settings['img2img_mode'] = False
     settings['img2img_start_step'] = 0.06
     settings['img2img_denoise'] = 0.94
-    settings['performance'] = 'Speed'
     settings['resolution'] = get_resolution_string(1152, 896)
     settings['sampler'] = 'dpmpp_2m_sde_gpu'
     settings['scheduler'] = 'karras'
@@ -248,7 +252,9 @@ with shared.gradio_root:
 
         with gr.Column(scale=0.5, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):
-                performance_selection = gr.Radio(label='Performance', choices=['Speed', 'Quality'], value=settings['performance'])
+                performance = gr.Radio(label='Performance', choices=['Speed', 'Quality', 'Custom'], value=settings['performance'])
+                custom_steps = gr.Slider(label='Custom Steps', minimum=10, maximum=200, step=1, value=settings['custom_steps'], visible=settings['performance'] == 'Custom')
+                custom_switch = gr.Slider(label='Custom Switch', minimum=0.2, maximum=1.0, step=0.01, value=settings['custom_switch'], visible=settings['performance'] == 'Custom')
                 resolution = gr.Dropdown(label='Resolution (width × height)', choices=list(resolutions.keys()), value=settings['resolution'])
                 style_selection = gr.Dropdown(label='Style', choices=style_keys, value=settings['style'])
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=settings['image_number'])
@@ -266,6 +272,11 @@ with shared.gradio_root:
                         return s
 
                 seed_random.change(random_checked, inputs=[seed_random], outputs=[image_seed])
+
+                def performance_changed(value):
+                    return gr.update(visible=value == 'Custom'), gr.update(visible=value == 'Custom')
+
+                performance.change(fn=performance_changed, inputs=[performance], outputs=[custom_steps, custom_switch])
 
             with gr.Tab(label='Models'):
                 with gr.Row():
@@ -288,10 +299,6 @@ with shared.gradio_root:
                 sampler_name = gr.Dropdown(label='Sampler', choices=['dpmpp_2m_sde_gpu', 'dpmpp_2m_sde', 'dpmpp_3m_sde_gpu', 'dpmpp_3m_sde',
                     'dpmpp_sde_gpu', 'dpmpp_sde', 'dpmpp_2s_ancestral', 'euler', 'euler_ancestral', 'heun', 'dpm_2', 'dpm_2_ancestral'], value=settings['sampler'])
                 scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'simple', 'ddim_uniform'], value=settings['scheduler'])
-                sampler_steps_speed = gr.Slider(label='Sampler Steps (Speed)', minimum=10, maximum=100, step=1, value=settings['steps_speed'])
-                switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.2, maximum=1.0, step=0.01, value=settings['switch_step'])
-                sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=settings['steps_quality'])
-                switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.2, maximum=1.0, step=0.01, value=settings['switch_step'])
                 img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.5, step=0.01, value=settings['img2img_start_step'])
                 img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.5, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=settings['sharpness'])
@@ -316,8 +323,8 @@ with shared.gradio_root:
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, advanced_column)
         ctrls = [
             prompt, negative_prompt, style_selection,
-            performance_selection, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
-            sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg
+            performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
+            custom_steps, custom_switch, cfg
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png, img2img_mode, img2img_start_step, img2img_denoise]
         load_images_button.upload(fn=load_images_handler, inputs=[load_images_button], outputs=gallery)
