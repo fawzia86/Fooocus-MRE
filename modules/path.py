@@ -21,7 +21,6 @@ def load_paths():
                     path_outputs = paths_obj['path_outputs']
             except Exception as e:
                 print(e)
-                pass
             finally:
                 paths_file.close()
 
