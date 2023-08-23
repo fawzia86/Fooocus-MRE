@@ -162,10 +162,9 @@ def load_prompt_handler(files, *args):
                         pass
     return ctrls
 
-def load_image_handler(files):
-    if len(files) > 0:
-        path = files[0].name
-    return [path]
+
+def load_images_handler(files):
+    return list(map(lambda x: x.name, files))
 
 
 def load_settings():
@@ -239,10 +238,10 @@ with shared.gradio_root:
                     with gr.Row():
                         img2img_mode = gr.Checkbox(label='Image-2-Image', value=settings['img2img_mode'], elem_classes='type_small_row')
                     with gr.Row():
-                        load_image_button = gr.UploadButton(label='Load Image', file_count=1, file_types=["image"], elem_classes='type_small_row')
+                        load_images_button = gr.UploadButton(label='Load Image(s)', file_count='multiple', file_types=["image"], elem_classes='type_small_row')
                 with gr.Column(scale=0.15, min_width=0):
                     with gr.Row():
-                        load_prompt_button = gr.UploadButton(label='Load Prompt', file_count=1, file_types=['.json', '.png'], elem_classes='type_small_row')
+                        load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png'], elem_classes='type_small_row')
                     with gr.Row():
                         run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row')
             with gr.Row():
@@ -322,7 +321,7 @@ with shared.gradio_root:
             sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png, img2img_mode, img2img_start_step, img2img_denoise]
-        load_image_button.upload(fn=load_image_handler, inputs=[load_image_button], outputs=gallery)
+        load_images_button.upload(fn=load_images_handler, inputs=[load_images_button], outputs=gallery)
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed)\
             .then(fn=generate_clicked, inputs=ctrls + [gallery], outputs=[run_button, progress_html, progress_window, gallery, metadata_viewer])

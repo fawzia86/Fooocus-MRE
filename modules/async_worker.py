@@ -81,11 +81,12 @@ def worker():
                 f'Step {step}/{total_steps} in the {i}-th Sampling',
                 y)])
 
+        gallery_size = len(gallery)
         for i in range(image_number):
-            if img2img_mode and len(gallery) > 0:
+            if img2img_mode and gallery_size > 0:
                 start_step = round(steps * img2img_start_step)
                 denoise = img2img_denoise
-                gallery_entry = gallery[0]
+                gallery_entry = gallery[i % gallery_size]
                 input_image_path = gallery_entry['name']
             else:
                 start_step = 0
