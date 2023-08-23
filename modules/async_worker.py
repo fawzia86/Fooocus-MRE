@@ -20,7 +20,8 @@ def worker():
     import modules.patch
     import fooocus_version
 
-    from modules.sdxl_styles import apply_style, aspect_ratios
+    from modules.resolutions import get_resolution_string, resolutions
+    from modules.sdxl_styles import apply_style
     from modules.private_logger import log
 
     try:
@@ -34,7 +35,7 @@ def worker():
 
     def handler(task):
         prompt, negative_prompt, style_selection, performance_selection, \
-        aspect_ratios_selection, image_number, image_seed, sharpness, sampler_name, scheduler, \
+        resolution, image_number, image_seed, sharpness, sampler_name, scheduler, \
         sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_png, \
@@ -58,7 +59,7 @@ def worker():
             steps = sampler_steps_quality
             switch = round(sampler_steps_quality * switch_step_quality)
 
-        width, height = aspect_ratios[aspect_ratios_selection]
+        width, height = resolutions[resolution]
 
         results = []
         metadata_strings = []
@@ -115,13 +116,14 @@ def worker():
                     ('Negative Prompt', negative_prompt),
                     ('Style', style_selection),
                     ('Seed', seed),
-                    ('Resolution', str((width, height))),
+                    ('Resolution', get_resolution_string(width, height)),
                     ('Performance', performance_selection),
                     ('Sampler & Scheduler & Steps', str((sampler_name, scheduler, steps, switch))),
                     ('Sharpness', sharpness),
                     ('CFG & CLIP Skips', str((cfg, base_clip_skip, refiner_clip_skip))),
                     ('Base Model', base_model_name),
                     ('Refiner Model', refiner_model_name),
+                    ('Image-2-Image', (img2img_mode, start_step, denoise, metadata['input_image']))
                 ]
                 for n, w in loras:
                     if n != 'None':

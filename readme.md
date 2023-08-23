@@ -123,6 +123,7 @@ Below things are already inside the software, and **users do not need to do anyt
 10. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
 11. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
 12. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+13. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
 
 ## Thanks
 

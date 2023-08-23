@@ -9,7 +9,8 @@ import modules.html
 import modules.async_worker as worker
 import json
 
-from modules.sdxl_styles import style_keys, aspect_ratios
+from modules.resolutions import get_resolution_string, resolutions
+from modules.sdxl_styles import style_keys
 from collections.abc import Mapping
 from PIL import Image
 from os.path import exists
@@ -59,10 +60,10 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[2] = metadata['style']
     if 'performance' in metadata:
         ctrls[3] = metadata['performance']
-    if 'resolution' in metadata:
+    if 'width' in metadata and 'height' in metadata:
+        ctrls[4] = get_resolution_string(metadata['width'], metadata['height'])
+    elif 'resolution' in metadata:
         ctrls[4] = metadata['resolution']
-    elif 'width' in metadata and 'height' in metadata:
-        ctrls[4] = str(metadata['width'])+'×'+str(metadata['height'])
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
@@ -185,7 +186,7 @@ def load_settings():
     settings['img2img_start_step'] = 0.06
     settings['img2img_denoise'] = 0.94
     settings['performance'] = 'Speed'
-    settings['resolution'] = '1152×896'
+    settings['resolution'] = get_resolution_string(1152, 896)
     settings['sampler'] = 'dpmpp_2m_sde_gpu'
     settings['scheduler'] = 'karras'
     settings['cfg'] = 7.0
@@ -236,7 +237,7 @@ with shared.gradio_root:
                     prompt = gr.Textbox(show_label=False, placeholder='Type prompt here.', container=False, autofocus=True, elem_classes='type_row', lines=1024, value=settings['prompt'])
                 with gr.Column(scale=0.15, min_width=0):
                     with gr.Row():
-                        img2img_mode = gr.Checkbox(label='img2img', value=settings['img2img_mode'], elem_classes='type_small_row')
+                        img2img_mode = gr.Checkbox(label='Image-2-Image', value=settings['img2img_mode'], elem_classes='type_small_row')
                     with gr.Row():
                         load_image_button = gr.UploadButton(label='Load Image', file_count=1, file_types=["image"], elem_classes='type_small_row')
                 with gr.Column(scale=0.15, min_width=0):
@@ -246,10 +247,12 @@ with shared.gradio_root:
                         run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row')
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
-        with gr.Column(scale=0.52, visible=settings['advanced_mode']) as right_col:
-            with gr.Tab(label='Setting'):
+
+        with gr.Column(scale=0.5, visible=settings['advanced_mode']) as advanced_column:
+            with gr.Tab(label='Settings'):
                 performance_selection = gr.Radio(label='Performance', choices=['Speed', 'Quality'], value=settings['performance'])
-                aspect_ratios_selection = gr.Radio(label='Aspect Ratios (width × height)', choices=list(aspect_ratios.keys()), value=settings['resolution'])
+                resolution = gr.Dropdown(label='Resolution (width × height)', choices=list(resolutions.keys()), value=settings['resolution'])
+                style_selection = gr.Dropdown(label='Style', choices=style_keys, value=settings['style'])
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=settings['image_number'])
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.", value=settings['negative_prompt'])
                 seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
@@ -266,8 +269,6 @@ with shared.gradio_root:
 
                 seed_random.change(random_checked, inputs=[seed_random], outputs=[image_seed])
 
-            with gr.Tab(label='Style'):
-                style_selection = gr.Radio(show_label=False, container=True, choices=style_keys, value=settings['style'])
             with gr.Tab(label='Models'):
                 with gr.Row():
                     base_model = gr.Dropdown(label='SDXL Base Model', choices=modules.path.model_filenames, value=settings['base_model'], show_label=True)
@@ -281,6 +282,7 @@ with shared.gradio_root:
                             lora_ctrls += [lora_model, lora_weight]
                 with gr.Row():
                     model_refresh = gr.Button(label='Refresh', value='\U0001f504 Refresh All Files', variant='secondary', elem_classes='refresh_button')
+
             with gr.Tab(label='Advanced'):
                 cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=settings['cfg'])
                 base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=settings['base_clip_skip'])
@@ -292,8 +294,8 @@ with shared.gradio_root:
                 switch_step_speed = gr.Slider(label='Switch Step (Speed)', minimum=0.2, maximum=1.0, step=0.01, value=settings['switch_step'])
                 sampler_steps_quality = gr.Slider(label='Sampler Steps (Quality)', minimum=20, maximum=200, step=1, value=settings['steps_quality'])
                 switch_step_quality = gr.Slider(label='Switch Step (Quality)', minimum=0.2, maximum=1.0, step=0.01, value=settings['switch_step'])
-                img2img_start_step = gr.Slider(label='Img2img Start Step', minimum=0.0, maximum=0.5, step=0.01, value=settings['img2img_start_step'])
-                img2img_denoise = gr.Slider(label='Img2img Denoise', minimum=0.5, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
+                img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.5, step=0.01, value=settings['img2img_start_step'])
+                img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.5, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=settings['sharpness'])
                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
 
@@ -306,16 +308,17 @@ with shared.gradio_root:
                     return results
 
                 model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls)
+
             with gr.Tab(label='Metadata'):
                 with gr.Row():
                     save_metadata_json = gr.Checkbox(label='Save Metadata in JSON', value=settings['save_metadata_json'])
                     save_metadata_png = gr.Checkbox(label='Save Metadata in PNG', value=settings['save_metadata_png'])
                 metadata_viewer = gr.JSON(label='Metadata')
 
-        advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, right_col)
+        advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, advanced_column)
         ctrls = [
             prompt, negative_prompt, style_selection,
-            performance_selection, aspect_ratios_selection, image_number, image_seed, sharpness, sampler_name, scheduler,
+            performance_selection, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
             sampler_steps_speed, switch_step_speed, sampler_steps_quality, switch_step_quality, cfg
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png, img2img_mode, img2img_start_step, img2img_denoise]
