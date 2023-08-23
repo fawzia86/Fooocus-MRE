@@ -22,7 +22,9 @@ def generate_clicked(*args):
         gr.update(visible=True, value=modules.html.make_progress_html(1, 'Processing text encoding ...')), \
         gr.update(visible=True, value=None), \
         gr.update(visible=False), \
-        gr.update(value=None)
+        gr.update(), \
+        gr.update(value=None), \
+        gr.update()
 
     worker.buffer.append(list(args))
     finished = False
@@ -37,15 +39,19 @@ def generate_clicked(*args):
                     gr.update(visible=True, value=modules.html.make_progress_html(percentage, title)), \
                     gr.update(visible=True, value=image) if image is not None else gr.update(), \
                     gr.update(visible=False), \
+                    gr.update(), \
+                    gr.update(), \
                     gr.update()
             if flag == 'results':
                 yield gr.update(interactive=True), \
                     gr.update(visible=False), \
                     gr.update(visible=False), \
-                    gr.update(visible=True, value=product), \
+                    gr.update(visible=True), \
+                    gr.update(value=product), \
+                    gr.update(), \
                     gr.update()
             if flag == 'metadatas':
-                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product)
+                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=1)
                 finished = True
     return
 
@@ -167,7 +173,14 @@ def load_prompt_handler(_file, *args):
 
 
 def load_images_handler(files):
-    return list(map(lambda x: x.name, files))
+    return gr.update(value=True), list(map(lambda x: x.name, files)), gr.update(selected=0)
+
+
+def output_to_input_handler(gallery):
+    if len(gallery) == 0:
+        return gr.update(value=False), [], gr.update()
+    else:
+        return gr.update(value=True), list(map(lambda x: x['name'], gallery)), gr.update(selected=0)
 
 
 settings = load_settings()
@@ -178,7 +191,12 @@ with shared.gradio_root:
         with gr.Column():
             progress_window = gr.Image(label='Preview', show_label=True, height=640, visible=False)
             progress_html = gr.HTML(value=modules.html.make_progress_html(32, 'Progress 32%'), visible=False, elem_id='progress-bar', elem_classes='progress-bar')
-            gallery = gr.Gallery(label='Gallery', show_label=False, object_fit='contain', height=720, visible=True)
+            with gr.Column() as gallery_holder:
+                with gr.Tabs(selected=1) as gallery_tabs:
+                    with gr.Tab(label='Input', id=0):
+                        input_gallery = gr.Gallery(label='Input', show_label=False, object_fit='contain', height=720, visible=True)
+                    with gr.Tab(label='Output', id=1):
+                        output_gallery = gr.Gallery(label='Output', show_label=False, object_fit='contain', height=720, visible=True)
             with gr.Row(elem_classes='type_row'):
                 with gr.Column(scale=0.85):
                     prompt = gr.Textbox(show_label=False, placeholder='Type prompt here.', container=False, autofocus=True, elem_classes='type_row', lines=1024, value=settings['prompt'])
@@ -189,6 +207,17 @@ with shared.gradio_root:
                         run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row')
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
+
+            def verify_input(img2img, gallery_in, gallery_out):
+                if img2img and len(gallery_in) == 0:
+                    if len(gallery_out) == 0:
+                        gr.Warning('Image-2-Image: disabled (no images available)')
+                        return gr.update(value=False), gr.update(), gr.update()
+                    else:
+                        gr.Info('Image-2-Image: imported output as input')
+                        return gr.update(), list(map(lambda x: x['name'], gallery_out)), gr.update()
+                else:
+                    return gr.update(), gr.update(), gr.update()
 
         with gr.Column(scale=0.5, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):
@@ -202,8 +231,9 @@ with shared.gradio_root:
                 seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
                 image_seed = gr.Number(label='Seed', value=settings['seed'], precision=0, visible=not settings['seed_random'])
                 with gr.Row():
-                    load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png'], elem_classes='type_small_row')
-                    load_images_button = gr.UploadButton(label='Load Image(s)', file_count='multiple', file_types=["image"], elem_classes='type_small_row')
+                    load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png'], elem_classes='type_small_row', min_width=0)
+                    load_images_button = gr.UploadButton(label='Load Image(s)', file_count='multiple', file_types=["image"], elem_classes='type_small_row', min_width=0)
+                    output_to_input_button = gr.Button(label='Output to Input', value='Output to Input', elem_classes='type_small_row', min_width=0)
 
                 def random_checked(r):
                     return gr.update(visible=not r)
@@ -220,6 +250,8 @@ with shared.gradio_root:
                     return gr.update(visible=value == 'Custom'), gr.update(visible=value == 'Custom')
 
                 performance.change(fn=performance_changed, inputs=[performance], outputs=[custom_steps, custom_switch])
+                load_images_button.upload(fn=load_images_handler, inputs=[load_images_button], outputs=[img2img_mode, input_gallery, gallery_tabs])
+                output_to_input_button.click(output_to_input_handler, inputs=output_gallery, outputs=[img2img_mode, input_gallery, gallery_tabs])
 
             with gr.Tab(label='Models'):
                 with gr.Row():
@@ -270,10 +302,10 @@ with shared.gradio_root:
             custom_steps, custom_switch, cfg
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png, img2img_mode, img2img_start_step, img2img_denoise]
-        load_images_button.upload(fn=load_images_handler, inputs=[load_images_button], outputs=gallery)
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
-        run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed)\
-            .then(fn=generate_clicked, inputs=ctrls + [gallery], outputs=[run_button, progress_html, progress_window, gallery, metadata_viewer])
+        run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
+            .then(fn=verify_input, inputs=[img2img_mode, input_gallery, output_gallery], outputs=[img2img_mode, input_gallery, output_gallery]) \
+            .then(fn=generate_clicked, inputs=ctrls + [input_gallery], outputs=[run_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default=None, help="Set the listen port.")
