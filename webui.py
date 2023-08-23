@@ -135,31 +135,30 @@ def metadata_to_ctrls(metadata, ctrls):
     return ctrls    
 
 
-def load_prompt_handler(files, *args):
+def load_prompt_handler(_file, *args):
     ctrls=list(args)
-    if len(files) > 0:
-        path = files[0].name
-        if path.endswith('.json'):
-            with open(path, encoding='utf-8') as json_file:
+    path = _file.name
+    if path.endswith('.json'):
+        with open(path, encoding='utf-8') as json_file:
+            try:
+                json_obj = json.load(json_file)
+                metadata_to_ctrls(json_obj, ctrls)
+            except Exception as e:
+                print(e)
+                pass
+            finally:
+                json_file.close()
+    elif path.endswith('.png'):
+        with open(path, 'rb') as png_file:
+            image = Image.open(png_file)
+            png_file.close()
+            if 'Comment' in image.info:
                 try:
-                    json_obj = json.load(json_file)
-                    metadata_to_ctrls(json_obj, ctrls)
+                    metadata = json.loads(image.info['Comment'])
+                    metadata_to_ctrls(metadata, ctrls)
                 except Exception as e:
                     print(e)
                     pass
-                finally:
-                    json_file.close()
-        elif path.endswith('.png'):
-            with open(path, 'rb') as png_file:
-                image = Image.open(png_file)
-                png_file.close()
-                if 'Comment' in image.info:
-                    try:
-                        metadata = json.loads(image.info['Comment'])
-                        metadata_to_ctrls(metadata, ctrls)
-                    except Exception as e:
-                        print(e)
-                        pass
     return ctrls
 
 
