@@ -17,7 +17,7 @@ def prepare_environment():
                                    f"pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url {torch_index_url}")
     requirements_file = os.environ.get('REQS_FILE', "requirements_versions.txt")
 
-    xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.20')
+    xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.21')
 
     comfy_repo = os.environ.get('COMFY_REPO', "https://github.com/comfyanonymous/ComfyUI")
     comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "f081017c1a20a5d9cfae9005fd0898502e3356be")
