@@ -274,8 +274,8 @@ with shared.gradio_root:
                 sampler_name = gr.Dropdown(label='Sampler', choices=['dpmpp_2m_sde_gpu', 'dpmpp_2m_sde', 'dpmpp_3m_sde_gpu', 'dpmpp_3m_sde',
                     'dpmpp_sde_gpu', 'dpmpp_sde', 'dpmpp_2s_ancestral', 'euler', 'euler_ancestral', 'heun', 'dpm_2', 'dpm_2_ancestral'], value=settings['sampler'])
                 scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'simple', 'ddim_uniform'], value=settings['scheduler'])
-                img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.5, step=0.01, value=settings['img2img_start_step'])
-                img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.5, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
+                img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
+                img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=settings['sharpness'])
                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
 
