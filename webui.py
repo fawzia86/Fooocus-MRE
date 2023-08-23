@@ -69,7 +69,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[31] = False
+        ctrls[32] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -137,7 +137,7 @@ def metadata_to_ctrls(metadata, ctrls):
                 ctrls[30] = round(metadata['start_step'] / ctrls[10], 2)
         if 'denoise' in metadata:
             ctrls[31] = metadata['denoise']
-
+    # seed_random
     return ctrls    
 
 
@@ -184,12 +184,12 @@ with shared.gradio_root:
                     prompt = gr.Textbox(show_label=False, placeholder='Type prompt here.', container=False, autofocus=True, elem_classes='type_row', lines=1024, value=settings['prompt'])
                 with gr.Column(scale=0.15, min_width=0):
                     with gr.Row():
-                        img2img_mode = gr.Checkbox(label='Image-2-Image', value=settings['img2img_mode'], elem_classes='type_small_row')
-                    with gr.Row():
                         load_images_button = gr.UploadButton(label='Load Image(s)', file_count='multiple', file_types=["image"], elem_classes='type_small_row')
-                with gr.Column(scale=0.15, min_width=0):
                     with gr.Row():
                         load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png'], elem_classes='type_small_row')
+                with gr.Column(scale=0.15, min_width=0):
+                    with gr.Row():
+                        img2img_mode = gr.Checkbox(label='Image-2-Image', value=settings['img2img_mode'], elem_classes='type_small_row')
                     with gr.Row():
                         run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row')
             with gr.Row():
