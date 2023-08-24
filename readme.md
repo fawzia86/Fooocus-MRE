@@ -74,7 +74,7 @@ Thanks to [camenduru](https://github.com/camenduru)'s codes!
 The command lines are
 
     git clone https://github.com/MoonRide303/Fooocus-MRE.git
-    cd Fooocus
+    cd Fooocus-MRE
     conda env create -f environment.yaml
     conda activate fooocus
     pip install -r requirements_versions.txt
