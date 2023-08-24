@@ -24,7 +24,7 @@ Fooocus also developed many "fooocus-only" features for advanced users to get pe
 
 You can directly download Fooocus with:
 
-**[>>> Click here to download <<<](https://github.com/lllyasviel/Fooocus/releases/download/1.0.35/Fooocus_win64_1-1-1035.7z)**
+**[>>> Click here to download <<<](https://github.com/MoonRide303/Fooocus-MRE/releases/download/v1.0.40/Fooocus-MRE-v1.0.40.7z)**
 
 After you download the file, please uncompress it, and then run the "run.bat".
 
