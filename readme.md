@@ -63,6 +63,7 @@ Please open an issue if you use similar devices but still cannot achieve accepta
 | Colab | Info
 | --- | --- |
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lllyasviel/Fooocus/blob/main/colab.ipynb) | Fooocus Colab (Official Version)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MoonRide303/Fooocus-MRE/blob/moonride-main/colab.ipynb) | Fooocus-MRE Colab (MoonRide Edition)
 
 Note that sometimes this Colab will say like "you must restart the runtime in order to use newly installed XX". This can be safely ignored.
 
