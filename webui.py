@@ -146,11 +146,13 @@ def metadata_to_ctrls(metadata, ctrls):
     if 'revision' in metadata:
         ctrls[32] = metadata['revision']
     if 'zero_out' in metadata:
-        ctrls[33] = metadata['zero_out']
+        ctrls[33] = metadata['zero_out_positive']
+    if 'zero_out' in metadata:
+        ctrls[34] = metadata['zero_out_negative']
     if 'revision_weight' in metadata:
-        ctrls[34] = metadata['revision_weight']
+        ctrls[35] = metadata['revision_weight']
     if 'revision_noise' in metadata:
-        ctrls[35] = metadata['revision_noise']
+        ctrls[36] = metadata['revision_noise']
     # seed_random
     return ctrls    
 
@@ -216,16 +218,16 @@ with shared.gradio_root:
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
 
-            def verify_input(img2img, gallery_in, gallery_out):
+            def verify_input(img2img, revision, gallery_in, gallery_out):
                 if img2img and len(gallery_in) == 0:
                     if len(gallery_out) == 0:
-                        gr.Warning('Image-2-Image: disabled (no images available)')
-                        return gr.update(value=False), gr.update(), gr.update()
+                        gr.Warning('Image-2-Image / Revision: disabled (no images available)')
+                        return gr.update(value=False), gr.update(value=False), gr.update(), gr.update()
                     else:
-                        gr.Info('Image-2-Image: imported output as input')
-                        return gr.update(), list(map(lambda x: x['name'], gallery_out)), gr.update()
+                        gr.Info('Image-2-Image / Revision: imported output as input')
+                        return gr.update(), gr.update(), list(map(lambda x: x['name'], gallery_out)), gr.update()
                 else:
-                    return gr.update(), gr.update(), gr.update()
+                    return gr.update(), gr.update(), gr.update(), gr.update()
 
         with gr.Column(scale=0.5, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):
@@ -263,14 +265,16 @@ with shared.gradio_root:
                 output_to_input_button.click(output_to_input_handler, inputs=output_gallery, outputs=[img2img_mode, input_gallery, gallery_tabs])
 
             with gr.Tab(label='Image-2-Image'):
+                revision_mode = gr.Checkbox(label='Revision', value=settings['revision_mode'], elem_classes='type_small_row')
                 with gr.Row():
-                    revision_mode = gr.Checkbox(label='Revision', value=settings['revision_mode'], elem_classes='type_small_row')
-                    zero_out = gr.Checkbox(label='Zero Out Prompts', value=settings['zero_out'], elem_classes='type_small_row')
+                    zero_out_positive = gr.Checkbox(label='Zero Out Positive Prompt', value=settings['zero_out_positive'], elem_classes='type_small_row')
+                    zero_out_negative = gr.Checkbox(label='Zero Out Negative Prompt', value=settings['zero_out_negative'], elem_classes='type_small_row')
                 revision_weight = gr.Slider(label='Revision Weight', minimum=-2, maximum=2, step=0.01, value=settings['revision_weight'])
                 revision_noise = gr.Slider(label='Revision Noise', minimum=0, maximum=1, step=0.01, value=settings['revision_noise'])
-                revision_ctrls = [revision_mode, zero_out, revision_weight, revision_noise]
                 img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
                 img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
+
+                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, zero_out_positive, zero_out_negative, revision_weight, revision_noise]
 
             with gr.Tab(label='Models'):
                 with gr.Row():
@@ -318,11 +322,10 @@ with shared.gradio_root:
             performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
             custom_steps, custom_switch, cfg
         ]
-        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls \
-            + [save_metadata_json, save_metadata_png, img2img_mode, img2img_start_step, img2img_denoise] + revision_ctrls
+        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png] + img2img_ctrls
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
-            .then(fn=verify_input, inputs=[img2img_mode, input_gallery, output_gallery], outputs=[img2img_mode, input_gallery, output_gallery]) \
+            .then(fn=verify_input, inputs=[img2img_mode, revision_mode, input_gallery, output_gallery], outputs=[img2img_mode, revision_mode, input_gallery, output_gallery]) \
             .then(fn=generate_clicked, inputs=ctrls + [input_gallery], outputs=[run_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
 
 parser = argparse.ArgumentParser()

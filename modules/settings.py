@@ -23,7 +23,8 @@ def load_settings():
     settings['img2img_start_step'] = 0.06
     settings['img2img_denoise'] = 0.94
     settings['revision_mode'] = False
-    settings['zero_out'] = False
+    settings['zero_out_positive'] = False
+    settings['zero_out_negative'] = False
     settings['revision_weight'] = 1.0
     settings['revision_noise'] = 0.0
     settings['resolution'] = get_resolution_string(1152, 896)

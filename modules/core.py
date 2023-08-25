@@ -8,7 +8,7 @@ import comfy.model_management
 import comfy.utils
 
 from comfy.sd import load_checkpoint_guess_config
-from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode
+from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode, ConditioningZeroOut
 from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cleanup_additional_models
 from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
 from modules.samplers_advanced import KSampler, KSamplerWithRefiner
@@ -22,6 +22,7 @@ opEmptyLatentImage = EmptyLatentImage()
 opVAEDecode = VAEDecode()
 opVAEEncode = VAEEncode()
 opImageScaleToTotalPixels = ImageScaleToTotalPixels()
+opConditioningZeroOut = ConditioningZeroOut()
 
 class StableDiffusionModel:
     def __init__(self, unet, vae, clip, clip_vision):
@@ -83,6 +84,11 @@ def encode_vae(vae, pixels):
 @torch.no_grad()
 def upscale(image):
     return opImageScaleToTotalPixels.upscale(image=image, upscale_method='bicubic', megapixels=1.0)[0]
+
+
+@torch.no_grad()
+def zero_out(conditioning):
+    return opConditioningZeroOut.zero_out(conditioning=conditioning)[0]
 
 
 def get_previewer(device, latent_format):

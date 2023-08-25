@@ -140,24 +140,22 @@ def clean_prompt_cond_caches():
 
 
 @torch.no_grad()
-def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip, \
-    input_image_path, start_step, denoise, revision, zero_out, revision_weight, revision_noise, callback):
-    global positive_conditions_cache, negative_conditions_cache, \
-        positive_conditions_refiner_cache, negative_conditions_refiner_cache
+def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip,
+    img2img, input_image_path, start_step, denoise, revision, zero_out_positive, zero_out_negative, revision_weight, revision_noise, callback):
+    global positive_conditions_cache, negative_conditions_cache, positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
     xl_base_patched.clip.clip_layer(base_clip_skip)
 
     positive_conditions = core.encode_prompt_condition(clip=xl_base_patched.clip, prompt=positive_prompt) if positive_conditions_cache is None else positive_conditions_cache
     negative_conditions = core.encode_prompt_condition(clip=xl_base_patched.clip, prompt=negative_prompt) if negative_conditions_cache is None else negative_conditions_cache
 
-    positive_conditions_cache = positive_conditions
-    negative_conditions_cache = negative_conditions
+    if zero_out_positive:
+        positive_conditions = core.zero_out(positive_conditions)
+    if zero_out_negative:
+        negative_conditions = core.zero_out(negative_conditions)
 
-    if input_image_path == None:
-        latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
-        force_full_denoise = True
-        denoise = None
-    else:
+    input_image = None
+    if input_image_path != None:
         with open(input_image_path, 'rb') as image_file:
             pil_image = Image.open(image_file)
             image = ImageOps.exif_transpose(pil_image)
@@ -166,8 +164,20 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
             image = np.array(image).astype(np.float32) / 255.0
             image = torch.from_numpy(image)[None,]
             input_image = core.upscale(image)
-            latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
-            force_full_denoise = False
+
+    if input_image == None or img2img == False:
+        latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
+        force_full_denoise = True
+        denoise = None
+    else:
+        latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
+        force_full_denoise = False
+
+    #if input_image != None and revision:
+        # TODO Revision
+
+    positive_conditions_cache = positive_conditions
+    negative_conditions_cache = negative_conditions
 
     if xl_refiner is not None:
 
