@@ -35,12 +35,13 @@ def worker():
         print(e)
 
     def handler(task):
-        prompt, negative_prompt, style, performance, \
-        resolution, image_number, image_seed, sharpness, sampler_name, scheduler, \
-        custom_steps, custom_switch, cfg, \
+        prompt, negative_prompt, style, performance, resolution, image_number, image_seed, \
+        sharpness, sampler_name, scheduler, custom_steps, custom_switch, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_png, \
-        img2img_mode, img2img_start_step, img2img_denoise, gallery = task
+        img2img_mode, img2img_start_step, img2img_denoise, \
+        revision_mode, zero_out, revision_weight, revision_noise, \
+        gallery = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
 
@@ -98,7 +99,8 @@ def worker():
                 input_image_path = None
 
             imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
-                cfg, base_clip_skip, refiner_clip_skip, input_image_path, start_step, denoise, callback=callback)
+                cfg, base_clip_skip, refiner_clip_skip, input_image_path, start_step, denoise,
+                revision_mode, zero_out, revision_weight, revision_noise, callback=callback)
 
             metadata = {
                 'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style,
@@ -110,6 +112,7 @@ def worker():
                 'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
                 'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode,
                 'start_step': start_step, 'denoise': denoise, 'input_image': None if input_image_path == None else os.path.basename(input_image_path),
+                'revision': revision_mode,'zero_out': zero_out, 'revision_weight': revision_weight, 'revision_noise': revision_noise,
                 'software': fooocus_version.full_version
             }
             metadata_string = json.dumps(metadata, ensure_ascii=False)
@@ -128,7 +131,8 @@ def worker():
                     ('CFG & CLIP Skips', str((cfg, base_clip_skip, refiner_clip_skip))),
                     ('Base Model', base_model_name),
                     ('Refiner Model', refiner_model_name),
-                    ('Image-2-Image', (img2img_mode, start_step, denoise, metadata['input_image']))
+                    ('Image-2-Image', (img2img_mode, start_step, denoise, metadata['input_image'])),
+                    ('Revision', (revision_mode, zero_out, revision_weight, revision_noise))
                 ]
                 for n, w in loras:
                     if n != 'None':
