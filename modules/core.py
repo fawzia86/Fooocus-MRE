@@ -56,6 +56,11 @@ def load_lora(model, lora_filename, strength_model=1.0, strength_clip=1.0):
 
 
 @torch.no_grad()
+def load_clip_vision(ckpt_filename):
+    return comfy.clip_vision.load(ckpt_filename)
+
+
+@torch.no_grad()
 def encode_prompt_condition(clip, prompt):
     return opCLIPTextEncode.encode(clip=clip, text=prompt)[0]
 

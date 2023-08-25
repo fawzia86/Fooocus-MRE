@@ -19,6 +19,8 @@ xl_refiner_hash = ''
 xl_base_patched: core.StableDiffusionModel = None
 xl_base_patched_hash = ''
 
+clip_vision: core.StableDiffusionModel = None
+clip_vision_hash = ''
 
 def refresh_base_model(name):
     global xl_base, xl_base_hash, xl_base_patched, xl_base_patched_hash
@@ -98,6 +100,21 @@ def refresh_loras(loras):
     xl_base_patched = model
     xl_base_patched_hash = str(loras)
     print(f'LoRAs loaded: {xl_base_patched_hash}')
+
+    return
+
+
+def refresh_clip_vision():
+    global clip_vision, clip_vision_hash
+    if clip_vision_hash == str(clip_vision):
+        return
+
+    model_name = modules.path.default_clip_vision_name
+    filename = os.path.join(modules.path.clip_vision_path, model_name)
+    clip_vision = core.load_clip_vision(filename)
+
+    clip_vision_hash = model_name
+    print(f'CLIP Vision model loaded: {clip_vision_hash}')
 
     return
 
