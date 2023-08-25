@@ -8,7 +8,7 @@ import comfy.model_management
 import comfy.utils
 
 from comfy.sd import load_checkpoint_guess_config
-from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode, ConditioningZeroOut
+from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode, ConditioningZeroOut, CLIPVisionEncode, unCLIPConditioning
 from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cleanup_additional_models
 from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
 from modules.samplers_advanced import KSampler, KSamplerWithRefiner
@@ -23,6 +23,9 @@ opVAEDecode = VAEDecode()
 opVAEEncode = VAEEncode()
 opImageScaleToTotalPixels = ImageScaleToTotalPixels()
 opConditioningZeroOut = ConditioningZeroOut()
+opCLIPVisionEncode = CLIPVisionEncode()
+opUnCLIPConditioning = unCLIPConditioning()
+
 
 class StableDiffusionModel:
     def __init__(self, unet, vae, clip, clip_vision):
@@ -89,6 +92,16 @@ def upscale(image):
 @torch.no_grad()
 def zero_out(conditioning):
     return opConditioningZeroOut.zero_out(conditioning=conditioning)[0]
+
+
+@torch.no_grad()
+def encode_clip_vision(clip_vision, image):
+    return opCLIPVisionEncode.encode(clip_vision=clip_vision, image=image)[0]
+
+
+@torch.no_grad()
+def apply_adm(conditioning, clip_vision_output, strength, noise_augmentation):
+    return opUnCLIPConditioning.apply_adm(conditioning=conditioning, clip_vision_output=clip_vision_output, strength=strength, noise_augmentation=noise_augmentation)[0]
 
 
 def get_previewer(device, latent_format):

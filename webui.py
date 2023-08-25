@@ -149,8 +149,8 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[33] = metadata['zero_out_positive']
     if 'zero_out' in metadata:
         ctrls[34] = metadata['zero_out_negative']
-    if 'revision_weight' in metadata:
-        ctrls[35] = metadata['revision_weight']
+    if 'revision_strength' in metadata:
+        ctrls[35] = metadata['revision_strength']
     if 'revision_noise' in metadata:
         ctrls[36] = metadata['revision_noise']
     # seed_random
@@ -269,12 +269,12 @@ with shared.gradio_root:
                 with gr.Row():
                     zero_out_positive = gr.Checkbox(label='Zero Out Positive Prompt', value=settings['zero_out_positive'], elem_classes='type_small_row')
                     zero_out_negative = gr.Checkbox(label='Zero Out Negative Prompt', value=settings['zero_out_negative'], elem_classes='type_small_row')
-                revision_weight = gr.Slider(label='Revision Weight', minimum=-2, maximum=2, step=0.01, value=settings['revision_weight'])
+                revision_strength = gr.Slider(label='Revision Strength', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength'])
                 revision_noise = gr.Slider(label='Revision Noise', minimum=0, maximum=1, step=0.01, value=settings['revision_noise'])
                 img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
                 img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
 
-                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, zero_out_positive, zero_out_negative, revision_weight, revision_noise]
+                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, zero_out_positive, zero_out_negative, revision_strength, revision_noise]
 
             with gr.Tab(label='Models'):
                 with gr.Row():

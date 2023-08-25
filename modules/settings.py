@@ -25,7 +25,7 @@ def load_settings():
     settings['revision_mode'] = False
     settings['zero_out_positive'] = False
     settings['zero_out_negative'] = False
-    settings['revision_weight'] = 1.0
+    settings['revision_strength'] = 1.0
     settings['revision_noise'] = 0.0
     settings['resolution'] = get_resolution_string(1152, 896)
     settings['sampler'] = 'dpmpp_2m_sde_gpu'

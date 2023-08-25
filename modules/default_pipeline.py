@@ -141,7 +141,7 @@ def clean_prompt_cond_caches():
 
 @torch.no_grad()
 def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip,
-    img2img, input_image_path, start_step, denoise, revision, zero_out_positive, zero_out_negative, revision_weight, revision_noise, callback):
+    img2img, input_image_path, start_step, denoise, revision, zero_out_positive, zero_out_negative, revision_strength, revision_noise, callback):
     global positive_conditions_cache, negative_conditions_cache, positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
     xl_base_patched.clip.clip_layer(base_clip_skip)
@@ -165,6 +165,7 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
             image = torch.from_numpy(image)[None,]
             input_image = core.upscale(image)
 
+
     if input_image == None or img2img == False:
         latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
         force_full_denoise = True
@@ -173,8 +174,11 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
         force_full_denoise = False
 
-    #if input_image != None and revision:
-        # TODO Revision
+    if input_image != None and revision:
+        clip_vision_output = core.encode_clip_vision(clip_vision, input_image)
+        positive_conditions = core.apply_adm(positive_conditions, clip_vision_output, revision_strength, revision_noise)
+    else:
+        clip_vision_output = None
 
     positive_conditions_cache = positive_conditions
     negative_conditions_cache = negative_conditions
@@ -185,6 +189,14 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
 
         positive_conditions_refiner = core.encode_prompt_condition(clip=xl_refiner.clip, prompt=positive_prompt) if positive_conditions_refiner_cache is None else positive_conditions_refiner_cache
         negative_conditions_refiner = core.encode_prompt_condition(clip=xl_refiner.clip, prompt=negative_prompt) if negative_conditions_refiner_cache is None else negative_conditions_refiner_cache
+
+        if zero_out_positive:
+            positive_conditions_refiner = core.zero_out(positive_conditions_refiner)
+        if zero_out_negative:
+            negative_conditions_refiner = core.zero_out(negative_conditions_refiner)
+
+        if clip_vision_output != None:
+            positive_conditions_refiner = core.apply_adm(positive_conditions_refiner, clip_vision_output, revision_strength, revision_noise)
 
         positive_conditions_refiner_cache = positive_conditions_refiner
         negative_conditions_refiner_cache = negative_conditions_refiner
