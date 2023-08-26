@@ -134,6 +134,8 @@ The codebase starts from an odd mixture of [Stable Diffusion web UI](https://git
 
 Thanks to [Stability AI](https://github.com/Stability-AI) for researching and opening their Stable Diffusion model series, [OpenAI](https://github.com/openai) for CLIP and [mlfoundations](https://github.com/mlfoundations) for OpenCLIP, and [LAION AI](https://github.com/LAION-AI) for data sets on which those models could learn.
 
+Special thanks to [twri](https://github.com/twri) and [3Diva](https://github.com/3Diva) for creating additional SDXL styles available in Fooocus.
+
 ## Update Log
 
 The log is [here](update_log.md).
