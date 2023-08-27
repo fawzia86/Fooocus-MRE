@@ -115,18 +115,19 @@ Below things are already inside the software, and **users do not need to do anyt
 ## MoonRide Edition Features
 
 1. Support for img2img mode.
-2. Customizable samplers.
-3. Customizable schedulers.
-4. Customizable steps, and base / refiner switch point.
-5. Customizable CFG.
-6. Customizable CLIP Skip.
-7. Displaying full metadata for generated images in the UI.
-8. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
-9. Ability to load prompt information from JSON and PNG files.
-10. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
-11. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
-12. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
-13. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
+2. Support for Revision (prompting with images).
+3. Customizable samplers.
+4. Customizable schedulers.
+5. Customizable steps, and base / refiner switch point.
+6. Customizable CFG.
+7. Customizable CLIP Skip.
+8. Displaying full metadata for generated images in the UI.
+9. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
+10. Ability to load prompt information from JSON and PNG files.
+11. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
+12. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
+13. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+14. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
 
 ## Thanks
 

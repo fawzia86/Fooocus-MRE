@@ -81,8 +81,8 @@ def download_models():
         load_file_from_url(url=url, model_dir=lorafile_path, file_name=file_name)
     for file_name, url in clip_vision_filenames:
         load_file_from_url(url=url, model_dir=clip_vision_path, file_name=file_name)
-    for file_name, url in controlnet_filenames:
-        load_file_from_url(url=url, model_dir=controlnet_path, file_name=file_name)
+#    for file_name, url in controlnet_filenames:
+#        load_file_from_url(url=url, model_dir=controlnet_path, file_name=file_name)
     return
 
 
