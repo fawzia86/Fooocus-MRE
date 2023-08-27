@@ -13,6 +13,7 @@ from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cl
 from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
 from modules.samplers_advanced import KSampler, KSamplerWithRefiner
 from modules.patch import patch_all
+from modules.path import embeddings_path
 
 comfy.model_management.DISABLE_SMART_MEMORY = True
 
@@ -45,7 +46,7 @@ class StableDiffusionModel:
 
 @torch.no_grad()
 def load_model(ckpt_filename):
-    unet, clip, vae, clip_vision = load_checkpoint_guess_config(ckpt_filename)
+    unet, clip, vae, clip_vision = load_checkpoint_guess_config(ckpt_filename, embedding_directory=embeddings_path)
     return StableDiffusionModel(unet=unet, clip=clip, vae=vae, clip_vision=clip_vision)
 
 

@@ -116,18 +116,19 @@ Below things are already inside the software, and **users do not need to do anyt
 
 1. Support for img2img mode.
 2. Support for Revision (prompting with images).
-3. Customizable samplers.
-4. Customizable schedulers.
-5. Customizable steps, and base / refiner switch point.
-6. Customizable CFG.
-7. Customizable CLIP Skip.
-8. Displaying full metadata for generated images in the UI.
-9. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
-10. Ability to load prompt information from JSON and PNG files.
-11. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
-12. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
-13. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
-14. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
+3. Support for embeddings (use "embedding:embedding_name" syntax, ComfyUI style).
+4. Customizable samplers.
+5. Customizable schedulers.
+6. Customizable steps, and base / refiner switch point.
+7. Customizable CFG.
+8. Customizable CLIP Skip.
+9. Displaying full metadata for generated images in the UI.
+10. Ability to save full metadata for generated images (as JSON or embedded in PNG, disabled by default).
+11. Ability to load prompt information from JSON and PNG files.
+12. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
+13. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
+14. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+15. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
 
 ## Thanks
 

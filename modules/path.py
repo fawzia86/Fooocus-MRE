@@ -7,6 +7,7 @@ from os.path import exists
 def load_paths():
     path_checkpoints = '../models/checkpoints/'
     path_loras = '../models/loras/'
+    path_embeddings = '../models/embeddings/'
     path_clip_vision = '../models/clip_vision/'
     path_controlnet = '../models/controlnet/'
     path_outputs = '../outputs/'
@@ -19,6 +20,8 @@ def load_paths():
                     path_checkpoints = paths_obj['path_checkpoints']
                 if 'path_loras' in paths_obj:
                     path_loras = paths_obj['path_loras']
+                if 'path_embeddings' in paths_obj:
+                    path_embeddings = paths_obj['path_embeddings']
                 if 'clip_vision' in paths_obj:
                     path_clip_vision = paths_obj['clip_vision']
                 if 'controlnet' in paths_obj:
@@ -31,13 +34,14 @@ def load_paths():
             finally:
                 paths_file.close()
 
-    return path_checkpoints, path_loras, path_clip_vision, path_controlnet, path_outputs
+    return path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_outputs
 
 
-path_checkpoints, path_loras, path_clip_vision, path_controlnet, path_outputs = load_paths()
+path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_outputs = load_paths()
 
 modelfile_path = path_checkpoints if os.path.isabs(path_checkpoints) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_checkpoints))
 lorafile_path = path_loras if os.path.isabs(path_loras) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_loras))
+embeddings_path = path_embeddings if os.path.isabs(path_embeddings) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_embeddings))
 clip_vision_path = path_clip_vision if os.path.isabs(path_loras) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_clip_vision))
 controlnet_path = path_loras if os.path.isabs(path_controlnet) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_controlnet))
 temp_outputs_path = path_outputs if os.path.isabs(path_outputs) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_outputs))
