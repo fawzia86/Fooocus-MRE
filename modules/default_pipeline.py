@@ -174,9 +174,11 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
         force_full_denoise = False
 
-    if input_image != None and revision:
+    if input_image != None and revision and revision_strength != 0:
+        print('Revision started')
         clip_vision_output = core.encode_clip_vision(clip_vision, input_image)
         positive_conditions = core.apply_adm(positive_conditions, clip_vision_output, revision_strength, revision_noise)
+        print('Revision finished')
     else:
         clip_vision_output = None
 
@@ -195,8 +197,9 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         if zero_out_negative:
             negative_conditions_refiner = core.zero_out(negative_conditions_refiner)
 
-        if clip_vision_output != None:
-            positive_conditions_refiner = core.apply_adm(positive_conditions_refiner, clip_vision_output, revision_strength, revision_noise)
+        # TODO Revision for refiner
+#        if clip_vision_output != None:
+#            positive_conditions_refiner = core.apply_adm(positive_conditions_refiner, clip_vision_output, revision_strength, revision_noise)
 
         positive_conditions_refiner_cache = positive_conditions_refiner
         negative_conditions_refiner_cache = negative_conditions_refiner

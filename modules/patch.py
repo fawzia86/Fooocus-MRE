@@ -6,6 +6,7 @@ import modules.anisotropic as anisotropic
 
 from comfy.samplers import model_management, lcm, math
 from comfy.ldm.modules.diffusionmodules.openaimodel import timestep_embedding, forward_timestep_embed
+from comfy.model_base import sdxl_pooled
 
 
 sharpness = 2.0
@@ -358,7 +359,7 @@ def unet_forward_patched(self, x, timesteps=None, context=None, y=None, control=
 
 
 def sdxl_encode_adm_patched(self, **kwargs):
-    clip_pooled = kwargs["pooled_output"]
+    clip_pooled = sdxl_pooled(kwargs, self.noise_augmentor)
     width = kwargs.get("width", 768)
     height = kwargs.get("height", 768)
     crop_w = kwargs.get("crop_w", 0)

@@ -183,7 +183,7 @@ def load_prompt_handler(_file, *args):
 
 
 def load_images_handler(files):
-    return gr.update(value=True), list(map(lambda x: x.name, files)), gr.update(selected=0)
+    return gr.update(value=True), list(map(lambda x: x.name, files)), gr.update(selected=0), gr.update(value=len(files))
 
 
 def output_to_input_handler(gallery):
@@ -243,8 +243,6 @@ with shared.gradio_root:
                 image_seed = gr.Number(label='Seed', value=settings['seed'], precision=0, visible=not settings['seed_random'])
                 with gr.Row():
                     load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png'], elem_classes='type_small_row', min_width=0)
-                    load_images_button = gr.UploadButton(label='Load Image(s)', file_count='multiple', file_types=["image"], elem_classes='type_small_row', min_width=0)
-                    output_to_input_button = gr.Button(label='Output to Input', value='Output to Input', elem_classes='type_small_row', min_width=0)
 
                 def random_checked(r):
                     return gr.update(visible=not r)
@@ -261,8 +259,6 @@ with shared.gradio_root:
                     return gr.update(visible=value == 'Custom'), gr.update(visible=value == 'Custom')
 
                 performance.change(fn=performance_changed, inputs=[performance], outputs=[custom_steps, custom_switch])
-                load_images_button.upload(fn=load_images_handler, inputs=[load_images_button], outputs=[img2img_mode, input_gallery, gallery_tabs])
-                output_to_input_button.click(output_to_input_handler, inputs=output_gallery, outputs=[img2img_mode, input_gallery, gallery_tabs])
 
             with gr.Tab(label='Image-2-Image'):
                 revision_mode = gr.Checkbox(label='Revision', value=settings['revision_mode'], elem_classes='type_small_row')
@@ -273,6 +269,12 @@ with shared.gradio_root:
                 revision_noise = gr.Slider(label='Revision Noise', minimum=0, maximum=1, step=0.01, value=settings['revision_noise'])
                 img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
                 img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
+                with gr.Row():
+                    load_images_button = gr.UploadButton(label='Load Image(s)', file_count='multiple', file_types=["image"], elem_classes='type_small_row', min_width=0)
+                    output_to_input_button = gr.Button(label='Output to Input', value='Output to Input', elem_classes='type_small_row', min_width=0)
+
+                load_images_button.upload(fn=load_images_handler, inputs=[load_images_button], outputs=[img2img_mode, input_gallery, gallery_tabs, image_number])
+                output_to_input_button.click(output_to_input_handler, inputs=output_gallery, outputs=[img2img_mode, input_gallery, gallery_tabs])
 
                 img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, zero_out_positive, zero_out_negative, revision_strength, revision_noise]
 

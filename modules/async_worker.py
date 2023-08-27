@@ -47,10 +47,16 @@ def worker():
 
         modules.patch.sharpness = sharpness
 
+        gallery_size = len(gallery)
+        if gallery_size == 0:
+            input_image_path = None
+            img2img_mode = False
+            revision_mode = False
+
         pipeline.refresh_base_model(base_model_name)
         pipeline.refresh_refiner_model(refiner_model_name)
         pipeline.refresh_loras(loras)
-        if revision_mode:
+        if revision_mode and revision_strength != 0:
             pipeline.refresh_clip_vision()
         pipeline.clean_prompt_cond_caches()
 
@@ -93,11 +99,7 @@ def worker():
             if gallery_size > 0:
                 gallery_entry = gallery[i % gallery_size]
                 input_image_path = gallery_entry['name']
-            else:
-                input_image_path = None
-                img2img_mode = False
-                revision_mode = False
-               
+
             if img2img_mode:
                 start_step = round(steps * img2img_start_step)
                 denoise = img2img_denoise
