@@ -10,7 +10,7 @@ import modules.async_worker as worker
 import modules.constants as constants
 import json
 
-from modules.settings import load_settings
+from modules.settings import default_settings
 from modules.resolutions import get_resolution_string, resolutions
 from modules.sdxl_styles import style_keys
 from collections.abc import Mapping
@@ -183,7 +183,7 @@ def output_to_input_handler(gallery):
         return gr.update(value=True), list(map(lambda x: x['name'], gallery)), gr.update(selected=0)
 
 
-settings = load_settings()
+settings = default_settings
 
 shared.gradio_root = gr.Blocks(title=fooocus_version.full_version, css=modules.html.css).queue()
 with shared.gradio_root:
