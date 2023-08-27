@@ -41,17 +41,21 @@ def worker():
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_png, \
         img2img_mode, img2img_start_step, img2img_denoise, \
         revision_mode, zero_out_positive, zero_out_negative, revision_strength, revision_noise, \
-        gallery = task
+        input_gallery, revision_gallery = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
 
         modules.patch.sharpness = sharpness
 
-        gallery_size = len(gallery)
-        if gallery_size == 0:
-            input_image_path = None
+        input_gallery_size = len(input_gallery)
+        if input_gallery_size == 0:
             img2img_mode = False
+            input_image_path = None
+
+        revision_gallery_size = len(revision_gallery)
+        if revision_gallery_size == 0:
             revision_mode = False
+            revision_image_path = None
 
         pipeline.refresh_base_model(base_model_name)
         pipeline.refresh_refiner_model(refiner_model_name)
@@ -94,11 +98,14 @@ def worker():
                 f'Step {step}/{total_steps} in the {i}-th Sampling',
                 y)])
 
-        gallery_size = len(gallery)
         for i in range(image_number):
-            if gallery_size > 0:
-                gallery_entry = gallery[i % gallery_size]
-                input_image_path = gallery_entry['name']
+            if input_gallery_size > 0:
+                input_gallery_entry = input_gallery[i % input_gallery_size]
+                input_image_path = input_gallery_entry['name']
+
+            if revision_gallery_size > 0:
+                revision_gallery_entry = revision_gallery[i % revision_gallery_size]
+                revision_image_path = revision_gallery_entry['name']
 
             if img2img_mode:
                 start_step = round(steps * img2img_start_step)
@@ -109,7 +116,7 @@ def worker():
 
             imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
                 cfg, base_clip_skip, refiner_clip_skip, img2img_mode, input_image_path, start_step, denoise,
-                revision_mode, zero_out_positive, zero_out_negative, revision_strength, revision_noise, callback=callback)
+                revision_mode, revision_image_path, zero_out_positive, zero_out_negative, revision_strength, revision_noise, callback=callback)
 
             metadata = {
                 'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style,
@@ -123,6 +130,7 @@ def worker():
                 'start_step': start_step, 'denoise': denoise, 'input_image': None if input_image_path == None else os.path.basename(input_image_path),
                 'revision': revision_mode, 'zero_out_positive': zero_out_positive, 'zero_out_negative': zero_out_negative,
                 'revision_strength': revision_strength, 'revision_noise': revision_noise,
+                'revision_image': None if revision_image_path == None else os.path.basename(revision_image_path),
                 'software': fooocus_version.full_version
             }
             metadata_string = json.dumps(metadata, ensure_ascii=False)
@@ -142,7 +150,7 @@ def worker():
                     ('Base Model', base_model_name),
                     ('Refiner Model', refiner_model_name),
                     ('Image-2-Image', (img2img_mode, start_step, denoise, metadata['input_image'])),
-                    ('Revision', (revision_mode, zero_out_positive, zero_out_negative, revision_strength, revision_noise))
+                    ('Revision', (revision_mode, zero_out_positive, zero_out_negative, revision_strength, revision_noise, metadata['revision_image']))
                 ]
                 for n, w in loras:
                     if n != 'None':

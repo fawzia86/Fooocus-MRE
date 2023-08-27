@@ -139,9 +139,22 @@ def clean_prompt_cond_caches():
     return
 
 
+def get_image(path):
+    image = None
+    with open(path, 'rb') as image_file:
+        pil_image = Image.open(image_file)
+        image = ImageOps.exif_transpose(pil_image)
+        image_file.close()
+        image = image.convert("RGB")
+        image = np.array(image).astype(np.float32) / 255.0
+        image = torch.from_numpy(image)[None,]
+        image = core.upscale(image)
+    return image
+
+
 @torch.no_grad()
 def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip,
-    img2img, input_image_path, start_step, denoise, revision, zero_out_positive, zero_out_negative, revision_strength, revision_noise, callback):
+    img2img, input_image_path, start_step, denoise, revision, revision_image_path, zero_out_positive, zero_out_negative, revision_strength, revision_noise, callback):
     global positive_conditions_cache, negative_conditions_cache, positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
     xl_base_patched.clip.clip_layer(base_clip_skip)
@@ -156,15 +169,11 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
 
     input_image = None
     if input_image_path != None:
-        with open(input_image_path, 'rb') as image_file:
-            pil_image = Image.open(image_file)
-            image = ImageOps.exif_transpose(pil_image)
-            image_file.close()
-            image = image.convert("RGB")
-            image = np.array(image).astype(np.float32) / 255.0
-            image = torch.from_numpy(image)[None,]
-            input_image = core.upscale(image)
+        input_image = get_image(input_image_path)
 
+    revision_image = None
+    if revision_image_path != None:
+        revision_image = get_image(revision_image_path)
 
     if input_image == None or img2img == False:
         latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
@@ -174,9 +183,9 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
         force_full_denoise = False
 
-    if input_image != None and revision and revision_strength != 0:
+    if revision_image != None and revision and revision_strength != 0:
         print('Revision started')
-        clip_vision_output = core.encode_clip_vision(clip_vision, input_image)
+        clip_vision_output = core.encode_clip_vision(clip_vision, revision_image)
         positive_conditions = core.apply_adm(positive_conditions, clip_vision_output, revision_strength, revision_noise)
         print('Revision finished')
     else:
