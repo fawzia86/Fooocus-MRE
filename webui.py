@@ -149,10 +149,15 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[33] = metadata['zero_out_positive']
     if 'zero_out' in metadata:
         ctrls[34] = metadata['zero_out_negative']
-    if 'revision_strength' in metadata:
-        ctrls[35] = metadata['revision_strength']
-    if 'revision_noise' in metadata:
-        ctrls[36] = metadata['revision_noise']
+    if 'revision_strength_1' in metadata:
+        ctrls[35] = metadata['revision_strength_1']
+    if 'revision_strength_2' in metadata:
+        ctrls[36] = metadata['revision_strength_2']
+    if 'revision_strength_3' in metadata:
+        ctrls[37] = metadata['revision_strength_3']
+    if 'revision_strength_4' in metadata:
+        ctrls[38] = metadata['revision_strength_4']
+
     # seed_random
     return ctrls    
 
@@ -187,7 +192,7 @@ def load_input_images_handler(files):
 
 
 def load_revision_images_handler(files):
-    return gr.update(value=True), list(map(lambda x: x.name, files)), gr.update(selected=1)
+    return gr.update(value=True), list(map(lambda x: x.name, files[:4])), gr.update(selected=1)
 
 
 def output_to_input_handler(gallery):
@@ -201,7 +206,7 @@ def output_to_revision_handler(gallery):
     if len(gallery) == 0:
         return gr.update(value=False), [], gr.update()
     else:
-        return gr.update(value=True), list(map(lambda x: x['name'], gallery)), gr.update(selected=1)
+        return gr.update(value=True), list(map(lambda x: x['name'], gallery[:4])), gr.update(selected=1)
 
 
 settings = load_settings()
@@ -274,12 +279,16 @@ with shared.gradio_root:
                 performance.change(fn=performance_changed, inputs=[performance], outputs=[custom_steps, custom_switch])
 
             with gr.Tab(label='Image-2-Image'):
-                revision_mode = gr.Checkbox(label='Revision', value=settings['revision_mode'], elem_classes='type_small_row')
+                revision_mode = gr.Checkbox(label='Revision (prompting with images)', value=settings['revision_mode'], elem_classes='type_small_row')
                 with gr.Row():
                     zero_out_positive = gr.Checkbox(label='Zero Out Positive Prompt', value=settings['zero_out_positive'], elem_classes='type_small_row')
                     zero_out_negative = gr.Checkbox(label='Zero Out Negative Prompt', value=settings['zero_out_negative'], elem_classes='type_small_row')
-                revision_strength = gr.Slider(label='Revision Strength', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength'])
-                revision_noise = gr.Slider(label='Revision Noise', minimum=0, maximum=1, step=0.01, value=settings['revision_noise'])
+
+                revision_strength_1 = gr.Slider(label='Revision Strength for Image 1', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_1'])
+                revision_strength_2 = gr.Slider(label='Revision Strength for Image 2', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_2'])
+                revision_strength_3 = gr.Slider(label='Revision Strength for Image 3', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_3'])
+                revision_strength_4 = gr.Slider(label='Revision Strength for Image 4', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_4'])
+
                 img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
                 img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
                 with gr.Row():
@@ -294,7 +303,8 @@ with shared.gradio_root:
                 output_to_input_button.click(output_to_input_handler, inputs=output_gallery, outputs=[img2img_mode, input_gallery, gallery_tabs])
                 output_to_revision_button.click(output_to_revision_handler, inputs=output_gallery, outputs=[revision_mode, revision_gallery, gallery_tabs])
 
-                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, zero_out_positive, zero_out_negative, revision_strength, revision_noise]
+                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, zero_out_positive, zero_out_negative,
+                    revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
 
                 def verify_revision(rev, gallery_rev, gallery_in):
                     if rev and len(gallery_rev) == 0:

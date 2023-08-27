@@ -40,8 +40,8 @@ def worker():
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_png, \
         img2img_mode, img2img_start_step, img2img_denoise, \
-        revision_mode, zero_out_positive, zero_out_negative, revision_strength, revision_noise, \
-        input_gallery, revision_gallery = task
+        revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2, \
+        revision_strength_3, revision_strength_4, input_gallery, revision_gallery = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
 
@@ -53,7 +53,7 @@ def worker():
             input_image_path = None
 
         revision_gallery_size = len(revision_gallery)
-        if revision_gallery_size == 0 or revision_strength == 0:
+        if revision_gallery_size == 0:
             revision_mode = False
 
         pipeline.refresh_base_model(base_model_name)
@@ -109,9 +109,11 @@ def worker():
             if revision_mode:
                 revision_images_paths = list(map(lambda x: x['name'], revision_gallery))
                 revision_images_filenames = list(map(lambda path: os.path.basename(path), revision_images_paths))
+                revision_strengths = [revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
             else:
                 revision_images_paths = []
                 revision_images_filenames = []
+                revision_strengths = []
 
             if img2img_mode:
                 start_step = round(steps * img2img_start_step)
@@ -122,7 +124,7 @@ def worker():
 
             imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
                 cfg, base_clip_skip, refiner_clip_skip, img2img_mode, input_image_path, start_step, denoise,
-                revision_mode, revision_images_paths, zero_out_positive, zero_out_negative, revision_strength, revision_noise, callback=callback)
+                revision_mode, revision_images_paths, zero_out_positive, zero_out_negative, revision_strengths, callback=callback)
 
             metadata = {
                 'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style,
@@ -135,7 +137,8 @@ def worker():
                 'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode,
                 'start_step': start_step, 'denoise': denoise, 'input_image': input_image_filename,
                 'revision': revision_mode, 'zero_out_positive': zero_out_positive, 'zero_out_negative': zero_out_negative,
-                'revision_strength': revision_strength, 'revision_noise': revision_noise,
+                'revision_strength_1': revision_strength_1, 'revision_strength_2': revision_strength_2,
+                'revision_strength_3': revision_strength_3, 'revision_strength_4': revision_strength_4,
                 'revision_images': revision_images_filenames,
                 'software': fooocus_version.full_version
             }
@@ -156,7 +159,8 @@ def worker():
                     ('Base Model', base_model_name),
                     ('Refiner Model', refiner_model_name),
                     ('Image-2-Image', (img2img_mode, start_step, denoise, input_image_filename)),
-                    ('Revision', (revision_mode, zero_out_positive, zero_out_negative, revision_strength, revision_noise, revision_images_filenames))
+                    ('Revision', (revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2,
+                        revision_strength_3, revision_strength_4, revision_images_filenames))
                 ]
                 for n, w in loras:
                     if n != 'None':

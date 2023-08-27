@@ -154,7 +154,7 @@ def get_image(path):
 
 @torch.no_grad()
 def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip,
-    img2img, input_image_path, start_step, denoise, revision, revision_images_paths, zero_out_positive, zero_out_negative, revision_strength, revision_noise, callback):
+    img2img, input_image_path, start_step, denoise, revision, revision_images_paths, zero_out_positive, zero_out_negative, revision_strengths, callback):
     global positive_conditions_cache, negative_conditions_cache, positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
     xl_base_patched.clip.clip_layer(base_clip_skip)
@@ -180,14 +180,16 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         force_full_denoise = False
 
     clip_vision_outputs = []
-    if revision and revision_strength != 0 and len(revision_images_paths) > 0:
+    revision_images_count = len(revision_images_paths)
+    if revision and revision_images_count > 0:
         set_comfy_adm_encoding()
-        for i in range(len(revision_images_paths)):
+        for i in range(revision_images_count):
             print(f'Revision for image {i+1} started')
-            revision_image = get_image(revision_images_paths[i])
-            clip_vision_output = core.encode_clip_vision(clip_vision, revision_image)
-            clip_vision_outputs.append(clip_vision_output)
-            positive_conditions = core.apply_adm(positive_conditions, clip_vision_output, revision_strength, revision_noise)
+            if revision_strengths[i % 4] != 0:
+                revision_image = get_image(revision_images_paths[i])
+                clip_vision_output = core.encode_clip_vision(clip_vision, revision_image)
+                clip_vision_outputs.append(clip_vision_output)
+                positive_conditions = core.apply_adm(positive_conditions, clip_vision_output, revision_strengths[i % 4], 0)
             print(f'Revision for image {i+1} finished')
     else:
         set_fooocus_adm_encoding()
@@ -208,10 +210,10 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         if zero_out_negative:
             negative_conditions_refiner = core.zero_out(negative_conditions_refiner)
 
-        # TODO Revision for refiner
-#        if len(clip_vision_outputs) > 0:
-#            for i in range(len(clip_vision_outputs)):
-#                positive_conditions = core.apply_adm(positive_conditions, clip_vision_outputs[i], revision_strength, revision_noise)
+        if len(clip_vision_outputs) > 0:
+            for i in range(len(clip_vision_outputs)):
+                if revision_strengths[i % 4] != 0:
+                    positive_conditions = core.apply_adm(positive_conditions, clip_vision_outputs[i], revision_strengths[i % 4], 0)
 
         positive_conditions_refiner_cache = positive_conditions_refiner
         negative_conditions_refiner_cache = negative_conditions_refiner
