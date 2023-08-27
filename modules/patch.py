@@ -11,6 +11,7 @@ from comfy.model_base import sdxl_pooled
 
 sharpness = 2.0
 
+comfy_encode_adm = comfy.model_base.SDXL.encode_adm
 
 def sampling_function_patched(model_function, x, timestep, uncond, cond, cond_scale, cond_concat=None, model_options={},
                       seed=None):
@@ -389,3 +390,11 @@ def patch_all():
     comfy.samplers.sampling_function = sampling_function_patched
     comfy.model_base.SDXL.encode_adm = sdxl_encode_adm_patched
     comfy.ldm.modules.diffusionmodules.openaimodel.UNetModel.forward = unet_forward_patched
+
+
+def set_comfy_adm_encoding():
+    comfy.model_base.SDXL.encode_adm = comfy_encode_adm
+
+
+def set_fooocus_adm_encoding():
+    comfy.model_base.SDXL.encode_adm = sdxl_encode_adm_patched

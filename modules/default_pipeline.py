@@ -8,7 +8,7 @@ import modules.path
 from comfy.model_base import SDXL, SDXLRefiner
 from comfy.model_management import soft_empty_cache
 from PIL import Image, ImageOps
-
+from modules.patch import set_comfy_adm_encoding, set_fooocus_adm_encoding
 
 xl_base: core.StableDiffusionModel = None
 xl_base_hash = ''
@@ -154,7 +154,7 @@ def get_image(path):
 
 @torch.no_grad()
 def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip,
-    img2img, input_image_path, start_step, denoise, revision, revision_image_path, zero_out_positive, zero_out_negative, revision_strength, revision_noise, callback):
+    img2img, input_image_path, start_step, denoise, revision, revision_images_paths, zero_out_positive, zero_out_negative, revision_strength, revision_noise, callback):
     global positive_conditions_cache, negative_conditions_cache, positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
     xl_base_patched.clip.clip_layer(base_clip_skip)
@@ -171,10 +171,6 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
     if input_image_path != None:
         input_image = get_image(input_image_path)
 
-    revision_image = None
-    if revision_image_path != None:
-        revision_image = get_image(revision_image_path)
-
     if input_image == None or img2img == False:
         latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
         force_full_denoise = True
@@ -183,12 +179,18 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
         force_full_denoise = False
 
-    if revision_image != None and revision and revision_strength != 0:
-        print('Revision started')
-        clip_vision_output = core.encode_clip_vision(clip_vision, revision_image)
-        positive_conditions = core.apply_adm(positive_conditions, clip_vision_output, revision_strength, revision_noise)
-        print('Revision finished')
+    clip_vision_outputs = []
+    if revision and revision_strength != 0 and len(revision_images_paths) > 0:
+        set_comfy_adm_encoding()
+        for i in range(len(revision_images_paths)):
+            print(f'Revision for image {i+1} started')
+            revision_image = get_image(revision_images_paths[i])
+            clip_vision_output = core.encode_clip_vision(clip_vision, revision_image)
+            clip_vision_outputs.append(clip_vision_output)
+            positive_conditions = core.apply_adm(positive_conditions, clip_vision_output, revision_strength, revision_noise)
+            print(f'Revision for image {i+1} finished')
     else:
+        set_fooocus_adm_encoding()
         clip_vision_output = None
 
     positive_conditions_cache = positive_conditions
@@ -207,8 +209,9 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
             negative_conditions_refiner = core.zero_out(negative_conditions_refiner)
 
         # TODO Revision for refiner
-#        if clip_vision_output != None:
-#            positive_conditions_refiner = core.apply_adm(positive_conditions_refiner, clip_vision_output, revision_strength, revision_noise)
+#        if len(clip_vision_outputs) > 0:
+#            for i in range(len(clip_vision_outputs)):
+#                positive_conditions = core.apply_adm(positive_conditions, clip_vision_outputs[i], revision_strength, revision_noise)
 
         positive_conditions_refiner_cache = positive_conditions_refiner
         negative_conditions_refiner_cache = negative_conditions_refiner
