@@ -6,7 +6,7 @@ import fooocus_version
 from modules.launch_util import is_installed, run, python, \
     run_pip, repo_dir, git_clone, requirements_met, script_path, dir_repos
 from modules.model_loader import load_file_from_url
-from modules.path import modelfile_path, lorafile_path
+from modules.path import modelfile_path, lorafile_path, clip_vision_path, controlnet_path
 
 REINSTALL_ALL = False
 
@@ -63,12 +63,26 @@ lora_filenames = [
      'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_offset_example-lora_1.0.safetensors')
 ]
 
+clip_vision_filenames = [
+    ('clip_vision_g.safetensors',
+     'https://huggingface.co/stabilityai/control-lora/resolve/main/revision/clip_vision_g.safetensors')
+]
+
+controlnet_filenames = [
+    ('control-lora-canny-rank256.safetensors',
+     'https://huggingface.co/stabilityai/control-lora/resolve/main/control-LoRAs-rank256/control-lora-canny-rank256.safetensors')
+]
+
 
 def download_models():
     for file_name, url in model_filenames:
         load_file_from_url(url=url, model_dir=modelfile_path, file_name=file_name)
     for file_name, url in lora_filenames:
         load_file_from_url(url=url, model_dir=lorafile_path, file_name=file_name)
+    for file_name, url in clip_vision_filenames:
+        load_file_from_url(url=url, model_dir=clip_vision_path, file_name=file_name)
+    for file_name, url in controlnet_filenames:
+        load_file_from_url(url=url, model_dir=controlnet_path, file_name=file_name)
     return
 
 

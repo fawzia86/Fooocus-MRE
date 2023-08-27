@@ -22,6 +22,13 @@ def load_settings():
     settings['img2img_mode'] = False
     settings['img2img_start_step'] = 0.06
     settings['img2img_denoise'] = 0.94
+    settings['revision_mode'] = False
+    settings['zero_out_positive'] = False
+    settings['zero_out_negative'] = False
+    settings['revision_strength_1'] = 1.0
+    settings['revision_strength_2'] = 1.0
+    settings['revision_strength_3'] = 1.0
+    settings['revision_strength_4'] = 1.0
     settings['resolution'] = get_resolution_string(1152, 896)
     settings['sampler'] = 'dpmpp_2m_sde_gpu'
     settings['scheduler'] = 'karras'

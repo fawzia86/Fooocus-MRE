@@ -51,7 +51,7 @@ def generate_clicked(*args):
                     gr.update(), \
                     gr.update()
             if flag == 'metadatas':
-                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=1)
+                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=2)
                 finished = True
     return
 
@@ -143,6 +143,21 @@ def metadata_to_ctrls(metadata, ctrls):
                 ctrls[30] = round(metadata['start_step'] / ctrls[10], 2)
         if 'denoise' in metadata:
             ctrls[31] = metadata['denoise']
+    if 'revision' in metadata:
+        ctrls[32] = metadata['revision']
+    if 'zero_out' in metadata:
+        ctrls[33] = metadata['zero_out_positive']
+    if 'zero_out' in metadata:
+        ctrls[34] = metadata['zero_out_negative']
+    if 'revision_strength_1' in metadata:
+        ctrls[35] = metadata['revision_strength_1']
+    if 'revision_strength_2' in metadata:
+        ctrls[36] = metadata['revision_strength_2']
+    if 'revision_strength_3' in metadata:
+        ctrls[37] = metadata['revision_strength_3']
+    if 'revision_strength_4' in metadata:
+        ctrls[38] = metadata['revision_strength_4']
+
     # seed_random
     return ctrls    
 
@@ -172,8 +187,12 @@ def load_prompt_handler(_file, *args):
     return ctrls
 
 
-def load_images_handler(files):
+def load_input_images_handler(files):
     return gr.update(value=True), list(map(lambda x: x.name, files)), gr.update(selected=0)
+
+
+def load_revision_images_handler(files):
+    return gr.update(value=True), list(map(lambda x: x.name, files[:4])), gr.update(selected=1)
 
 
 def output_to_input_handler(gallery):
@@ -181,6 +200,13 @@ def output_to_input_handler(gallery):
         return gr.update(value=False), [], gr.update()
     else:
         return gr.update(value=True), list(map(lambda x: x['name'], gallery)), gr.update(selected=0)
+
+
+def output_to_revision_handler(gallery):
+    if len(gallery) == 0:
+        return gr.update(value=False), [], gr.update()
+    else:
+        return gr.update(value=True), list(map(lambda x: x['name'], gallery[:4])), gr.update(selected=1)
 
 
 settings = default_settings
@@ -192,10 +218,12 @@ with shared.gradio_root:
             progress_window = gr.Image(label='Preview', show_label=True, height=640, visible=False)
             progress_html = gr.HTML(value=modules.html.make_progress_html(32, 'Progress 32%'), visible=False, elem_id='progress-bar', elem_classes='progress-bar')
             with gr.Column() as gallery_holder:
-                with gr.Tabs(selected=1) as gallery_tabs:
+                with gr.Tabs(selected=2) as gallery_tabs:
                     with gr.Tab(label='Input', id=0):
                         input_gallery = gr.Gallery(label='Input', show_label=False, object_fit='contain', height=720, visible=True)
-                    with gr.Tab(label='Output', id=1):
+                    with gr.Tab(label='Revision', id=1):
+                        revision_gallery = gr.Gallery(label='Revision', show_label=False, object_fit='contain', height=720, visible=True)
+                    with gr.Tab(label='Output', id=2):
                         output_gallery = gr.Gallery(label='Output', show_label=False, object_fit='contain', height=720, visible=True)
             with gr.Row(elem_classes='type_row'):
                 with gr.Column(scale=0.85):
@@ -222,19 +250,17 @@ with shared.gradio_root:
         with gr.Column(scale=0.5, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):
                 performance = gr.Radio(label='Performance', choices=['Speed', 'Quality', 'Custom'], value=settings['performance'])
-                custom_steps = gr.Slider(label='Custom Steps', minimum=10, maximum=200, step=1, value=settings['custom_steps'], visible=settings['performance'] == 'Custom')
-                custom_switch = gr.Slider(label='Custom Switch', minimum=0.2, maximum=1.0, step=0.01, value=settings['custom_switch'], visible=settings['performance'] == 'Custom')
+                with gr.Row():
+                    custom_steps = gr.Slider(label='Custom Steps', minimum=10, maximum=200, step=1, value=settings['custom_steps'], visible=settings['performance'] == 'Custom')
+                    custom_switch = gr.Slider(label='Custom Switch', minimum=0.2, maximum=1.0, step=0.01, value=settings['custom_switch'], visible=settings['performance'] == 'Custom')
                 resolution = gr.Dropdown(label='Resolution (width × height)', choices=list(resolutions.keys()), value=settings['resolution'])
                 style_selection = gr.Dropdown(label='Style', choices=style_keys, value=settings['style'])
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=settings['image_number'])
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.", value=settings['negative_prompt'])
                 seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
                 image_seed = gr.Number(label='Seed', value=settings['seed'], precision=0, visible=not settings['seed_random'])
-                img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
                 with gr.Row():
                     load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png'], elem_classes='type_small_row', min_width=0)
-                    load_images_button = gr.UploadButton(label='Load Image(s)', file_count='multiple', file_types=["image"], elem_classes='type_small_row', min_width=0)
-                    output_to_input_button = gr.Button(label='Output to Input', value='Output to Input', elem_classes='type_small_row', min_width=0)
 
                 def random_checked(r):
                     return gr.update(visible=not r)
@@ -251,8 +277,45 @@ with shared.gradio_root:
                     return gr.update(visible=value == 'Custom'), gr.update(visible=value == 'Custom')
 
                 performance.change(fn=performance_changed, inputs=[performance], outputs=[custom_steps, custom_switch])
-                load_images_button.upload(fn=load_images_handler, inputs=[load_images_button], outputs=[img2img_mode, input_gallery, gallery_tabs])
+
+            with gr.Tab(label='Image-2-Image'):
+                revision_mode = gr.Checkbox(label='Revision (prompting with images)', value=settings['revision_mode'], elem_classes='type_small_row')
+                with gr.Row():
+                    zero_out_positive = gr.Checkbox(label='Zero Out Positive Prompt', value=settings['zero_out_positive'], elem_classes='type_small_row')
+                    zero_out_negative = gr.Checkbox(label='Zero Out Negative Prompt', value=settings['zero_out_negative'], elem_classes='type_small_row')
+
+                revision_strength_1 = gr.Slider(label='Revision Strength for Image 1', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_1'])
+                revision_strength_2 = gr.Slider(label='Revision Strength for Image 2', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_2'])
+                revision_strength_3 = gr.Slider(label='Revision Strength for Image 3', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_3'])
+                revision_strength_4 = gr.Slider(label='Revision Strength for Image 4', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_4'])
+
+                img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
+                img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
+                with gr.Row():
+                    load_input_images_button = gr.UploadButton(label='Load Image(s) to Input', file_count='multiple', file_types=["image"], elem_classes='type_small_row', min_width=0)
+                    load_revision_images_button = gr.UploadButton(label='Load Image(s) to Revision', file_count='multiple', file_types=["image"], elem_classes='type_small_row', min_width=0)
+                with gr.Row():
+                    output_to_input_button = gr.Button(label='Output to Input', value='Output to Input', elem_classes='type_small_row', min_width=0)
+                    output_to_revision_button = gr.Button(label='Output to Revision', value='Output to Revision', elem_classes='type_small_row', min_width=0)
+
+                load_input_images_button.upload(fn=load_input_images_handler, inputs=[load_input_images_button], outputs=[img2img_mode, input_gallery, gallery_tabs])
+                load_revision_images_button.upload(fn=load_revision_images_handler, inputs=[load_revision_images_button], outputs=[revision_mode, revision_gallery, gallery_tabs])
                 output_to_input_button.click(output_to_input_handler, inputs=output_gallery, outputs=[img2img_mode, input_gallery, gallery_tabs])
+                output_to_revision_button.click(output_to_revision_handler, inputs=output_gallery, outputs=[revision_mode, revision_gallery, gallery_tabs])
+
+                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, zero_out_positive, zero_out_negative,
+                    revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
+
+                def verify_revision(rev, gallery_rev, gallery_in):
+                    if rev and len(gallery_rev) == 0:
+                        if len(gallery_in) == 0:
+                            gr.Warning('Revision: disabled (no images available)')
+                            return gr.update(value=False), gr.update(), gr.update()
+                        else:
+                            gr.Info('Revision: imported input')
+                            return gr.update(), list(map(lambda x: x['name'], gallery_out)), gr.update()
+                    else:
+                        return gr.update(), gr.update(), gr.update()
 
             with gr.Tab(label='Models'):
                 with gr.Row():
@@ -275,7 +338,6 @@ with shared.gradio_root:
                 sampler_name = gr.Dropdown(label='Sampler', choices=['dpmpp_2m_sde_gpu', 'dpmpp_2m_sde', 'dpmpp_3m_sde_gpu', 'dpmpp_3m_sde',
                     'dpmpp_sde_gpu', 'dpmpp_sde', 'dpmpp_2s_ancestral', 'euler', 'euler_ancestral', 'heun', 'dpm_2', 'dpm_2_ancestral'], value=settings['sampler'])
                 scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'simple', 'ddim_uniform'], value=settings['scheduler'])
-                img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=40.0, step=0.01, value=settings['sharpness'])
                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
 
@@ -301,11 +363,12 @@ with shared.gradio_root:
             performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
             custom_steps, custom_switch, cfg
         ]
-        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png, img2img_mode, img2img_start_step, img2img_denoise]
+        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png] + img2img_ctrls
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=verify_input, inputs=[img2img_mode, input_gallery, output_gallery], outputs=[img2img_mode, input_gallery, output_gallery]) \
-            .then(fn=generate_clicked, inputs=ctrls + [input_gallery], outputs=[run_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
+            .then(fn=verify_revision, inputs=[revision_mode, revision_gallery, input_gallery], outputs=[revision_mode, revision_gallery, input_gallery]) \
+            .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery], outputs=[run_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default=None, help="Set the listen port.")

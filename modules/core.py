@@ -8,7 +8,7 @@ import comfy.model_management
 import comfy.utils
 
 from comfy.sd import load_checkpoint_guess_config
-from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode
+from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode, ConditioningZeroOut, CLIPVisionEncode, unCLIPConditioning
 from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cleanup_additional_models
 from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
 from modules.samplers_advanced import KSampler, KSamplerWithRefiner
@@ -22,6 +22,10 @@ opEmptyLatentImage = EmptyLatentImage()
 opVAEDecode = VAEDecode()
 opVAEEncode = VAEEncode()
 opImageScaleToTotalPixels = ImageScaleToTotalPixels()
+opConditioningZeroOut = ConditioningZeroOut()
+opCLIPVisionEncode = CLIPVisionEncode()
+opUnCLIPConditioning = unCLIPConditioning()
+
 
 class StableDiffusionModel:
     def __init__(self, unet, vae, clip, clip_vision):
@@ -56,6 +60,11 @@ def load_lora(model, lora_filename, strength_model=1.0, strength_clip=1.0):
 
 
 @torch.no_grad()
+def load_clip_vision(ckpt_filename):
+    return comfy.clip_vision.load(ckpt_filename)
+
+
+@torch.no_grad()
 def encode_prompt_condition(clip, prompt):
     return opCLIPTextEncode.encode(clip=clip, text=prompt)[0]
 
@@ -78,6 +87,21 @@ def encode_vae(vae, pixels):
 @torch.no_grad()
 def upscale(image):
     return opImageScaleToTotalPixels.upscale(image=image, upscale_method='bicubic', megapixels=1.0)[0]
+
+
+@torch.no_grad()
+def zero_out(conditioning):
+    return opConditioningZeroOut.zero_out(conditioning=conditioning)[0]
+
+
+@torch.no_grad()
+def encode_clip_vision(clip_vision, image):
+    return opCLIPVisionEncode.encode(clip_vision=clip_vision, image=image)[0]
+
+
+@torch.no_grad()
+def apply_adm(conditioning, clip_vision_output, strength, noise_augmentation):
+    return opUnCLIPConditioning.apply_adm(conditioning=conditioning, clip_vision_output=clip_vision_output, strength=strength, noise_augmentation=noise_augmentation)[0]
 
 
 def get_previewer(device, latent_format):
