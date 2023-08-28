@@ -5,6 +5,8 @@ import json
 import modules.core as core
 import modules.constants as constants
 
+from modules.resolutions import annotate_resolution_string
+
 
 buffer = []
 outputs = []
@@ -75,6 +77,8 @@ def worker():
             steps = custom_steps
             switch = round(custom_steps * custom_switch)
 
+        if resolution not in resolutions:
+            resolution = annotate_resolution_string(resolution)
         width, height = resolutions[resolution]
 
         results = []

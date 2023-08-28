@@ -1,3 +1,6 @@
+from math import gcd
+
+
 # https://arxiv.org/abs/2307.01952, Appendix I
 SD_XL_BASE_RATIOS = {
     "0.25": (512, 2048),
@@ -43,8 +46,14 @@ SD_XL_BASE_RATIOS = {
 }
 
 
+def annotate_resolution_string(resolution):
+    width, height = list(map(lambda x: int(x), resolution.split('×')[:2]))
+    return get_resolution_string(width, height)
+
+
 def get_resolution_string(width, height):
-    return str(width) + '×' + str(height)
+    _gcd = gcd(width, height)
+    return f'{width}×{height} ({width//_gcd}:{height//_gcd})'
 
 
 resolutions = {get_resolution_string(v[0], v[1]):v for v in SD_XL_BASE_RATIOS.values()}
