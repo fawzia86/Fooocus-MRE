@@ -22,10 +22,10 @@ def load_paths():
                     path_loras = paths_obj['path_loras']
                 if 'path_embeddings' in paths_obj:
                     path_embeddings = paths_obj['path_embeddings']
-                if 'clip_vision' in paths_obj:
-                    path_clip_vision = paths_obj['clip_vision']
-                if 'controlnet' in paths_obj:
-                    path_controlnet = paths_obj['controlnet']
+                if 'path_clip_vision' in paths_obj:
+                    path_clip_vision = paths_obj['path_clip_vision']
+                if 'path_controlnet' in paths_obj:
+                    path_controlnet = paths_obj['path_controlnet']
                 if 'path_outputs' in paths_obj:
                     path_outputs = paths_obj['path_outputs']
 
