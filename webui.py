@@ -188,7 +188,7 @@ def load_prompt_handler(_file, *args):
 
 
 def load_input_images_handler(files):
-    return gr.update(value=True), list(map(lambda x: x.name, files)), gr.update(selected=0)
+    return gr.update(value=True), list(map(lambda x: x.name, files)), gr.update(selected=0), gr.update(value=len(files))
 
 
 def load_revision_images_handler(files):
@@ -300,7 +300,7 @@ with shared.gradio_root:
                     output_to_input_button = gr.Button(label='Output to Input', value='Output to Input', elem_classes='type_small_row', min_width=0)
                     output_to_revision_button = gr.Button(label='Output to Revision', value='Output to Revision', elem_classes='type_small_row', min_width=0)
 
-                load_input_images_button.upload(fn=load_input_images_handler, inputs=[load_input_images_button], outputs=[img2img_mode, input_gallery, gallery_tabs])
+                load_input_images_button.upload(fn=load_input_images_handler, inputs=[load_input_images_button], outputs=[img2img_mode, input_gallery, gallery_tabs, image_number])
                 load_revision_images_button.upload(fn=load_revision_images_handler, inputs=[load_revision_images_button], outputs=[revision_mode, revision_gallery, gallery_tabs])
                 output_to_input_button.click(output_to_input_handler, inputs=output_gallery, outputs=[img2img_mode, input_gallery, gallery_tabs])
                 output_to_revision_button.click(output_to_revision_handler, inputs=output_gallery, outputs=[revision_mode, revision_gallery, gallery_tabs])
