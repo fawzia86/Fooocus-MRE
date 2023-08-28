@@ -7,7 +7,6 @@ import modules.path
 
 from comfy.model_base import SDXL, SDXLRefiner
 from comfy.model_management import soft_empty_cache
-from PIL import Image, ImageOps
 from modules.settings import default_settings
 from modules.patch import set_comfy_adm_encoding, set_fooocus_adm_encoding
 
@@ -138,22 +137,10 @@ def clean_prompt_cond_caches():
     return
 
 
-def get_image(path):
-    image = None
-    with open(path, 'rb') as image_file:
-        pil_image = Image.open(image_file)
-        image = ImageOps.exif_transpose(pil_image)
-        image_file.close()
-        image = image.convert("RGB")
-        image = np.array(image).astype(np.float32) / 255.0
-        image = torch.from_numpy(image)[None,]
-        image = core.upscale(image)
-    return image
-
 
 @torch.no_grad()
 def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip,
-    img2img, input_image_path, start_step, denoise, revision, revision_images_paths, zero_out_positive, zero_out_negative, revision_strengths, callback):
+    img2img, input_image, start_step, denoise, revision, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths, callback):
     global positive_conditions_cache, negative_conditions_cache, positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
     xl_base_patched.clip.clip_layer(base_clip_skip)
@@ -166,10 +153,6 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
     if zero_out_negative:
         negative_conditions = core.zero_out(negative_conditions)
 
-    input_image = None
-    if input_image_path != None:
-        input_image = get_image(input_image_path)
-
     if input_image == None or img2img == False:
         latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
         force_full_denoise = True
@@ -178,21 +161,13 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
         force_full_denoise = False
 
-    clip_vision_outputs = []
-    revision_images_count = len(revision_images_paths)
-    if revision and revision_images_count > 0:
+    if revision:
         set_comfy_adm_encoding()
-        for i in range(revision_images_count):
-            print(f'Revision for image {i+1} started')
+        for i in range(len(clip_vision_outputs)):
             if revision_strengths[i % 4] != 0:
-                revision_image = get_image(revision_images_paths[i])
-                clip_vision_output = core.encode_clip_vision(clip_vision, revision_image)
-                clip_vision_outputs.append(clip_vision_output)
-                positive_conditions = core.apply_adm(positive_conditions, clip_vision_output, revision_strengths[i % 4], 0)
-            print(f'Revision for image {i+1} finished')
+                positive_conditions = core.apply_adm(positive_conditions, clip_vision_outputs[i % 4], revision_strengths[i % 4], 0)
     else:
         set_fooocus_adm_encoding()
-        clip_vision_output = None
 
     positive_conditions_cache = positive_conditions
     negative_conditions_cache = negative_conditions
@@ -209,7 +184,7 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         if zero_out_negative:
             negative_conditions_refiner = core.zero_out(negative_conditions_refiner)
 
-        if len(clip_vision_outputs) > 0:
+        if revision:
             for i in range(len(clip_vision_outputs)):
                 if revision_strengths[i % 4] != 0:
                     positive_conditions = core.apply_adm(positive_conditions, clip_vision_outputs[i], revision_strengths[i % 4], 0)
@@ -254,6 +229,7 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
 
     images = core.image_to_numpy(decoded_latent)
 
+    clean_prompt_cond_caches()
     gc.collect()
     soft_empty_cache()
 

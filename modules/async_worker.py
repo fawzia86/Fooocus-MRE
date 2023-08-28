@@ -1,15 +1,31 @@
 import os
 import threading
 import json
+import torch
+import numpy as np
 
 import modules.core as core
 import modules.constants as constants
 
+from PIL import Image, ImageOps
 from modules.resolutions import annotate_resolution_string
 
 
 buffer = []
 outputs = []
+
+
+def get_image(path):
+    image = None
+    with open(path, 'rb') as image_file:
+        pil_image = Image.open(image_file)
+        image = ImageOps.exif_transpose(pil_image)
+        image_file.close()
+        image = image.convert("RGB")
+        image = np.array(image).astype(np.float32) / 255.0
+        image = torch.from_numpy(image)[None,]
+        image = core.upscale(image)
+    return image
 
 
 def worker():
@@ -102,6 +118,26 @@ def worker():
                 f'Step {step}/{total_steps} in the {i}-th Sampling',
                 y)])
 
+        if revision_mode:
+            revision_images_paths = list(map(lambda x: x['name'], revision_gallery))
+            revision_images_filenames = list(map(lambda path: os.path.basename(path), revision_images_paths))
+            revision_strengths = [revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
+        else:
+            revision_images_paths = []
+            revision_images_filenames = []
+            revision_strengths = []
+
+        clip_vision_outputs = []
+        revision_images_count = len(revision_images_paths)
+        if revision_mode and revision_images_count > 0:
+            for i in range(revision_images_count):
+                print(f'Revision for image {i+1} started')
+                if revision_strengths[i % 4] != 0:
+                    revision_image = get_image(revision_images_paths[i])
+                    clip_vision_output = core.encode_clip_vision(pipeline.clip_vision, revision_image)
+                    clip_vision_outputs.append(clip_vision_output)
+                print(f'Revision for image {i+1} finished')
+
         for i in range(image_number):
             if img2img_mode and input_gallery_size > 0:
                 input_gallery_entry = input_gallery[i % input_gallery_size]
@@ -111,15 +147,6 @@ def worker():
                 input_image_path = None
                 input_image_filename = None
 
-            if revision_mode:
-                revision_images_paths = list(map(lambda x: x['name'], revision_gallery))
-                revision_images_filenames = list(map(lambda path: os.path.basename(path), revision_images_paths))
-                revision_strengths = [revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
-            else:
-                revision_images_paths = []
-                revision_images_filenames = []
-                revision_strengths = []
-
             if img2img_mode:
                 start_step = round(steps * img2img_start_step)
                 denoise = img2img_denoise
@@ -127,9 +154,13 @@ def worker():
                 start_step = 0
                 denoise = None
 
+            input_image = None
+            if input_image_path != None:
+                input_image = get_image(input_image_path)
+
             imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
-                cfg, base_clip_skip, refiner_clip_skip, img2img_mode, input_image_path, start_step, denoise,
-                revision_mode, revision_images_paths, zero_out_positive, zero_out_negative, revision_strengths, callback=callback)
+                cfg, base_clip_skip, refiner_clip_skip, img2img_mode, input_image, start_step, denoise,
+                revision_mode, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths, callback=callback)
 
             metadata = {
                 'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style,
