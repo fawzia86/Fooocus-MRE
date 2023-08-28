@@ -6,8 +6,8 @@ from PIL.PngImagePlugin import PngInfo
 from modules.util import generate_temp_filename
 
 
-def log(img, dic, metadata=None, save_metadata_json=False, save_metadata_png=False):
-    date_string, local_temp_filename, only_name = generate_temp_filename(folder=modules.path.temp_outputs_path, extension='png')
+def log(img, dic, metadata=None, save_metadata_json=False, save_metadata_png=False, keep_input_names=False, input_image_filename=None):
+    date_string, local_temp_filename, only_name = generate_temp_filename(folder=modules.path.temp_outputs_path, extension='png', base=input_image_filename if keep_input_names else None)
     os.makedirs(os.path.dirname(local_temp_filename), exist_ok=True)
 
     if save_metadata_json:

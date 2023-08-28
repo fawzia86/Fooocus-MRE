@@ -296,6 +296,7 @@ with shared.gradio_root:
 
                 img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
                 img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
+                keep_input_names = gr.Checkbox(label='Keep Input Names', value=settings['keep_input_names'], elem_classes='type_small_row')
                 with gr.Row():
                     load_input_images_button = gr.UploadButton(label='Load Image(s) to Input', file_count='multiple', file_types=["image"], elem_classes='type_small_row', min_width=0)
                     load_revision_images_button = gr.UploadButton(label='Load Image(s) to Revision', file_count='multiple', file_types=["image"], elem_classes='type_small_row', min_width=0)
@@ -376,7 +377,8 @@ with shared.gradio_root:
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=verify_input, inputs=[img2img_mode, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, input_gallery]) \
             .then(fn=verify_revision, inputs=[revision_mode, input_gallery, revision_gallery, output_gallery], outputs=[revision_mode, revision_gallery]) \
-            .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery], outputs=[run_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
+            .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery, keep_input_names],
+                outputs=[run_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default=None, help="Set the listen port.")

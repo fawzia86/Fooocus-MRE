@@ -60,7 +60,7 @@ def worker():
         img2img_mode, img2img_start_step, img2img_denoise, \
         revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2, \
         revision_strength_3, revision_strength_4, same_seed_for_all, \
-        input_gallery, revision_gallery = task
+        input_gallery, revision_gallery, keep_input_names = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
 
@@ -146,6 +146,7 @@ def worker():
             else:
                 input_image_path = None
                 input_image_filename = None
+                keep_input_names = None
 
             if img2img_mode:
                 start_step = round(steps * img2img_start_step)
@@ -202,7 +203,7 @@ def worker():
                     if n != 'None':
                         d.append((f'LoRA [{n}] weight', w))
                 d.append(('Software', fooocus_version.full_version))
-                log(x, d, metadata_string, save_metadata_json, save_metadata_png)
+                log(x, d, metadata_string, save_metadata_json, save_metadata_png, keep_input_names, input_image_filename)
 
             if not same_seed_for_all:
                 seed += 1

@@ -23,6 +23,7 @@ def load_settings():
     settings['img2img_mode'] = False
     settings['img2img_start_step'] = 0.06
     settings['img2img_denoise'] = 0.94
+    settings['keep_input_names'] = False
     settings['revision_mode'] = False
     settings['zero_out_positive'] = False
     settings['zero_out_negative'] = False

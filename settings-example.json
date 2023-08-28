@@ -15,6 +15,7 @@
     "img2img_mode": false,
     "img2img_start_step": 0.06,
     "img2img_denoise": 0.94,
+    "keep_input_names": false,
     "revision": false,
     "zero_out_positive": false,
     "zero_out_negative": false,
