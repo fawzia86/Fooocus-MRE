@@ -20,7 +20,7 @@ def prepare_environment():
     xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.21')
 
     comfy_repo = os.environ.get('COMFY_REPO', "https://github.com/comfyanonymous/ComfyUI")
-    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "412596d3251ae01c58df07d1dd36742f63e6b3ce")
+    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "4798cf5a629ef349dc9a44c38ba5221f0db25092")
 
     print(f"Python {sys.version}")
     print(f"Fooocus version: {fooocus_version.version}")

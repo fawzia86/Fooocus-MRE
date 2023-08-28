@@ -184,10 +184,11 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
         if zero_out_negative:
             negative_conditions_refiner = core.zero_out(negative_conditions_refiner)
 
-        if revision:
-            for i in range(len(clip_vision_outputs)):
-                if revision_strengths[i % 4] != 0:
-                    positive_conditions = core.apply_adm(positive_conditions, clip_vision_outputs[i], revision_strengths[i % 4], 0)
+        # TODO revision for refiner conditioning
+#        if revision:
+#            for i in range(len(clip_vision_outputs)):
+#                if revision_strengths[i % 4] != 0:
+#                    positive_conditions_refiner = core.apply_adm(positive_conditions_refiner, clip_vision_outputs[i], revision_strengths[i % 4], 0)
 
         positive_conditions_refiner_cache = positive_conditions_refiner
         negative_conditions_refiner_cache = negative_conditions_refiner
