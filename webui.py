@@ -236,16 +236,19 @@ with shared.gradio_root:
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
 
-            def verify_input(img2img, gallery_in, gallery_out):
+            def verify_input(img2img, gallery_in, gallery_rev, gallery_out):
                 if img2img and len(gallery_in) == 0:
-                    if len(gallery_out) == 0:
-                        gr.Warning('Image-2-Image: disabled (no images available)')
-                        return gr.update(value=False), gr.update(), gr.update()
-                    else:
+                    if len(gallery_rev) > 0:
+                        gr.Info('Image-2-Image: imported revision as input')
+                        return gr.update(), list(map(lambda x: x['name'], gallery_rev[:1]))
+                    elif len(gallery_out) > 0:
                         gr.Info('Image-2-Image: imported output as input')
-                        return gr.update(), list(map(lambda x: x['name'], gallery_out)), gr.update()
+                        return gr.update(), list(map(lambda x: x['name'], gallery_out[:1]))
+                    else:
+                        gr.Warning('Image-2-Image: disabled (no images available)')
+                        return gr.update(value=False), gr.update()
                 else:
-                    return gr.update(), gr.update(), gr.update()
+                    return gr.update(), gr.update()
 
         with gr.Column(scale=0.5, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):
@@ -308,16 +311,19 @@ with shared.gradio_root:
                 img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, zero_out_positive, zero_out_negative,
                     revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
 
-                def verify_revision(rev, gallery_rev, gallery_in):
+                def verify_revision(rev, gallery_in, gallery_rev, gallery_out):
                     if rev and len(gallery_rev) == 0:
-                        if len(gallery_in) == 0:
-                            gr.Warning('Revision: disabled (no images available)')
-                            return gr.update(value=False), gr.update(), gr.update()
-                        else:
+                        if len(gallery_in) > 0:
                             gr.Info('Revision: imported input')
-                            return gr.update(), list(map(lambda x: x['name'], gallery_in)), gr.update()
+                            return gr.update(), list(map(lambda x: x['name'], gallery_in[:1]))
+                        elif len(gallery_out) > 0:
+                            gr.Info('Revision: imported output')
+                            return gr.update(), list(map(lambda x: x['name'], gallery_out[:1]))
+                        else:
+                            gr.Warning('Revision: disabled (no images available)')
+                            return gr.update(value=False), gr.update()
                     else:
-                        return gr.update(), gr.update(), gr.update()
+                        return gr.update(), gr.update()
 
             with gr.Tab(label='Models'):
                 with gr.Row():
@@ -368,8 +374,8 @@ with shared.gradio_root:
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png] + img2img_ctrls + [same_seed_for_all]
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
-            .then(fn=verify_input, inputs=[img2img_mode, input_gallery, output_gallery], outputs=[img2img_mode, input_gallery, output_gallery]) \
-            .then(fn=verify_revision, inputs=[revision_mode, revision_gallery, input_gallery], outputs=[revision_mode, revision_gallery, input_gallery]) \
+            .then(fn=verify_input, inputs=[img2img_mode, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, input_gallery]) \
+            .then(fn=verify_revision, inputs=[revision_mode, input_gallery, revision_gallery, output_gallery], outputs=[revision_mode, revision_gallery]) \
             .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery], outputs=[run_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
 
 parser = argparse.ArgumentParser()
