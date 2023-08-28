@@ -315,7 +315,7 @@ with shared.gradio_root:
                             return gr.update(value=False), gr.update(), gr.update()
                         else:
                             gr.Info('Revision: imported input')
-                            return gr.update(), list(map(lambda x: x['name'], gallery_out)), gr.update()
+                            return gr.update(), list(map(lambda x: x['name'], gallery_in)), gr.update()
                     else:
                         return gr.update(), gr.update(), gr.update()
 
