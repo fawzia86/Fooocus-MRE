@@ -157,8 +157,8 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[37] = metadata['revision_strength_3']
     if 'revision_strength_4' in metadata:
         ctrls[38] = metadata['revision_strength_4']
-
     # seed_random
+    # same_seed_for_all
     return ctrls    
 
 
@@ -257,7 +257,9 @@ with shared.gradio_root:
                 style_selection = gr.Dropdown(label='Style', choices=style_keys, value=settings['style'])
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=32, step=1, value=settings['image_number'])
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.", value=settings['negative_prompt'])
-                seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
+                with gr.Row():
+                   seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
+                   same_seed_for_all = gr.Checkbox(label='Same seed for all images', value=settings['same_seed_for_all'])
                 image_seed = gr.Number(label='Seed', value=settings['seed'], precision=0, visible=not settings['seed_random'])
                 with gr.Row():
                     load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png'], elem_classes='type_small_row', min_width=0)
@@ -363,7 +365,7 @@ with shared.gradio_root:
             performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
             custom_steps, custom_switch, cfg
         ]
-        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png] + img2img_ctrls
+        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png] + img2img_ctrls + [same_seed_for_all]
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=verify_input, inputs=[img2img_mode, input_gallery, output_gallery], outputs=[img2img_mode, input_gallery, output_gallery]) \

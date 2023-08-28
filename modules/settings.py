@@ -12,6 +12,7 @@ def load_settings():
     settings['save_metadata_json'] = False
     settings['save_metadata_png'] = False
     settings['seed_random'] = True
+    settings['same_seed_for_all'] = False
     settings['seed'] = 0
     settings['style'] = 'cinematic-default'
     settings['prompt'] = ''

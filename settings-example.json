@@ -4,6 +4,7 @@
     "save_metadata_json": true,
     "save_metadata_png": true,
     "seed_random": false,
+    "same_seed_for_all": false,
     "seed": 0,
     "style": "cinematic-default",
     "prompt": "",

@@ -43,7 +43,8 @@ def worker():
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_png, \
         img2img_mode, img2img_start_step, img2img_denoise, \
         revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2, \
-        revision_strength_3, revision_strength_4, input_gallery, revision_gallery = task
+        revision_strength_3, revision_strength_4, same_seed_for_all, \
+        input_gallery, revision_gallery = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
 
@@ -172,7 +173,8 @@ def worker():
                 d.append(('Software', fooocus_version.full_version))
                 log(x, d, metadata_string, save_metadata_json, save_metadata_png)
 
-            seed += 1
+            if not same_seed_for_all:
+                seed += 1
             results += imgs
 
         outputs.append(['results', results])
