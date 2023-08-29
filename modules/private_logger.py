@@ -6,23 +6,27 @@ from PIL.PngImagePlugin import PngInfo
 from modules.util import generate_temp_filename
 
 
-def log(img, dic, metadata=None, save_metadata_json=False, save_metadata_png=False, keep_input_names=False, input_image_filename=None):
-    date_string, local_temp_filename, only_name = generate_temp_filename(folder=modules.path.temp_outputs_path, extension='png', base=input_image_filename if keep_input_names else None)
+def log(img, dic, metadata=None, save_metadata_json=False, save_metadata_image=False, keep_input_names=False, input_image_filename=None, output_format='png'):
+    date_string, local_temp_filename, only_name = generate_temp_filename(folder=modules.path.temp_outputs_path, extension=output_format, base=input_image_filename if keep_input_names else None)
     os.makedirs(os.path.dirname(local_temp_filename), exist_ok=True)
 
     if save_metadata_json:
-        json_path = local_temp_filename.replace('.png', '.json')
+        json_path = local_temp_filename.replace(f'.{output_format}', '.json')
         with open(json_path, 'w', encoding='utf-8') as json_file:
             json_file.write(metadata)
             json_file.close()
     
-    if save_metadata_png:
-        pnginfo = PngInfo()
-        pnginfo.add_text("Comment", metadata)
+    if output_format == 'png':
+        if save_metadata_image:
+            pnginfo = PngInfo()
+            pnginfo.add_text("Comment", metadata)
+        else:
+            pnginfo = None
+        Image.fromarray(img).save(local_temp_filename, pnginfo=pnginfo)
+    elif output_format == 'jpg':
+        Image.fromarray(img).save(local_temp_filename, quality=95, optimize=True, progressive=True, comment=metadata if save_metadata_image else None)
     else:
-        pnginfo = None
-
-    Image.fromarray(img).save(local_temp_filename, pnginfo=pnginfo)
+        Image.fromarray(img).save(local_temp_filename)
 
     html_name = os.path.join(os.path.dirname(local_temp_filename), 'log.html')
 

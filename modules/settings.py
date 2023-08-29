@@ -10,7 +10,8 @@ def load_settings():
     settings['advanced_mode'] = False
     settings['image_number'] = 2
     settings['save_metadata_json'] = False
-    settings['save_metadata_png'] = False
+    settings['save_metadata_image'] = False
+    settings['output_format'] = 'png'
     settings['seed_random'] = True
     settings['same_seed_for_all'] = False
     settings['seed'] = 0

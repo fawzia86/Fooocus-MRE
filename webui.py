@@ -75,7 +75,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[32] = False
+        ctrls[41] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -131,7 +131,7 @@ def metadata_to_ctrls(metadata, ctrls):
     if 'w5' in metadata:
         ctrls[26] = metadata['w5']
     # save_metadata_json
-    # save_metadata_png
+    # save_metadata_image
     if 'img2img' in metadata:
         ctrls[29] = metadata['img2img']
         if 'start_step' in metadata:
@@ -157,8 +157,9 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[37] = metadata['revision_strength_3']
     if 'revision_strength_4' in metadata:
         ctrls[38] = metadata['revision_strength_4']
-    # seed_random
     # same_seed_for_all
+    # output_format
+    # seed_random
     return ctrls    
 
 
@@ -174,13 +175,21 @@ def load_prompt_handler(_file, *args):
                 print(e)
             finally:
                 json_file.close()
-    elif path.endswith('.png'):
-        with open(path, 'rb') as png_file:
-            image = Image.open(png_file)
-            png_file.close()
-            if 'Comment' in image.info:
+    else:
+        with open(path, 'rb') as image_file:
+            image = Image.open(image_file)
+            image_file.close()
+
+            if path.endswith('.png') and 'Comment' in image.info:
+                metadata_string = image.info['Comment']
+            elif path.endswith('.jpg') and 'comment' in image.info:
+                metadata_string = image.info['comment']
+            else:
+                metadata_string = None
+
+            if metadata_string != None:
                 try:
-                    metadata = json.loads(image.info['Comment'])
+                    metadata = json.loads(metadata_string)
                     metadata_to_ctrls(metadata, ctrls)
                 except Exception as e:
                     print(e)
@@ -265,7 +274,7 @@ with shared.gradio_root:
                    same_seed_for_all = gr.Checkbox(label='Same seed for all images', value=settings['same_seed_for_all'])
                 image_seed = gr.Number(label='Seed', value=settings['seed'], precision=0, visible=not settings['seed_random'])
                 with gr.Row():
-                    load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png'], elem_classes='type_small_row', min_width=0)
+                    load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png', '.jpg'], elem_classes='type_small_row', min_width=0)
 
                 def random_checked(r):
                     return gr.update(visible=not r)
@@ -340,7 +349,7 @@ with shared.gradio_root:
                 with gr.Row():
                     model_refresh = gr.Button(label='Refresh', value='\U0001f504 Refresh All Files', variant='secondary', elem_classes='refresh_button')
 
-            with gr.Tab(label='Advanced'):
+            with gr.Tab(label='Sampling'):
                 cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=settings['cfg'])
                 base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=settings['base_clip_skip'])
                 refiner_clip_skip = gr.Slider(label='Refiner CLIP Skip', minimum=-10, maximum=-1, step=1, value=settings['refiner_clip_skip'])
@@ -360,10 +369,11 @@ with shared.gradio_root:
 
                 model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls)
 
-            with gr.Tab(label='Metadata'):
+            with gr.Tab(label='Misc'):
+                output_format = gr.Radio(label='Output Format', choices=['png', 'jpg'], value=settings['output_format'])
                 with gr.Row():
                     save_metadata_json = gr.Checkbox(label='Save Metadata in JSON', value=settings['save_metadata_json'])
-                    save_metadata_png = gr.Checkbox(label='Save Metadata in PNG', value=settings['save_metadata_png'])
+                    save_metadata_image = gr.Checkbox(label='Save Metadata in Image', value=settings['save_metadata_image'])
                 metadata_viewer = gr.JSON(label='Metadata')
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, advanced_column)
@@ -372,7 +382,7 @@ with shared.gradio_root:
             performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
             custom_steps, custom_switch, cfg
         ]
-        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_png] + img2img_ctrls + [same_seed_for_all]
+        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_image] + img2img_ctrls + [same_seed_for_all, output_format]
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=verify_input, inputs=[img2img_mode, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, input_gallery]) \
