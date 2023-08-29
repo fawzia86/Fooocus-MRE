@@ -118,40 +118,34 @@ def worker():
                 f'Step {step}/{total_steps} in the {i}-th Sampling',
                 y)])
 
+        clip_vision_outputs = []
         if revision_mode:
             revision_images_paths = list(map(lambda x: x['name'], revision_gallery))
             revision_images_filenames = list(map(lambda path: os.path.basename(path), revision_images_paths))
             revision_strengths = [revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
-        else:
-            revision_images_paths = []
-            revision_images_filenames = []
-            revision_strengths = []
-
-        clip_vision_outputs = []
-        revision_images_count = len(revision_images_paths)
-        if revision_mode and revision_images_count > 0:
-            for i in range(revision_images_count):
+            for i in range(revision_gallery_size):
                 print(f'Revision for image {i+1} started')
                 if revision_strengths[i % 4] != 0:
                     revision_image = get_image(revision_images_paths[i])
                     clip_vision_output = core.encode_clip_vision(pipeline.clip_vision, revision_image)
                     clip_vision_outputs.append(clip_vision_output)
                 print(f'Revision for image {i+1} finished')
+        else:
+            revision_images_paths = []
+            revision_images_filenames = []
+            revision_strengths = []
 
         for i in range(image_number):
-            if img2img_mode and input_gallery_size > 0:
+            if img2img_mode:
                 input_gallery_entry = input_gallery[i % input_gallery_size]
                 input_image_path = input_gallery_entry['name']
                 input_image_filename = None if input_image_path == None else os.path.basename(input_image_path)
+                start_step = round(steps * img2img_start_step)
+                denoise = img2img_denoise
             else:
                 input_image_path = None
                 input_image_filename = None
                 keep_input_names = None
-
-            if img2img_mode:
-                start_step = round(steps * img2img_start_step)
-                denoise = img2img_denoise
-            else:
                 start_step = 0
                 denoise = None
 
@@ -171,14 +165,21 @@ def worker():
                 'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
                 'base_model': base_model_name, 'refiner_model': refiner_model_name,
                 'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
-                'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode,
-                'start_step': start_step, 'denoise': denoise, 'input_image': input_image_filename,
-                'revision': revision_mode, 'zero_out_positive': zero_out_positive, 'zero_out_negative': zero_out_negative,
-                'revision_strength_1': revision_strength_1, 'revision_strength_2': revision_strength_2,
-                'revision_strength_3': revision_strength_3, 'revision_strength_4': revision_strength_4,
-                'revision_images': revision_images_filenames,
-                'software': fooocus_version.full_version
+                'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode, 'revision': revision_mode,
+                'zero_out_positive': zero_out_positive, 'zero_out_negative': zero_out_negative
             }
+            if img2img_mode:
+                metadata |= {
+                    'start_step': start_step, 'denoise': denoise, 'input_image': input_image_filename,
+                }
+            if revision_mode:
+                metadata |= {
+                    'revision_strength_1': revision_strength_1, 'revision_strength_2': revision_strength_2,
+                    'revision_strength_3': revision_strength_3, 'revision_strength_4': revision_strength_4,
+                    'revision_images': revision_images_filenames,
+                }
+            metadata |= { 'software': fooocus_version.full_version }
+
             metadata_string = json.dumps(metadata, ensure_ascii=False)
             metadata_strings.append(metadata_string)
 
@@ -189,15 +190,16 @@ def worker():
                     ('Style', style),
                     ('Seed', seed),
                     ('Resolution', get_resolution_string(width, height)),
-                    ('Performance', str((performance, steps, switch))),
-                    ('Sampler & Scheduler', str((sampler_name, scheduler))),
+                    ('Performance', (performance, steps, switch)),
+                    ('Sampler & Scheduler', (sampler_name, scheduler)),
                     ('Sharpness', sharpness),
-                    ('CFG & CLIP Skips', str((cfg, base_clip_skip, refiner_clip_skip))),
+                    ('CFG & CLIP Skips', (cfg, base_clip_skip, refiner_clip_skip)),
                     ('Base Model', base_model_name),
                     ('Refiner Model', refiner_model_name),
-                    ('Image-2-Image', (img2img_mode, start_step, denoise, input_image_filename)),
-                    ('Revision', (revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2,
-                        revision_strength_3, revision_strength_4, revision_images_filenames))
+                    ('Image-2-Image', (img2img_mode, start_step, denoise, input_image_filename) if img2img_mode else (img2img_mode)),
+                    ('Revision', (revision_mode, revision_strength_1, revision_strength_2, revision_strength_3,
+                        revision_strength_4, revision_images_filenames) if revision_mode else (revision_mode)),
+                    ('Zero Out Prompts', (zero_out_positive, zero_out_negative)),
                 ]
                 for n, w in loras:
                     if n != 'None':
