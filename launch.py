@@ -20,7 +20,7 @@ def prepare_environment():
     xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.21')
 
     comfy_repo = os.environ.get('COMFY_REPO', "https://github.com/comfyanonymous/ComfyUI")
-    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "8ddd081b093f2774982f261ecb7d23d616328323")
+    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "18617967e5be09d4d24ff0bb337ab4468dd80e6c")
 
     print(f"Python {sys.version}")
     print(f"Fooocus version: {fooocus_version.version}")
@@ -81,8 +81,8 @@ def download_models():
         load_file_from_url(url=url, model_dir=lorafile_path, file_name=file_name)
     for file_name, url in clip_vision_filenames:
         load_file_from_url(url=url, model_dir=clip_vision_path, file_name=file_name)
-#    for file_name, url in controlnet_filenames:
-#        load_file_from_url(url=url, model_dir=controlnet_path, file_name=file_name)
+    for file_name, url in controlnet_filenames:
+        load_file_from_url(url=url, model_dir=controlnet_path, file_name=file_name)
     return
 
 

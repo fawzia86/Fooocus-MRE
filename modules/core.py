@@ -8,9 +8,11 @@ import comfy.model_management
 import comfy.utils
 
 from comfy.sd import load_checkpoint_guess_config
-from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode, ConditioningZeroOut, CLIPVisionEncode, unCLIPConditioning
+from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode, \
+    ConditioningZeroOut, CLIPVisionEncode, unCLIPConditioning, ControlNetApplyAdvanced
 from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cleanup_additional_models
 from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
+from comfy_extras.nodes_canny import Canny
 from modules.samplers_advanced import KSampler, KSamplerWithRefiner
 from modules.patch import patch_all
 from modules.path import embeddings_path
@@ -26,7 +28,8 @@ opImageScaleToTotalPixels = ImageScaleToTotalPixels()
 opConditioningZeroOut = ConditioningZeroOut()
 opCLIPVisionEncode = CLIPVisionEncode()
 opUnCLIPConditioning = unCLIPConditioning()
-
+opCanny = Canny()
+opControlNetApplyAdvanced = ControlNetApplyAdvanced()
 
 class StableDiffusionModel:
     def __init__(self, unet, vae, clip, clip_vision):
@@ -63,6 +66,11 @@ def load_lora(model, lora_filename, strength_model=1.0, strength_clip=1.0):
 @torch.no_grad()
 def load_clip_vision(ckpt_filename):
     return comfy.clip_vision.load(ckpt_filename)
+
+
+@torch.no_grad()
+def load_controlnet(ckpt_filename):
+    return comfy.controlnet.load_controlnet(ckpt_filename)
 
 
 @torch.no_grad()
@@ -103,6 +111,17 @@ def encode_clip_vision(clip_vision, image):
 @torch.no_grad()
 def apply_adm(conditioning, clip_vision_output, strength, noise_augmentation):
     return opUnCLIPConditioning.apply_adm(conditioning=conditioning, clip_vision_output=clip_vision_output, strength=strength, noise_augmentation=noise_augmentation)[0]
+
+
+@torch.no_grad()
+def detect_edge(image, low_threshold, high_threshold):
+    return opCanny.detect_edge(image=image, low_threshold=low_threshold, high_threshold=high_threshold)[0]
+
+
+@torch.no_grad()
+def apply_controlnet(positive, negative, control_net, image, strength, start_percent, end_percent):
+    return opControlNetApplyAdvanced.apply_controlnet(positive=positive, negative=negative, control_net=control_net,
+        image=image, strength=strength, start_percent=start_percent, end_percent=end_percent)
 
 
 def get_previewer(device, latent_format):

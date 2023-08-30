@@ -75,7 +75,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[41] = False
+        ctrls[47] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -159,6 +159,18 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[38] = metadata['revision_strength_4']
     # same_seed_for_all
     # output_format
+    if 'control_lora_canny' in metadata:
+        ctrls[41] = metadata['control_lora_canny']
+    if 'canny_edge_low' in metadata:
+        ctrls[42] = metadata['canny_edge_low']
+    if 'canny_edge_high' in metadata:
+        ctrls[43] = metadata['canny_edge_high']
+    if 'canny_start' in metadata:
+        ctrls[44] = metadata['canny_start']
+    if 'canny_stop' in metadata:
+        ctrls[45] = metadata['canny_stop']
+    if 'canny_strength' in metadata:
+        ctrls[46] = metadata['canny_strength']
     # seed_random
     return ctrls    
 
@@ -245,20 +257,6 @@ with shared.gradio_root:
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
 
-            def verify_input(img2img, gallery_in, gallery_rev, gallery_out):
-                if img2img and len(gallery_in) == 0:
-                    if len(gallery_rev) > 0:
-                        gr.Info('Image-2-Image: imported revision as input')
-                        return gr.update(), list(map(lambda x: x['name'], gallery_rev[:1]))
-                    elif len(gallery_out) > 0:
-                        gr.Info('Image-2-Image: imported output as input')
-                        return gr.update(), list(map(lambda x: x['name'], gallery_out[:1]))
-                    else:
-                        gr.Warning('Image-2-Image: disabled (no images available)')
-                        return gr.update(value=False), gr.update()
-                else:
-                    return gr.update(), gr.update()
-
         with gr.Column(scale=0.5, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):
                 performance = gr.Radio(label='Performance', choices=['Speed', 'Quality', 'Custom'], value=settings['performance'])
@@ -293,18 +291,18 @@ with shared.gradio_root:
                 performance.change(fn=performance_changed, inputs=[performance], outputs=[custom_steps, custom_switch])
 
             with gr.Tab(label='Image-2-Image'):
-                revision_mode = gr.Checkbox(label='Revision (prompting with images)', value=settings['revision_mode'], elem_classes='type_small_row')
-                with gr.Row():
-                    zero_out_positive = gr.Checkbox(label='Zero Out Positive Prompt', value=settings['zero_out_positive'], elem_classes='type_small_row')
-                    zero_out_negative = gr.Checkbox(label='Zero Out Negative Prompt', value=settings['zero_out_negative'], elem_classes='type_small_row')
-
+                revision_mode = gr.Checkbox(label='Revision (prompting with images)', value=settings['revision_mode'])
                 revision_strength_1 = gr.Slider(label='Revision Strength for Image 1', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_1'])
                 revision_strength_2 = gr.Slider(label='Revision Strength for Image 2', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_2'])
                 revision_strength_3 = gr.Slider(label='Revision Strength for Image 3', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_3'])
                 revision_strength_4 = gr.Slider(label='Revision Strength for Image 4', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_4'])
+                with gr.Row():
+                    zero_out_positive = gr.Checkbox(label='Zero Out Positive Prompt', value=settings['zero_out_positive'])
+                    zero_out_negative = gr.Checkbox(label='Zero Out Negative Prompt', value=settings['zero_out_negative'])
 
                 img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
                 img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
+
                 keep_input_names = gr.Checkbox(label='Keep Input Names', value=settings['keep_input_names'], elem_classes='type_small_row')
                 with gr.Row():
                     load_input_images_button = gr.UploadButton(label='Load Image(s) to Input', file_count='multiple', file_types=["image"], elem_classes='type_small_row', min_width=0)
@@ -334,6 +332,16 @@ with shared.gradio_root:
                             return gr.update(value=False), gr.update()
                     else:
                         return gr.update(), gr.update()
+
+            with gr.Tab(label='CN'):
+                control_lora_canny = gr.Checkbox(label='Control-LoRA: Canny', value=settings['control_lora_canny'])
+                canny_edge_low = gr.Slider(label='Edge Detection Low', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_edge_low'])
+                canny_edge_high = gr.Slider(label='Edge Detection High', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_edge_high'])
+                canny_start = gr.Slider(label='Canny Start', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_start'])
+                canny_stop = gr.Slider(label='Canny Stop', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_stop'])
+                canny_strength = gr.Slider(label='Canny Strength', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_strength'])
+
+                canny_ctrls = [control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength]
 
             with gr.Tab(label='Models'):
                 with gr.Row():
@@ -377,15 +385,32 @@ with shared.gradio_root:
                 metadata_viewer = gr.JSON(label='Metadata')
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, advanced_column)
+
+        def verify_input(img2img, canny, gallery_in, gallery_rev, gallery_out):
+            if (img2img or canny) and len(gallery_in) == 0:
+                if len(gallery_rev) > 0:
+                    gr.Info('Image-2-Image / CL: imported revision as input')
+                    return gr.update(), gr.update(), list(map(lambda x: x['name'], gallery_rev[:1]))
+                elif len(gallery_out) > 0:
+                    gr.Info('Image-2-Image / CL: imported output as input')
+                    return gr.update(), gr.update(), list(map(lambda x: x['name'], gallery_out[:1]))
+                else:
+                    gr.Warning('Image-2-Image / CL: disabled (no images available)')
+                    return gr.update(value=False), gr.update(value=False), gr.update()
+            else:
+                return gr.update(), gr.update(), gr.update()
+
+
         ctrls = [
             prompt, negative_prompt, style_selection,
             performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
             custom_steps, custom_switch, cfg
         ]
-        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_image] + img2img_ctrls + [same_seed_for_all, output_format]
+        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_image] \
+            + img2img_ctrls + [same_seed_for_all, output_format] + canny_ctrls
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
-            .then(fn=verify_input, inputs=[img2img_mode, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, input_gallery]) \
+            .then(fn=verify_input, inputs=[img2img_mode, control_lora_canny, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, control_lora_canny, input_gallery]) \
             .then(fn=verify_revision, inputs=[revision_mode, input_gallery, revision_gallery, output_gallery], outputs=[revision_mode, revision_gallery]) \
             .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery, keep_input_names],
                 outputs=[run_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])

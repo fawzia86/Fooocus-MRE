@@ -60,6 +60,7 @@ def worker():
         img2img_mode, img2img_start_step, img2img_denoise, \
         revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2, \
         revision_strength_3, revision_strength_4, same_seed_for_all, output_format, \
+        control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, \
         input_gallery, revision_gallery, keep_input_names = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
@@ -70,6 +71,7 @@ def worker():
         if input_gallery_size == 0:
             img2img_mode = False
             input_image_path = None
+            control_lora_canny = False
 
         revision_gallery_size = len(revision_gallery)
         if revision_gallery_size == 0:
@@ -80,7 +82,8 @@ def worker():
         pipeline.refresh_loras(loras)
         if revision_mode:
             pipeline.refresh_clip_vision()
-        pipeline.clean_prompt_cond_caches()
+        if control_lora_canny:
+            pipeline.refresh_controlnets()
 
         p_txt, n_txt = apply_style(style, prompt, negative_prompt)
 
@@ -136,16 +139,19 @@ def worker():
             revision_strengths = []
 
         for i in range(image_number):
-            if img2img_mode:
+            if img2img_mode or control_lora_canny:
                 input_gallery_entry = input_gallery[i % input_gallery_size]
                 input_image_path = input_gallery_entry['name']
                 input_image_filename = None if input_image_path == None else os.path.basename(input_image_path)
-                start_step = round(steps * img2img_start_step)
-                denoise = img2img_denoise
             else:
                 input_image_path = None
                 input_image_filename = None
                 keep_input_names = None
+
+            if img2img_mode:
+                start_step = round(steps * img2img_start_step)
+                denoise = img2img_denoise
+            else:
                 start_step = 0
                 denoise = None
 
@@ -155,7 +161,8 @@ def worker():
 
             imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
                 cfg, base_clip_skip, refiner_clip_skip, img2img_mode, input_image, start_step, denoise,
-                revision_mode, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths, callback=callback)
+                revision_mode, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths,
+                control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, callback=callback)
 
             metadata = {
                 'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style,
@@ -166,17 +173,23 @@ def worker():
                 'base_model': base_model_name, 'refiner_model': refiner_model_name,
                 'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
                 'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode, 'revision': revision_mode,
-                'zero_out_positive': zero_out_positive, 'zero_out_negative': zero_out_negative
+                'zero_out_positive': zero_out_positive, 'zero_out_negative': zero_out_negative,
+                'control_lora_canny': control_lora_canny
             }
             if img2img_mode:
                 metadata |= {
-                    'start_step': start_step, 'denoise': denoise, 'input_image': input_image_filename,
+                    'start_step': start_step, 'denoise': denoise, 'input_image': input_image_filename
                 }
             if revision_mode:
                 metadata |= {
                     'revision_strength_1': revision_strength_1, 'revision_strength_2': revision_strength_2,
                     'revision_strength_3': revision_strength_3, 'revision_strength_4': revision_strength_4,
-                    'revision_images': revision_images_filenames,
+                    'revision_images': revision_images_filenames
+                }
+            if control_lora_canny:
+                metadata |= {
+                    'canny_edge_low': canny_edge_low, 'canny_edge_high': canny_edge_high, 'canny_start': canny_start,
+                    'canny_stop': canny_stop, 'canny_strength': canny_strength, 'canny_input': input_image_filename
                 }
             metadata |= { 'software': fooocus_version.full_version }
 
@@ -200,6 +213,8 @@ def worker():
                     ('Revision', (revision_mode, revision_strength_1, revision_strength_2, revision_strength_3,
                         revision_strength_4, revision_images_filenames) if revision_mode else (revision_mode)),
                     ('Zero Out Prompts', (zero_out_positive, zero_out_negative)),
+                    ('Canny', (control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop,
+                        canny_strength, input_image_filename) if control_lora_canny else (control_lora_canny)),
                 ]
                 for n, w in loras:
                     if n != 'None':

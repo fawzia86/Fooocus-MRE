@@ -22,6 +22,9 @@ xl_base_patched_hash = ''
 clip_vision: core.StableDiffusionModel = None
 clip_vision_hash = ''
 
+controlnet: core.StableDiffusionModel = None
+controlnet_hash = ''
+
 def refresh_base_model(name):
     global xl_base, xl_base_hash, xl_base_patched, xl_base_patched_hash
     if xl_base_hash == str(name):
@@ -119,6 +122,21 @@ def refresh_clip_vision():
     return
 
 
+def refresh_controlnets():
+    global controlnet, controlnet_hash
+    if controlnet_hash == str(controlnet):
+        return
+
+    model_name = modules.path.default_controlnet_name
+    filename = os.path.join(modules.path.controlnet_path, model_name)
+    controlnet = core.load_controlnet(filename)
+
+    controlnet_hash = model_name
+    print(f'ControlNet model loaded: {controlnet_hash}')
+
+    return
+
+
 refresh_base_model(default_settings['base_model'])
 
 positive_conditions_cache = None
@@ -140,7 +158,8 @@ def clean_prompt_cond_caches():
 
 @torch.no_grad()
 def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip,
-    img2img, input_image, start_step, denoise, revision, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths, callback):
+    img2img, input_image, start_step, denoise, revision, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths,
+    control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, callback):
     global positive_conditions_cache, negative_conditions_cache, positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
     xl_base_patched.clip.clip_layer(base_clip_skip)
@@ -153,13 +172,18 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
     if zero_out_negative:
         negative_conditions = core.zero_out(negative_conditions)
 
-    if input_image == None or img2img == False:
+    if img2img and input_image != None:
+        latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
+        force_full_denoise = False
+    else:
         latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
         force_full_denoise = True
         denoise = None
-    else:
-        latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
-        force_full_denoise = False
+
+    if control_lora_canny and input_image != None:
+        edges_image = core.detect_edge(input_image, canny_edge_low, canny_edge_high)
+        positive_conditions, negative_conditions = core.apply_controlnet(positive_conditions, negative_conditions,
+            controlnet, edges_image, canny_strength, canny_start, canny_stop)
 
     if revision:
         set_comfy_adm_encoding()
@@ -183,12 +207,6 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
             positive_conditions_refiner = core.zero_out(positive_conditions_refiner)
         if zero_out_negative:
             negative_conditions_refiner = core.zero_out(negative_conditions_refiner)
-
-        # TODO revision for refiner conditioning
-#        if revision:
-#            for i in range(len(clip_vision_outputs)):
-#                if revision_strengths[i % 4] != 0:
-#                    positive_conditions_refiner = core.apply_adm(positive_conditions_refiner, clip_vision_outputs[i], revision_strengths[i % 4], 0)
 
         positive_conditions_refiner_cache = positive_conditions_refiner
         negative_conditions_refiner_cache = negative_conditions_refiner
