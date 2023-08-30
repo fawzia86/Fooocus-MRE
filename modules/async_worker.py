@@ -104,13 +104,13 @@ def worker():
         results = []
         metadata_strings = []
 
-        seed = image_seed
-        max_seed = 2**63 - 1
-        if not isinstance(seed, int):
-            seed = random.randint(0, max_seed)
-        if seed < 0:
-            seed = - seed
-        seed = seed % max_seed
+        try:
+            seed = int(image_seed) 
+        except Exception as e:
+            seed = -1
+
+        if not isinstance(seed, int) or seed < constants.MIN_SEED or seed > constants.MAX_SEED:
+            seed = random.randint(constants.MIN_SEED, constants.MAX_SEED)
 
         all_steps = steps * image_number
 

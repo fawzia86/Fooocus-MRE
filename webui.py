@@ -270,18 +270,22 @@ with shared.gradio_root:
                 with gr.Row():
                    seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
                    same_seed_for_all = gr.Checkbox(label='Same seed for all images', value=settings['same_seed_for_all'])
-                image_seed = gr.Number(label='Seed', value=settings['seed'], precision=0, visible=not settings['seed_random'])
+                image_seed = gr.Textbox(label='Seed', value=settings['seed'], max_lines=1, visible=not settings['seed_random'])
                 with gr.Row():
                     load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png', '.jpg'], elem_classes='type_small_row', min_width=0)
 
                 def random_checked(r):
                     return gr.update(visible=not r)
 
-                def refresh_seed(r, s):
-                    if r or not isinstance(s, int) or s < 0 or s > 2**63 - 1:
-                        return random.randint(0, 2**63 - 1)
+                def refresh_seed(r, seed_string):
+                    try:
+                        seed_value = int(seed_string) 
+                    except Exception as e:
+                        seed_value = -1
+                    if r or not isinstance(seed_value, int) or seed_value < constants.MIN_SEED or seed_value > constants.MAX_SEED:
+                        return random.randint(constants.MIN_SEED, constants.MAX_SEED)
                     else:
-                        return s
+                        return seed_value
 
                 seed_random.change(random_checked, inputs=[seed_random], outputs=[image_seed])
 
