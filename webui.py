@@ -17,6 +17,11 @@ from collections.abc import Mapping
 from PIL import Image
 
 
+GALLERY_ID_INPUT = 0
+GALLERY_ID_REVISION = 1
+GALLERY_ID_OUTPUT = 2
+
+
 def generate_clicked(*args):
     yield gr.update(interactive=False), \
         gr.update(visible=True, value=modules.html.make_progress_html(1, 'Processing text encoding ...')), \
@@ -51,7 +56,7 @@ def generate_clicked(*args):
                     gr.update(), \
                     gr.update()
             if flag == 'metadatas':
-                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=2)
+                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=GALLERY_ID_OUTPUT)
                 finished = True
     return
 
@@ -209,25 +214,25 @@ def load_prompt_handler(_file, *args):
 
 
 def load_input_images_handler(files):
-    return list(map(lambda x: x.name, files)), gr.update(selected=0), gr.update(value=len(files))
+    return list(map(lambda x: x.name, files)), gr.update(selected=GALLERY_ID_INPUT), gr.update(value=len(files))
 
 
 def load_revision_images_handler(files):
-    return gr.update(value=True), list(map(lambda x: x.name, files[:4])), gr.update(selected=1)
+    return gr.update(value=True), list(map(lambda x: x.name, files[:4])), gr.update(selected=GALLERY_ID_REVISION)
 
 
 def output_to_input_handler(gallery):
     if len(gallery) == 0:
         return [], gr.update()
     else:
-        return list(map(lambda x: x['name'], gallery)), gr.update(selected=0)
+        return list(map(lambda x: x['name'], gallery)), gr.update(selected=GALLERY_ID_INPUT)
 
 
 def output_to_revision_handler(gallery):
     if len(gallery) == 0:
         return gr.update(value=False), [], gr.update()
     else:
-        return gr.update(value=True), list(map(lambda x: x['name'], gallery[:4])), gr.update(selected=1)
+        return gr.update(value=True), list(map(lambda x: x['name'], gallery[:4])), gr.update(selected=GALLERY_ID_REVISION)
 
 
 settings = default_settings
@@ -235,21 +240,21 @@ settings = default_settings
 shared.gradio_root = gr.Blocks(title=fooocus_version.full_version, css=modules.html.css).queue()
 with shared.gradio_root:
     with gr.Row():
-        with gr.Column():
+        with gr.Column(scale=2):
             progress_window = gr.Image(label='Preview', show_label=True, height=640, visible=False)
             progress_html = gr.HTML(value=modules.html.make_progress_html(32, 'Progress 32%'), visible=False, elem_id='progress-bar', elem_classes='progress-bar')
             with gr.Column() as gallery_holder:
-                with gr.Tabs(selected=2) as gallery_tabs:
-                    with gr.Tab(label='Input', id=0):
+                with gr.Tabs(selected=GALLERY_ID_OUTPUT) as gallery_tabs:
+                    with gr.Tab(label='Input', id=GALLERY_ID_INPUT):
                         input_gallery = gr.Gallery(label='Input', show_label=False, object_fit='contain', height=720, visible=True)
-                    with gr.Tab(label='Revision', id=1):
+                    with gr.Tab(label='Revision', id=GALLERY_ID_REVISION):
                         revision_gallery = gr.Gallery(label='Revision', show_label=False, object_fit='contain', height=720, visible=True)
-                    with gr.Tab(label='Output', id=2):
+                    with gr.Tab(label='Output', id=GALLERY_ID_OUTPUT):
                         output_gallery = gr.Gallery(label='Output', show_label=False, object_fit='contain', height=720, visible=True)
             with gr.Row(elem_classes='type_row'):
-                with gr.Column(scale=0.85):
+                with gr.Column(scale=17):
                     prompt = gr.Textbox(show_label=False, placeholder='Type prompt here.', container=False, autofocus=True, elem_classes='type_row', lines=1024, value=settings['prompt'])
-                with gr.Column(scale=0.15, min_width=0):
+                with gr.Column(scale=3, min_width=0):
                     with gr.Row():
                         img2img_mode = gr.Checkbox(label='Image-2-Image', value=settings['img2img_mode'], elem_classes='type_small_row')
                     with gr.Row():
@@ -257,7 +262,7 @@ with shared.gradio_root:
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
 
-        with gr.Column(scale=0.5, visible=settings['advanced_mode']) as advanced_column:
+        with gr.Column(scale=1, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):
                 performance = gr.Radio(label='Performance', choices=['Speed', 'Quality', 'Custom'], value=settings['performance'])
                 with gr.Row():
