@@ -118,19 +118,20 @@ Below things are already inside the software, and **users do not need to do anyt
 
 1. Support for Image-2-Image mode.
 2. Support for Control-LoRA: Canny Edge (guiding diffusion using edge detection on input, see [Canny Edge description from SAI](https://huggingface.co/stabilityai/control-lora#canny-edge)).
-3. Support for Control-LoRA: Revision (prompting with images, see [Revision description from SAI](https://huggingface.co/stabilityai/control-lora#revision)).
-4. Support for embeddings (use "embedding:embedding_name" syntax, ComfyUI style).
-5. Customizable sampling parameters (sampler, scheduler, steps, base / refiner switch point, CFG, CLIP Skip).
-6. Displaying full metadata for generated images in the UI.
-7. Support for JPEG format.
-8. Ability to save full metadata for generated images (as JSON or embedded in image, disabled by default).
-9. Ability to load prompt information from JSON and image files (if saved with metadata).
-10. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
-11. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
-12. Ability to retain input files names (when using Image-2-Image mode).
-13. Ability to generate multiple images using same seed (useful in Image-2-Image mode).
-14. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
-15. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
+3. Support for Control-LoRA: Depth (guiding diffusion using depth information from input, see [Depth description from SAI](https://huggingface.co/stabilityai/control-lora#midas-and-clipdrop-depth)).
+4. Support for Control-LoRA: Revision (prompting with images, see [Revision description from SAI](https://huggingface.co/stabilityai/control-lora#revision)).
+5. Support for embeddings (use "embedding:embedding_name" syntax, ComfyUI style).
+6. Customizable sampling parameters (sampler, scheduler, steps, base / refiner switch point, CFG, CLIP Skip).
+7. Displaying full metadata for generated images in the UI.
+8. Support for JPEG format.
+9. Ability to save full metadata for generated images (as JSON or embedded in image, disabled by default).
+10. Ability to load prompt information from JSON and image files (if saved with metadata).
+11. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
+12. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
+13. Ability to retain input files names (when using Image-2-Image mode).
+14. Ability to generate multiple images using same seed (useful in Image-2-Image mode).
+15. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+16. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
 
 ## Thanks
 

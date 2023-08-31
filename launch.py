@@ -70,7 +70,9 @@ clip_vision_filenames = [
 
 controlnet_filenames = [
     ('control-lora-canny-rank256.safetensors',
-     'https://huggingface.co/stabilityai/control-lora/resolve/main/control-LoRAs-rank256/control-lora-canny-rank256.safetensors')
+     'https://huggingface.co/stabilityai/control-lora/resolve/main/control-LoRAs-rank256/control-lora-canny-rank256.safetensors'),
+    ('control-lora-depth-rank256.safetensors',
+     'https://huggingface.co/stabilityai/control-lora/resolve/main/control-LoRAs-rank256/control-lora-depth-rank256.safetensors')
 ]
 
 

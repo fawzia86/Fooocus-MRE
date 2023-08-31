@@ -80,7 +80,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[47] = False
+        ctrls[51] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -176,6 +176,14 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[45] = metadata['canny_stop']
     if 'canny_strength' in metadata:
         ctrls[46] = metadata['canny_strength']
+    if 'control_lora_depth' in metadata:
+        ctrls[47] = metadata['control_lora_depth']
+    if 'depth_start' in metadata:
+        ctrls[48] = metadata['depth_start']
+    if 'depth_stop' in metadata:
+        ctrls[49] = metadata['depth_stop']
+    if 'depth_strength' in metadata:
+        ctrls[50] = metadata['depth_strength']
     # seed_random
     return ctrls    
 
@@ -350,7 +358,13 @@ with shared.gradio_root:
                 canny_stop = gr.Slider(label='Canny Stop', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_stop'])
                 canny_strength = gr.Slider(label='Canny Strength', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_strength'])
 
+                control_lora_depth = gr.Checkbox(label='Control-LoRA: Depth', value=settings['control_lora_depth'])
+                depth_start = gr.Slider(label='Depth Start', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_start'])
+                depth_stop = gr.Slider(label='Depth Stop', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_stop'])
+                depth_strength = gr.Slider(label='Depth Strength', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_strength'])
+
                 canny_ctrls = [control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength]
+                depth_ctrls = [control_lora_depth, depth_start, depth_stop, depth_strength]
 
             with gr.Tab(label='Models'):
                 with gr.Row():
@@ -416,7 +430,7 @@ with shared.gradio_root:
             custom_steps, custom_switch, cfg
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_image] \
-            + img2img_ctrls + [same_seed_for_all, output_format] + canny_ctrls
+            + img2img_ctrls + [same_seed_for_all, output_format] + canny_ctrls + depth_ctrls
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=verify_input, inputs=[img2img_mode, control_lora_canny, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, control_lora_canny, input_gallery]) \

@@ -61,6 +61,7 @@ def worker():
         revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2, \
         revision_strength_3, revision_strength_4, same_seed_for_all, output_format, \
         control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, \
+        control_lora_depth, depth_start, depth_stop, depth_strength, \
         input_gallery, revision_gallery, keep_input_names = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
@@ -72,6 +73,7 @@ def worker():
             img2img_mode = False
             input_image_path = None
             control_lora_canny = False
+            control_lora_depth = False
 
         revision_gallery_size = len(revision_gallery)
         if revision_gallery_size == 0:
@@ -83,7 +85,9 @@ def worker():
         if revision_mode:
             pipeline.refresh_clip_vision()
         if control_lora_canny:
-            pipeline.refresh_controlnets()
+            pipeline.refresh_controlnet_canny()
+        if control_lora_depth:
+            pipeline.refresh_controlnet_depth()
 
         p_txt, n_txt = apply_style(style, prompt, negative_prompt)
 
@@ -139,7 +143,7 @@ def worker():
             revision_strengths = []
 
         for i in range(image_number):
-            if img2img_mode or control_lora_canny:
+            if img2img_mode or control_lora_canny or control_lora_depth:
                 input_gallery_entry = input_gallery[i % input_gallery_size]
                 input_image_path = input_gallery_entry['name']
                 input_image_filename = None if input_image_path == None else os.path.basename(input_image_path)
@@ -162,7 +166,8 @@ def worker():
             imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
                 cfg, base_clip_skip, refiner_clip_skip, img2img_mode, input_image, start_step, denoise,
                 revision_mode, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths,
-                control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, callback=callback)
+                control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength,
+                control_lora_depth, depth_start, depth_stop, depth_strength, callback=callback)
 
             metadata = {
                 'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style,
@@ -174,7 +179,7 @@ def worker():
                 'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
                 'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode, 'revision': revision_mode,
                 'zero_out_positive': zero_out_positive, 'zero_out_negative': zero_out_negative,
-                'control_lora_canny': control_lora_canny
+                'control_lora_canny': control_lora_canny, 'control_lora_depth': control_lora_depth
             }
             if img2img_mode:
                 metadata |= {
@@ -190,6 +195,10 @@ def worker():
                 metadata |= {
                     'canny_edge_low': canny_edge_low, 'canny_edge_high': canny_edge_high, 'canny_start': canny_start,
                     'canny_stop': canny_stop, 'canny_strength': canny_strength, 'canny_input': input_image_filename
+                }
+            if control_lora_depth:
+                metadata |= {
+                    'depth_start': depth_start, 'depth_stop': depth_stop, 'depth_strength': depth_strength, 'depth_input': input_image_filename
                 }
             metadata |= { 'software': fooocus_version.full_version }
 
@@ -215,6 +224,7 @@ def worker():
                     ('Zero Out Prompts', (zero_out_positive, zero_out_negative)),
                     ('Canny', (control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop,
                         canny_strength, input_image_filename) if control_lora_canny else (control_lora_canny)),
+                    ('Depth', (control_lora_depth, depth_start, depth_stop, depth_strength, input_image_filename) if control_lora_depth else (control_lora_depth))
                 ]
                 for n, w in loras:
                     if n != 'None':

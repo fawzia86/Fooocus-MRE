@@ -94,8 +94,8 @@ def encode_vae(vae, pixels):
 
 
 @torch.no_grad()
-def upscale(image):
-    return opImageScaleToTotalPixels.upscale(image=image, upscale_method='bicubic', megapixels=1.0)[0]
+def upscale(image, megapixels=1.0):
+    return opImageScaleToTotalPixels.upscale(image=image, upscale_method='bicubic', megapixels=megapixels)[0]
 
 
 @torch.no_grad()

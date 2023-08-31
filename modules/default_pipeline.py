@@ -10,6 +10,7 @@ from comfy.model_management import soft_empty_cache
 from modules.settings import default_settings
 from modules.patch import set_comfy_adm_encoding, set_fooocus_adm_encoding
 
+
 xl_base: core.StableDiffusionModel = None
 xl_base_hash = ''
 
@@ -22,8 +23,12 @@ xl_base_patched_hash = ''
 clip_vision: core.StableDiffusionModel = None
 clip_vision_hash = ''
 
-controlnet: core.StableDiffusionModel = None
-controlnet_hash = ''
+controlnet_canny: core.StableDiffusionModel = None
+controlnet_canny_hash = ''
+
+controlnet_depth: core.StableDiffusionModel = None
+controlnet_depth_hash = ''
+
 
 def refresh_base_model(name):
     global xl_base, xl_base_hash, xl_base_patched, xl_base_patched_hash
@@ -122,17 +127,32 @@ def refresh_clip_vision():
     return
 
 
-def refresh_controlnets():
-    global controlnet, controlnet_hash
-    if controlnet_hash == str(controlnet):
+def refresh_controlnet_canny():
+    global controlnet_canny, controlnet_canny_hash
+    if controlnet_canny_hash == str(controlnet_canny):
         return
 
-    model_name = modules.path.default_controlnet_name
+    model_name = modules.path.default_controlnet_canny_name
     filename = os.path.join(modules.path.controlnet_path, model_name)
-    controlnet = core.load_controlnet(filename)
+    controlnet_canny = core.load_controlnet(filename)
 
-    controlnet_hash = model_name
-    print(f'ControlNet model loaded: {controlnet_hash}')
+    controlnet_canny_hash = model_name
+    print(f'ControlNet model loaded: {controlnet_canny_hash}')
+
+    return
+
+
+def refresh_controlnet_depth():
+    global controlnet_depth, controlnet_depth_hash
+    if controlnet_depth_hash == str(controlnet_depth):
+        return
+
+    model_name = modules.path.default_controlnet_depth_name
+    filename = os.path.join(modules.path.controlnet_path, model_name)
+    controlnet_depth = core.load_controlnet(filename)
+
+    controlnet_depth_hash = model_name
+    print(f'ControlNet model loaded: {controlnet_depth_hash}')
 
     return
 
@@ -159,7 +179,8 @@ def clean_prompt_cond_caches():
 @torch.no_grad()
 def process(positive_prompt, negative_prompt, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg, base_clip_skip, refiner_clip_skip,
     img2img, input_image, start_step, denoise, revision, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths,
-    control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, callback):
+    control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength,
+    control_lora_depth, depth_start, depth_stop, depth_strength, callback):
     global positive_conditions_cache, negative_conditions_cache, positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
     xl_base_patched.clip.clip_layer(base_clip_skip)
@@ -183,7 +204,11 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
     if control_lora_canny and input_image != None:
         edges_image = core.detect_edge(input_image, canny_edge_low, canny_edge_high)
         positive_conditions, negative_conditions = core.apply_controlnet(positive_conditions, negative_conditions,
-            controlnet, edges_image, canny_strength, canny_start, canny_stop)
+            controlnet_canny, edges_image, canny_strength, canny_start, canny_stop)
+
+    if control_lora_depth and input_image != None:
+        positive_conditions, negative_conditions = core.apply_controlnet(positive_conditions, negative_conditions,
+            controlnet_depth, input_image, depth_strength, depth_start, depth_stop)
 
     if revision:
         set_comfy_adm_encoding()

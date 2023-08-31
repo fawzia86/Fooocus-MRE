@@ -30,6 +30,10 @@ def load_settings():
     settings['canny_start'] = 0.0
     settings['canny_stop'] = 0.4
     settings['canny_strength'] = 0.8
+    settings['control_lora_depth'] = False
+    settings['depth_start'] = 0.0
+    settings['depth_stop'] = 0.4
+    settings['depth_strength'] = 0.8
     settings['keep_input_names'] = False
     settings['revision_mode'] = False
     settings['zero_out_positive'] = False
