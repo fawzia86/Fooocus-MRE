@@ -80,7 +80,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[51] = False
+        ctrls[53] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -176,14 +176,18 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[45] = metadata['canny_stop']
     if 'canny_strength' in metadata:
         ctrls[46] = metadata['canny_strength']
+    if 'canny_model' in metadata:
+        ctrls[47] = metadata['canny_model']
     if 'control_lora_depth' in metadata:
-        ctrls[47] = metadata['control_lora_depth']
+        ctrls[48] = metadata['control_lora_depth']
     if 'depth_start' in metadata:
-        ctrls[48] = metadata['depth_start']
+        ctrls[49] = metadata['depth_start']
     if 'depth_stop' in metadata:
-        ctrls[49] = metadata['depth_stop']
+        ctrls[50] = metadata['depth_stop']
     if 'depth_strength' in metadata:
-        ctrls[50] = metadata['depth_strength']
+        ctrls[51] = metadata['depth_strength']
+    if 'depth_model' in metadata:
+        ctrls[52] = metadata['depth_model']
     # seed_random
     return ctrls    
 
@@ -363,9 +367,6 @@ with shared.gradio_root:
                 depth_stop = gr.Slider(label='Depth Stop', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_stop'])
                 depth_strength = gr.Slider(label='Depth Strength', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_strength'])
 
-                canny_ctrls = [control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength]
-                depth_ctrls = [control_lora_depth, depth_start, depth_stop, depth_strength]
-
             with gr.Tab(label='Models'):
                 with gr.Row():
                     base_model = gr.Dropdown(label='SDXL Base Model', choices=modules.path.model_filenames, value=settings['base_model'], show_label=True)
@@ -378,7 +379,13 @@ with shared.gradio_root:
                             lora_weight = gr.Slider(label='Weight', minimum=-2, maximum=2, step=0.01, value=settings[f'lora_{i+1}_weight'])
                             lora_ctrls += [lora_model, lora_weight]
                 with gr.Row():
+                    canny_model = gr.Dropdown(label='Canny Model', choices=modules.path.canny_filenames, value=modules.path.default_controlnet_canny_name)
+                    depth_model = gr.Dropdown(label='Depth Model', choices=modules.path.depth_filenames, value=modules.path.default_controlnet_depth_name)
+                with gr.Row():
                     model_refresh = gr.Button(label='Refresh', value='\U0001f504 Refresh All Files', variant='secondary', elem_classes='refresh_button')
+
+                canny_ctrls = [control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, canny_model]
+                depth_ctrls = [control_lora_depth, depth_start, depth_stop, depth_strength, depth_model]
 
             with gr.Tab(label='Sampling'):
                 cfg = gr.Slider(label='CFG', minimum=1.0, maximum=20.0, step=0.1, value=settings['cfg'])

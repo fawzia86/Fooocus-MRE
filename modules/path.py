@@ -58,9 +58,10 @@ default_lora_weight = 0.5
 
 model_filenames = []
 lora_filenames = []
+canny_filenames = []
+depth_filenames = []
 
-
-def get_model_filenames(folder_path):
+def get_model_filenames(folder_path, name_filter=None):
     if not os.path.isdir(folder_path):
         raise ValueError("Folder path is not a valid directory.")
 
@@ -68,16 +69,18 @@ def get_model_filenames(folder_path):
     for filename in os.listdir(folder_path):
         if os.path.isfile(os.path.join(folder_path, filename)):
             _, file_extension = os.path.splitext(filename)
-            if file_extension.lower() in ['.pth', '.ckpt', '.bin', '.safetensors']:
+            if file_extension.lower() in ['.pth', '.ckpt', '.bin', '.safetensors'] and (name_filter == None or name_filter in _):
                 filenames.append(filename)
 
     return filenames
 
 
 def update_all_model_names():
-    global model_filenames, lora_filenames
+    global model_filenames, lora_filenames, canny_filenames, depth_filenames
     model_filenames = get_model_filenames(modelfile_path)
     lora_filenames = get_model_filenames(lorafile_path)
+    canny_filenames = get_model_filenames(controlnet_path, 'control-lora-canny')
+    depth_filenames = get_model_filenames(controlnet_path, 'control-lora-depth')
     return
 
 

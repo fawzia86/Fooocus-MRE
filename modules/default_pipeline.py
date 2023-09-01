@@ -127,12 +127,12 @@ def refresh_clip_vision():
     return
 
 
-def refresh_controlnet_canny():
+def refresh_controlnet_canny(name=None):
     global controlnet_canny, controlnet_canny_hash
     if controlnet_canny_hash == str(controlnet_canny):
         return
 
-    model_name = modules.path.default_controlnet_canny_name
+    model_name = modules.path.default_controlnet_canny_name if name == None else name
     filename = os.path.join(modules.path.controlnet_path, model_name)
     controlnet_canny = core.load_controlnet(filename)
 
@@ -142,12 +142,12 @@ def refresh_controlnet_canny():
     return
 
 
-def refresh_controlnet_depth():
+def refresh_controlnet_depth(name=None):
     global controlnet_depth, controlnet_depth_hash
     if controlnet_depth_hash == str(controlnet_depth):
         return
 
-    model_name = modules.path.default_controlnet_depth_name
+    model_name = modules.path.default_controlnet_depth_name if name == None else name
     filename = os.path.join(modules.path.controlnet_path, model_name)
     controlnet_depth = core.load_controlnet(filename)
 

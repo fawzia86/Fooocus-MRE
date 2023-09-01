@@ -60,8 +60,8 @@ def worker():
         img2img_mode, img2img_start_step, img2img_denoise, \
         revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2, \
         revision_strength_3, revision_strength_4, same_seed_for_all, output_format, \
-        control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, \
-        control_lora_depth, depth_start, depth_stop, depth_strength, \
+        control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, canny_model, \
+        control_lora_depth, depth_start, depth_stop, depth_strength, depth_model, \
         input_gallery, revision_gallery, keep_input_names = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
@@ -85,9 +85,9 @@ def worker():
         if revision_mode:
             pipeline.refresh_clip_vision()
         if control_lora_canny:
-            pipeline.refresh_controlnet_canny()
+            pipeline.refresh_controlnet_canny(canny_model)
         if control_lora_depth:
-            pipeline.refresh_controlnet_depth()
+            pipeline.refresh_controlnet_depth(depth_model)
 
         p_txt, n_txt = apply_style(style, prompt, negative_prompt)
 
@@ -197,11 +197,11 @@ def worker():
             if control_lora_canny:
                 metadata |= {
                     'canny_edge_low': canny_edge_low, 'canny_edge_high': canny_edge_high, 'canny_start': canny_start,
-                    'canny_stop': canny_stop, 'canny_strength': canny_strength, 'canny_input': input_image_filename
+                    'canny_stop': canny_stop, 'canny_strength': canny_strength, 'canny_model': canny_model, 'canny_input': input_image_filename
                 }
             if control_lora_depth:
                 metadata |= {
-                    'depth_start': depth_start, 'depth_stop': depth_stop, 'depth_strength': depth_strength, 'depth_input': input_image_filename
+                    'depth_start': depth_start, 'depth_stop': depth_stop, 'depth_strength': depth_strength, 'depth_model': depth_model, 'depth_input': input_image_filename
                 }
             metadata |= { 'software': fooocus_version.full_version }
 
@@ -226,8 +226,8 @@ def worker():
                         revision_strength_4, revision_images_filenames) if revision_mode else (revision_mode)),
                     ('Zero Out Prompts', (zero_out_positive, zero_out_negative)),
                     ('Canny', (control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop,
-                        canny_strength, input_image_filename) if control_lora_canny else (control_lora_canny)),
-                    ('Depth', (control_lora_depth, depth_start, depth_stop, depth_strength, input_image_filename) if control_lora_depth else (control_lora_depth))
+                        canny_strength, canny_model, input_image_filename) if control_lora_canny else (control_lora_canny)),
+                    ('Depth', (control_lora_depth, depth_start, depth_stop, depth_strength, depth_model, input_image_filename) if control_lora_depth else (control_lora_depth))
                 ]
                 for n, w in loras:
                     if n != 'None':
