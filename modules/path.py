@@ -52,8 +52,8 @@ default_base_model_name = 'sd_xl_base_1.0_0.9vae.safetensors'
 default_refiner_model_name = 'sd_xl_refiner_1.0_0.9vae.safetensors'
 default_lora_name = 'sd_xl_offset_example-lora_1.0.safetensors'
 default_clip_vision_name = 'clip_vision_g.safetensors'
-default_controlnet_canny_name = 'control-lora-canny-rank256.safetensors'
-default_controlnet_depth_name = 'control-lora-depth-rank256.safetensors'
+default_controlnet_canny_name = 'control-lora-canny-rank128.safetensors'
+default_controlnet_depth_name = 'control-lora-depth-rank128.safetensors'
 default_lora_weight = 0.5
 
 model_filenames = []
