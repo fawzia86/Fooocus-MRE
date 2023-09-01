@@ -193,6 +193,14 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
     if zero_out_negative:
         negative_conditions = core.zero_out(negative_conditions)
 
+    if revision:
+        set_comfy_adm_encoding()
+        for i in range(len(clip_vision_outputs)):
+            if revision_strengths[i % 4] != 0:
+                positive_conditions = core.apply_adm(positive_conditions, clip_vision_outputs[i % 4], revision_strengths[i % 4], 0)
+    else:
+        set_fooocus_adm_encoding()
+
     if img2img and input_image != None:
         latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
         force_full_denoise = False
@@ -209,14 +217,6 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
     if control_lora_depth and input_image != None:
         positive_conditions, negative_conditions = core.apply_controlnet(positive_conditions, negative_conditions,
             controlnet_depth, input_image, depth_strength, depth_start, depth_stop)
-
-    if revision:
-        set_comfy_adm_encoding()
-        for i in range(len(clip_vision_outputs)):
-            if revision_strengths[i % 4] != 0:
-                positive_conditions = core.apply_adm(positive_conditions, clip_vision_outputs[i % 4], revision_strengths[i % 4], 0)
-    else:
-        set_fooocus_adm_encoding()
 
     positive_conditions_cache = positive_conditions
     negative_conditions_cache = negative_conditions
