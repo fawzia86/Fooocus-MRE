@@ -9,6 +9,7 @@ import modules.constants as constants
 
 from PIL import Image, ImageOps
 from modules.resolutions import annotate_resolution_string
+from comfy.model_management import InterruptProcessingException
 
 
 buffer = []
@@ -142,6 +143,8 @@ def worker():
             revision_images_filenames = []
             revision_strengths = []
 
+
+        stop_batch = False
         for i in range(image_number):
             if img2img_mode or control_lora_canny or control_lora_depth:
                 input_gallery_entry = input_gallery[i % input_gallery_size]
@@ -163,14 +166,20 @@ def worker():
             if input_image_path != None:
                 input_image = get_image(input_image_path)
 
+            pipeline.clean_prompt_cond_caches()
             execution_start_time = time.perf_counter()
-            imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
-                cfg, base_clip_skip, refiner_clip_skip, img2img_mode, input_image, start_step, denoise,
-                revision_mode, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths,
-                control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength,
-                control_lora_depth, depth_start, depth_stop, depth_strength, callback=callback)
+            try:
+                imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
+                    cfg, base_clip_skip, refiner_clip_skip, img2img_mode, input_image, start_step, denoise,
+                    revision_mode, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths,
+                    control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength,
+                    control_lora_depth, depth_start, depth_stop, depth_strength, callback=callback)
+            except InterruptProcessingException as iex:
+                print('Processing interrupted')
+                stop_batch = True
+                imgs = []
             execution_time = time.perf_counter() - execution_start_time
-            print(f"Prompt executed in {execution_time:.2f} seconds")
+            print(f'Prompt executed in {execution_time:.2f} seconds')
 
             metadata = {
                 'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style,
@@ -233,12 +242,15 @@ def worker():
                     if n != 'None':
                         d.append((f'LoRA [{n}] weight', w))
                 d.append(('Software', fooocus_version.full_version))
-                d.append(('Execution Time', f"{execution_time:.2f} seconds"))
+                d.append(('Execution Time', f'{execution_time:.2f} seconds'))
                 log(x, d, metadata_string, save_metadata_json, save_metadata_image, keep_input_names, input_image_filename, output_format)
 
             if not same_seed_for_all:
                 seed += 1
             results += imgs
+
+            if stop_batch:
+                break
 
         outputs.append(['results', results])
         outputs.append(['metadatas', metadata_strings])

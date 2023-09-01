@@ -15,7 +15,7 @@ from modules.resolutions import get_resolution_string, resolutions
 from modules.sdxl_styles import style_keys
 from collections.abc import Mapping
 from PIL import Image
-
+from comfy.model_management import interrupt_current_processing
 
 GALLERY_ID_INPUT = 0
 GALLERY_ID_REVISION = 1
@@ -23,7 +23,7 @@ GALLERY_ID_OUTPUT = 2
 
 
 def generate_clicked(*args):
-    yield gr.update(interactive=False), \
+    yield gr.update(interactive=False, visible=False), gr.update(interactive=True, visible=True), \
         gr.update(visible=True, value=modules.html.make_progress_html(1, 'Processing text encoding ...')), \
         gr.update(visible=True, value=None), \
         gr.update(visible=False), \
@@ -40,7 +40,7 @@ def generate_clicked(*args):
             flag, product = worker.outputs.pop(0)
             if flag == 'preview':
                 percentage, title, image = product
-                yield gr.update(interactive=False), \
+                yield gr.update(interactive=False, visible=False), gr.update(interactive=True, visible=True), \
                     gr.update(visible=True, value=modules.html.make_progress_html(percentage, title)), \
                     gr.update(visible=True, value=image) if image is not None else gr.update(), \
                     gr.update(visible=False), \
@@ -48,7 +48,7 @@ def generate_clicked(*args):
                     gr.update(), \
                     gr.update()
             if flag == 'results':
-                yield gr.update(interactive=True), \
+                yield gr.update(interactive=True, visible=True), gr.update(interactive=False, visible=False), \
                     gr.update(visible=False), \
                     gr.update(visible=False), \
                     gr.update(visible=True), \
@@ -56,7 +56,7 @@ def generate_clicked(*args):
                     gr.update(), \
                     gr.update()
             if flag == 'metadatas':
-                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=GALLERY_ID_OUTPUT)
+                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=GALLERY_ID_OUTPUT)
                 finished = True
     return
 
@@ -271,6 +271,7 @@ with shared.gradio_root:
                         img2img_mode = gr.Checkbox(label='Image-2-Image', value=settings['img2img_mode'], elem_classes='type_small_row')
                     with gr.Row():
                         run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row')
+                        stop_button = gr.Button(label='Stop', value='Stop', elem_classes='type_small_row', interactive=False, visible=False)
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
 
@@ -430,7 +431,6 @@ with shared.gradio_root:
             else:
                 return gr.update(), gr.update(), gr.update()
 
-
         ctrls = [
             prompt, negative_prompt, style_selection,
             performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
@@ -443,7 +443,12 @@ with shared.gradio_root:
             .then(fn=verify_input, inputs=[img2img_mode, control_lora_canny, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, control_lora_canny, input_gallery]) \
             .then(fn=verify_revision, inputs=[revision_mode, input_gallery, revision_gallery, output_gallery], outputs=[revision_mode, revision_gallery]) \
             .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery, keep_input_names],
-                outputs=[run_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
+                outputs=[run_button, stop_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
+
+        def stop_clicked():
+            interrupt_current_processing()
+
+        stop_button.click(fn=stop_clicked, queue=False)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default=None, help="Set the listen port.")

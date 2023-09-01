@@ -273,7 +273,6 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
 
     images = core.image_to_numpy(decoded_latent)
 
-    clean_prompt_cond_caches()
     gc.collect()
     soft_empty_cache()
 

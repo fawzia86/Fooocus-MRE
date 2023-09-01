@@ -130,8 +130,9 @@ Below things are already inside the software, and **users do not need to do anyt
 12. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
 13. Ability to retain input files names (when using Image-2-Image mode).
 14. Ability to generate multiple images using same seed (useful in Image-2-Image mode).
-15. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
-16. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
+15. Ability to stop image generation.
+16. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+17. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
 
 ## Thanks
 
