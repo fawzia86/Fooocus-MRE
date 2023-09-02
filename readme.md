@@ -145,4 +145,4 @@ Special thanks to [twri](https://github.com/twri) and [3Diva](https://github.com
 
 ## Update Log
 
-The log is [here](update_log.md).
+The log for original version is [here](update_log.md), and for enhancements added in MRE [here](update_log_mre.md).
