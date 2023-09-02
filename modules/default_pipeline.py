@@ -8,7 +8,7 @@ import modules.path
 from comfy.model_base import SDXL, SDXLRefiner
 from comfy.model_management import soft_empty_cache
 from modules.settings import default_settings
-from modules.patch import set_comfy_adm_encoding, set_fooocus_adm_encoding
+from modules.patch import set_comfy_adm_encoding, set_fooocus_adm_encoding, cfg_patched
 
 
 xl_base: core.StableDiffusionModel = None
@@ -184,6 +184,15 @@ def process(positive_prompt, negative_prompt, steps, switch, width, height, imag
     global positive_conditions_cache, negative_conditions_cache, positive_conditions_refiner_cache, negative_conditions_refiner_cache
 
     xl_base_patched.clip.clip_layer(base_clip_skip)
+
+    if xl_base is not None:
+        xl_base.unet.model_options['sampler_cfg_function'] = cfg_patched
+
+    if xl_base_patched is not None:
+        xl_base_patched.unet.model_options['sampler_cfg_function'] = cfg_patched
+
+    if xl_refiner is not None:
+        xl_refiner.unet.model_options['sampler_cfg_function'] = cfg_patched
 
     positive_conditions = core.encode_prompt_condition(clip=xl_base_patched.clip, prompt=positive_prompt) if positive_conditions_cache is None else positive_conditions_cache
     negative_conditions = core.encode_prompt_condition(clip=xl_base_patched.clip, prompt=negative_prompt) if negative_conditions_cache is None else negative_conditions_cache
