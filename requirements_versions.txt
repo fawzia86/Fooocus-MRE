@@ -14,3 +14,4 @@ pytorch_lightning==1.9.4
 omegaconf==2.2.3
 gradio==3.41.2
 pygit2==1.12.2
+fastapi==0.94.0

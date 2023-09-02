@@ -16,6 +16,8 @@ from modules.sdxl_styles import style_keys
 from collections.abc import Mapping
 from PIL import Image
 from comfy.model_management import interrupt_current_processing
+from fastapi import FastAPI
+from modules.ui_gradio_extensions import reload_javascript
 
 GALLERY_ID_INPUT = 0
 GALLERY_ID_REVISION = 1
@@ -249,6 +251,9 @@ def output_to_revision_handler(gallery):
 
 settings = default_settings
 
+app = FastAPI()
+reload_javascript()
+
 shared.gradio_root = gr.Blocks(title=fooocus_version.full_version, css=modules.html.css).queue()
 with shared.gradio_root:
     with gr.Row():
@@ -270,8 +275,8 @@ with shared.gradio_root:
                     with gr.Row():
                         img2img_mode = gr.Checkbox(label='Image-2-Image', value=settings['img2img_mode'], elem_classes='type_small_row')
                     with gr.Row():
-                        run_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row')
-                        stop_button = gr.Button(label='Stop', value='Stop', elem_classes='type_small_row', interactive=False, visible=False)
+                        generate_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row', elem_id='generate_button')
+                        stop_button = gr.Button(label='Stop', value='Stop', elem_classes='type_small_row', elem_id='stop_button', interactive=False, visible=False)
             with gr.Row():
                 advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
 
@@ -439,20 +444,22 @@ with shared.gradio_root:
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_image] \
             + img2img_ctrls + [same_seed_for_all, output_format] + canny_ctrls + depth_ctrls
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
-        run_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
+        generate_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=verify_input, inputs=[img2img_mode, control_lora_canny, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, control_lora_canny, input_gallery]) \
             .then(fn=verify_revision, inputs=[revision_mode, input_gallery, revision_gallery, output_gallery], outputs=[revision_mode, revision_gallery]) \
             .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery, keep_input_names],
-                outputs=[run_button, stop_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
+                outputs=[generate_button, stop_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
 
         def stop_clicked():
             interrupt_current_processing()
 
         stop_button.click(fn=stop_clicked, queue=False)
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default=None, help="Set the listen port.")
 parser.add_argument("--share", action='store_true', help="Set whether to share on Gradio.")
 parser.add_argument("--listen", type=str, default=None, metavar="IP", nargs="?", const="0.0.0.0", help="Set the listen interface.")
 args = parser.parse_args()
+app = gr.mount_gradio_app(app, shared.gradio_root, '/')
 shared.gradio_root.launch(inbrowser=True, server_name=args.listen, server_port=args.port, share=args.share)
