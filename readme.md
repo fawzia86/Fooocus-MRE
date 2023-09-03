@@ -134,6 +134,8 @@ Below things are already inside the software, and **users do not need to do anyt
 16. Ability to stop image generation.
 17. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
 18. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
+19. Support for custom resolutions list (loaded from resolutions.json - use resolutions-example.json as a template).
+20. Support for custom resolutions - you can just type it now in Resolution field, like "1280x640".
 
 ## Thanks
 

@@ -1,5 +1,6 @@
 ### 1.0.45 MRE
 
+* Added support for custom resolutions and custom resolutions list.
 * Updated Comfy.
 * Added MRE changelog.
 

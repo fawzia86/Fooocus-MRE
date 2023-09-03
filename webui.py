@@ -286,7 +286,7 @@ with shared.gradio_root:
                 with gr.Row():
                     custom_steps = gr.Slider(label='Custom Steps', minimum=10, maximum=200, step=1, value=settings['custom_steps'], visible=settings['performance'] == 'Custom')
                     custom_switch = gr.Slider(label='Custom Switch', minimum=0.2, maximum=1.0, step=0.01, value=settings['custom_switch'], visible=settings['performance'] == 'Custom')
-                resolution = gr.Dropdown(label='Resolution (width × height)', choices=list(resolutions.keys()), value=settings['resolution'])
+                resolution = gr.Dropdown(label='Resolution (width × height)', choices=list(resolutions.keys()), value=settings['resolution'], allow_custom_value=True)
                 style_selection = gr.Dropdown(label='Style', choices=style_keys, value=settings['style'])
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=128, step=1, value=settings['image_number'])
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.", value=settings['negative_prompt'])

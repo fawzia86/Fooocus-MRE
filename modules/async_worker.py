@@ -8,7 +8,8 @@ import modules.core as core
 import modules.constants as constants
 
 from PIL import Image, ImageOps
-from modules.resolutions import annotate_resolution_string
+from modules.resolutions import annotate_resolution_string, string_to_dimensions
+from modules.settings import default_settings
 from comfy.model_management import InterruptProcessingException
 
 
@@ -103,8 +104,12 @@ def worker():
             switch = round(custom_steps * custom_switch)
 
         if resolution not in resolutions:
-            resolution = annotate_resolution_string(resolution)
-        width, height = resolutions[resolution]
+            try:
+                resolution = annotate_resolution_string(resolution)
+            except Exception as e:
+                print(f'Problem with resolution definition: "{resolution}", reverting to default: ' + default_settings['resolution'])
+                resolution = default_settings['resolution']
+        width, height = string_to_dimensions(resolution)
 
         results = []
         metadata_strings = []

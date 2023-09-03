@@ -37,3 +37,4 @@ notification.mp3
 /.coverage*
 /settings.json
 /paths.json
+/resolutions.json

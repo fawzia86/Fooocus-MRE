@@ -1,54 +1,77 @@
+import json
+import re
+
 from math import gcd
+from os.path import exists
 
 
-# https://arxiv.org/abs/2307.01952, Appendix I
-SD_XL_BASE_RATIOS = {
-    "0.25": (512, 2048),
-    "0.26": (512, 1984),
-    "0.27": (512, 1920),
-    "0.28": (512, 1856),
-    "0.32": (576, 1792),
-    "0.33": (576, 1728),
-    "0.35": (576, 1664),
-    "0.4": (640, 1600),
-    "0.42": (640, 1536),
-    "0.48": (704, 1472),
-    "0.5": (704, 1408),
-    "0.52": (704, 1344),
-    "0.57": (768, 1344),
-    "0.6": (768, 1280),
-    "0.68": (832, 1216),
-    "0.72": (832, 1152),
-    "0.78": (896, 1152),
-    "0.82": (896, 1088),
-    "0.88": (960, 1088),
-    "0.94": (960, 1024),
-    "1.0": (1024, 1024),
-    "1.07": (1024, 960),
-    "1.13": (1088, 960),
-    "1.21": (1088, 896),
-    "1.29": (1152, 896),
-    "1.38": (1152, 832),
-    "1.46": (1216, 832),
-    "1.67": (1280, 768),
-    "1.75": (1344, 768),
-    "2.0": (1408, 704),
-    "2.09": (1472, 704),
-    "2.4": (1536, 640),
-    "2.5": (1600, 640),
-    "2.89": (1664, 576),
-    "3.0": (1728, 576),
-    "3.11": (1792, 576),
-    "3.62": (1856, 512),
-    "3.75": (1920, 512),
-    "3.88": (1984, 512),
-    "4.0": (2048, 512),
-}
+# https://arxiv.org/abs/2307.01952, Appendix I + symmetry
+DEFAULT_RESOLUTIONS_LIST = [
+    "512×2048",
+    "512×1984",
+    "512×1920",
+    "512×1856",
+    "576×1792",
+    "576×1728",
+    "576×1664",
+    "640×1600",
+    "640×1536",
+    "704×1472",
+    "704×1408",
+    "704×1344",
+    "768×1344",
+    "768×1280",
+    "832×1216",
+    "832×1152",
+    "896×1152",
+    "896×1088",
+    "960×1088",
+    "960×1024",
+    "1024×1024",
+    "1024×960",
+    "1088×960",
+    "1088×896",
+    "1152×896",
+    "1152×832",
+    "1216×832",
+    "1280×768",
+    "1344×768",
+    "1344×704",
+    "1408×704",
+    "1472×704",
+    "1536×640",
+    "1600×640",
+    "1664×576",
+    "1728×576",
+    "1792×576",
+    "1856×512",
+    "1920×512",
+    "1984×512",
+    "2048×512"
+]
 
 
-def annotate_resolution_string(resolution):
-    width, height = list(map(lambda x: int(x), resolution.split('×')[:2]))
-    return get_resolution_string(width, height)
+def load_resolutions(filename=None):
+    if filename != None and exists(filename):
+        with open(filename) as resolutions_file:
+            try:
+                resolutions_obj = json.load(resolutions_file)
+                if isinstance(resolutions_obj, list) and len(resolutions_obj) > 0:
+                    resolutions_dict = get_resolutions_dict(resolutions_obj)
+                else:
+                    resolutions_dict = get_resolutions_dict(DEFAULT_RESOLUTIONS_LIST)
+            except Exception as e:
+                print(e)
+                resolutions_dict = get_resolutions_dict(DEFAULT_RESOLUTIONS_LIST)
+            finally:
+                resolutions_file.close()
+    else:
+        resolutions_dict = get_resolutions_dict(DEFAULT_RESOLUTIONS_LIST)
+    return resolutions_dict
+
+
+def string_to_dimensions(resolution_string):
+    return list(map(lambda x: int(x), re.findall('\d+', resolution_string)[:2]))
 
 
 def get_resolution_string(width, height):
@@ -56,4 +79,18 @@ def get_resolution_string(width, height):
     return f'{width}×{height} ({width//_gcd}:{height//_gcd})'
 
 
-resolutions = {get_resolution_string(v[0], v[1]):v for v in SD_XL_BASE_RATIOS.values()}
+def annotate_resolution_string(resolution_string):
+    width, height = string_to_dimensions(resolution_string)
+    return get_resolution_string(width, height)
+
+
+def get_resolutions_dict(resolutions_list):
+    resolutions_dict = {}
+    for resolution_string in resolutions_list:
+        width, height = string_to_dimensions(resolution_string)
+        full_resolution_string = get_resolution_string(width, height)
+        resolutions_dict[full_resolution_string] = (width, height)
+    return resolutions_dict
+
+
+resolutions = load_resolutions('resolutions.json')

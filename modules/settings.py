@@ -68,7 +68,6 @@ def load_settings():
         with open('settings.json') as settings_file:
             try:
                 settings_obj = json.load(settings_file)
-                counter = 0;
                 for k in settings.keys():
                     if k in settings_obj:
                         settings[k] = settings_obj[k]
