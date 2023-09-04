@@ -1,14 +1,16 @@
-# Fooocus
+# Fooocus-MRE
 
 ![image](https://github.com/MoonRide303/Fooocus-MRE/assets/130458190/ce430ea0-0995-4067-98dd-cef1d7dc1ab6)
 
-Fooocus is an image generating software.
+Fooocus-MRE is an image generating software, enhanced variant of the [original Fooocus](https://github.com/lllyasviel/Fooocus) dedicated for a bit more advanced users.
 
-Fooocus is a rethinking of Stable Diffusion and Midjourney’s designs:
+Fooocus-MRE is a rethinking of Stable Diffusion and Midjourney’s designs:
 
-* Learned from Stable Diffusion, the software is offline, open source, and free.
+* Learned from Stable Diffusion - the software is offline, open source, and free.
 
-* Learned from Midjourney, the manual tweaking is not needed, and users only need to focus on the prompts and images.
+* Learned from Midjourney - it provides high quality output with default settings, allowing users to focus on the prompts and images.
+
+* Learned from SD web UI and ComfyUI - more advanced users would like to have some control over image generation process.
 
 Fooocus has included and automated [lots of inner optimizations and quality improvements](#tech_list). Users can forget all those difficult technical parameters, and just enjoy the interaction between human and computer to "explore new mediums of thought and expanding the imaginative powers of the human species" `[1]`.
 
