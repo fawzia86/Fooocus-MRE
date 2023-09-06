@@ -138,6 +138,7 @@ Below things are already inside the software, and **users do not need to do anyt
 18. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
 19. Support for custom resolutions list (loaded from resolutions.json - use resolutions-example.json as a template).
 20. Support for custom resolutions - you can just type it now in Resolution field, like "1280x640".
+21. Support for custom styles (loaded from sdxl_styles folder on start).
 
 ## Thanks
 

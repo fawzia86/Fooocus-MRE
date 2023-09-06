@@ -203,7 +203,7 @@ def load_prompt_handler(_file, *args):
                 json_obj = json.load(json_file)
                 metadata_to_ctrls(json_obj, ctrls)
             except Exception as e:
-                print(e)
+                print('load_prompt_handler, e: ' + str(e))
             finally:
                 json_file.close()
     else:

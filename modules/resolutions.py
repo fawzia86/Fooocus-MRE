@@ -61,7 +61,7 @@ def load_resolutions(filename=None):
                 else:
                     resolutions_dict = get_resolutions_dict(DEFAULT_RESOLUTIONS_LIST)
             except Exception as e:
-                print(e)
+                print('load_resolutions, e: ' + str(e))
                 resolutions_dict = get_resolutions_dict(DEFAULT_RESOLUTIONS_LIST)
             finally:
                 resolutions_file.close()

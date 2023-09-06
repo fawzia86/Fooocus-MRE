@@ -3,5 +3,7 @@
     "path_loras": "../models/loras/",
     "path_embeddings": "../models/embeddings/",
     "path_clip_vision": "../models/clip_vision/",
+    "path_controlnet": "../models/controlnet/",
+    "path_styles": "../sdxl_styles/",
     "path_outputs": "../outputs/"
 }

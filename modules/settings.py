@@ -72,7 +72,7 @@ def load_settings():
                     if k in settings_obj:
                         settings[k] = settings_obj[k]
             except Exception as e:
-                print(e)
+                print('load_settings, e: ' + str(e))
             finally:
                 settings_file.close()
 

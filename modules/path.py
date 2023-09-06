@@ -10,6 +10,7 @@ def load_paths():
     path_embeddings = '../models/embeddings/'
     path_clip_vision = '../models/clip_vision/'
     path_controlnet = '../models/controlnet/'
+    path_styles = '../sdxl_styles/'
     path_outputs = '../outputs/'
 
     if exists('paths.json'):
@@ -26,24 +27,27 @@ def load_paths():
                     path_clip_vision = paths_obj['path_clip_vision']
                 if 'path_controlnet' in paths_obj:
                     path_controlnet = paths_obj['path_controlnet']
+                if 'path_styles' in paths_obj:
+                    path_styles = paths_obj['path_styles']
                 if 'path_outputs' in paths_obj:
                     path_outputs = paths_obj['path_outputs']
 
             except Exception as e:
-                print(e)
+                print('load_paths, e: ' + str(e))
             finally:
                 paths_file.close()
 
-    return path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_outputs
+    return path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_styles, path_outputs
 
 
-path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_outputs = load_paths()
+path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_styles, path_outputs = load_paths()
 
 modelfile_path = path_checkpoints if os.path.isabs(path_checkpoints) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_checkpoints))
 lorafile_path = path_loras if os.path.isabs(path_loras) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_loras))
 embeddings_path = path_embeddings if os.path.isabs(path_embeddings) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_embeddings))
 clip_vision_path = path_clip_vision if os.path.isabs(path_clip_vision) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_clip_vision))
-controlnet_path = path_loras if os.path.isabs(path_controlnet) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_controlnet))
+controlnet_path = path_controlnet if os.path.isabs(path_controlnet) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_controlnet))
+styles_path = path_styles if os.path.isabs(path_styles) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_styles))
 temp_outputs_path = path_outputs if os.path.isabs(path_outputs) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_outputs))
 
 os.makedirs(temp_outputs_path, exist_ok=True)
@@ -61,7 +65,8 @@ lora_filenames = []
 canny_filenames = []
 depth_filenames = []
 
-def get_model_filenames(folder_path, name_filter=None):
+
+def get_files_from_folder(folder_path, exensions=None, name_filter=None):
     if not os.path.isdir(folder_path):
         raise ValueError("Folder path is not a valid directory.")
 
@@ -69,10 +74,14 @@ def get_model_filenames(folder_path, name_filter=None):
     for filename in os.listdir(folder_path):
         if os.path.isfile(os.path.join(folder_path, filename)):
             _, file_extension = os.path.splitext(filename)
-            if file_extension.lower() in ['.pth', '.ckpt', '.bin', '.safetensors'] and (name_filter == None or name_filter in _):
+            if (exensions == None or file_extension.lower() in exensions) and (name_filter == None or name_filter in _):
                 filenames.append(filename)
 
     return filenames
+
+
+def get_model_filenames(folder_path, name_filter=None):
+    return get_files_from_folder(folder_path, ['.pth', '.ckpt', '.bin', '.safetensors'], name_filter)
 
 
 def update_all_model_names():

@@ -1,3 +1,8 @@
+### 1.0.45.1 MRE
+
+* Added support for reading styles from JSON files.
+* Fixed joining negative prompts.
+
 ### 1.0.45 MRE
 
 * Added support for custom resolutions and custom resolutions list.
