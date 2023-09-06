@@ -366,12 +366,12 @@ with shared.gradio_root:
                 canny_edge_high = gr.Slider(label='Edge Detection High', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_edge_high'])
                 canny_start = gr.Slider(label='Canny Start', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_start'])
                 canny_stop = gr.Slider(label='Canny Stop', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_stop'])
-                canny_strength = gr.Slider(label='Canny Strength', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_strength'])
+                canny_strength = gr.Slider(label='Canny Strength', minimum=0.0, maximum=2.0, step=0.01, value=settings['canny_strength'])
 
                 control_lora_depth = gr.Checkbox(label='Control-LoRA: Depth', value=settings['control_lora_depth'])
                 depth_start = gr.Slider(label='Depth Start', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_start'])
                 depth_stop = gr.Slider(label='Depth Stop', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_stop'])
-                depth_strength = gr.Slider(label='Depth Strength', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_strength'])
+                depth_strength = gr.Slider(label='Depth Strength', minimum=0.0, maximum=2.0, step=0.01, value=settings['depth_strength'])
 
             with gr.Tab(label='Models'):
                 with gr.Row():

@@ -2,6 +2,8 @@
 
 * Added support for reading styles from JSON files.
 * Fixed joining negative prompts.
+* Increased Control-LoRAs strength range.
+* Updated Comfy.
 
 ### 1.0.45 MRE
 
