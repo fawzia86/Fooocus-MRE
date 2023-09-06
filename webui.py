@@ -18,6 +18,8 @@ from PIL import Image
 from comfy.model_management import interrupt_current_processing
 from fastapi import FastAPI
 from modules.ui_gradio_extensions import reload_javascript
+from modules.util import get_current_log_path, get_previous_log_path
+
 
 GALLERY_ID_INPUT = 0
 GALLERY_ID_REVISION = 1
@@ -413,11 +415,19 @@ with shared.gradio_root:
 
                 model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls)
 
+
             with gr.Tab(label='Misc'):
+                def get_current_links():
+                    return '<a href="https://github.com/MoonRide303/Fooocus-MRE/wiki">&#128212; Fooocus-MRE Wiki</a>' \
+                        + f' <a href="/file={get_current_log_path()}" target="_blank">&#128212; Current Log</a>' \
+                        + f' <a href="/file={get_previous_log_path()}" target="_blank">&#128212; Previous Log</a>' \
+                        + f' <a href="https://ko-fi.com/moonride" target="_blank">&#9749; Ko-fi</a>'
+
                 output_format = gr.Radio(label='Output Format', choices=['png', 'jpg'], value=settings['output_format'])
                 with gr.Row():
                     save_metadata_json = gr.Checkbox(label='Save Metadata in JSON', value=settings['save_metadata_json'])
                     save_metadata_image = gr.Checkbox(label='Save Metadata in Image', value=settings['save_metadata_image'])
+                links = gr.HTML(value=get_current_links())
                 metadata_viewer = gr.JSON(label='Metadata')
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, advanced_column)
@@ -448,7 +458,8 @@ with shared.gradio_root:
             .then(fn=verify_input, inputs=[img2img_mode, control_lora_canny, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, control_lora_canny, input_gallery]) \
             .then(fn=verify_revision, inputs=[revision_mode, input_gallery, revision_gallery, output_gallery], outputs=[revision_mode, revision_gallery]) \
             .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery, keep_input_names],
-                outputs=[generate_button, stop_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs])
+                outputs=[generate_button, stop_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs]) \
+            .then(fn=get_current_links, inputs=None, outputs=links)
 
         def stop_clicked():
             interrupt_current_processing()
