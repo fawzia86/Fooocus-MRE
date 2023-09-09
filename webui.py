@@ -19,6 +19,7 @@ from comfy.cli_args import args
 from fastapi import FastAPI
 from modules.ui_gradio_extensions import reload_javascript
 from modules.util import get_current_log_path, get_previous_log_path
+from os.path import exists
 
 
 GALLERY_ID_INPUT = 0
@@ -459,12 +460,17 @@ with shared.gradio_root:
             .then(fn=verify_revision, inputs=[revision_mode, input_gallery, revision_gallery, output_gallery], outputs=[revision_mode, revision_gallery]) \
             .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery, keep_input_names],
                 outputs=[generate_button, stop_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs]) \
-            .then(fn=get_current_links, inputs=None, outputs=links)
+            .then(fn=get_current_links, inputs=None, outputs=links) \
+            .then(fn=None, _js='playNotification()')
 
         def stop_clicked():
             interrupt_current_processing()
 
         stop_button.click(fn=stop_clicked, queue=False)
+
+        notification_file = 'notification.ogg' if exists('notification.ogg') else 'notification.mp3' if exists('notification.mp3') else None
+        if notification_file != None:
+            gr.Audio(interactive=False, value=notification_file, elem_id='audio_notification', visible=False)
 
 
 app = gr.mount_gradio_app(app, shared.gradio_root, '/')

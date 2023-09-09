@@ -1,6 +1,7 @@
 ### 1.0.45.1 MRE
 
 * Added support for reading styles from JSON files.
+* Added support for playing audio when generation is finished (ported from SD web UI).
 * Fixed joining negative prompts.
 * Increased Control-LoRAs strength range.
 * Allowed passing parameters to Comfy.

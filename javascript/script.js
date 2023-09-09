@@ -12,6 +12,10 @@ function gradioApp() {
     return elem.shadowRoot ? elem.shadowRoot : elem;
 }
 
+function playNotification() {
+    gradioApp().querySelector('#audio_notification audio')?.play();
+}
+
 document.addEventListener('keydown', function(e) {
     var handled = false;
     if (e.key !== undefined) {
