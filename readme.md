@@ -132,13 +132,15 @@ Below things are already inside the software, and **users do not need to do anyt
 12. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
 13. Ability to retain input files names (when using Image-2-Image mode).
 14. Ability to generate multiple images using same seed (useful in Image-2-Image mode).
-15. Ability to generate images forever (right-click on Generate button to start or stop this mode).
+15. Ability to generate images forever (ported from SD web UI - right-click on Generate button to start or stop this mode).
 16. Ability to stop image generation.
 17. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
 18. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
 19. Support for custom resolutions list (loaded from resolutions.json - use resolutions-example.json as a template).
 20. Support for custom resolutions - you can just type it now in Resolution field, like "1280x640".
 21. Support for custom styles (loaded from sdxl_styles folder on start).
+22. Support for playing audio when generation is finished (ported from SD web UI - use notification.ogg or notification.mp3).
+23. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
 
 ## Thanks
 
