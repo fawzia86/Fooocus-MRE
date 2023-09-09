@@ -17,7 +17,6 @@ from modules.samplers_advanced import KSampler, KSamplerWithRefiner
 from modules.patch import patch_all
 from modules.path import embeddings_path
 
-comfy.model_management.DISABLE_SMART_MEMORY = True
 
 patch_all()
 opCLIPTextEncode = CLIPTextEncode()

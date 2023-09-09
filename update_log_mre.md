@@ -3,6 +3,7 @@
 * Added support for reading styles from JSON files.
 * Fixed joining negative prompts.
 * Increased Control-LoRAs strength range.
+* Allowed passing parameters to Comfy.
 * Added links in Misc tab
 * Updated Comfy.
 

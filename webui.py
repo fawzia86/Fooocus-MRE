@@ -2,7 +2,6 @@ import gradio as gr
 import random
 import time
 import shared
-import argparse
 import modules.path
 import fooocus_version
 import modules.html
@@ -16,6 +15,7 @@ from modules.sdxl_styles import style_keys
 from collections.abc import Mapping
 from PIL import Image
 from comfy.model_management import interrupt_current_processing
+from comfy.cli_args import args
 from fastapi import FastAPI
 from modules.ui_gradio_extensions import reload_javascript
 from modules.util import get_current_log_path, get_previous_log_path
@@ -467,10 +467,5 @@ with shared.gradio_root:
         stop_button.click(fn=stop_clicked, queue=False)
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--port", type=int, default=None, help="Set the listen port.")
-parser.add_argument("--share", action='store_true', help="Set whether to share on Gradio.")
-parser.add_argument("--listen", type=str, default=None, metavar="IP", nargs="?", const="0.0.0.0", help="Set the listen interface.")
-args = parser.parse_args()
 app = gr.mount_gradio_app(app, shared.gradio_root, '/')
 shared.gradio_root.launch(inbrowser=True, server_name=args.listen, server_port=args.port, share=args.share)

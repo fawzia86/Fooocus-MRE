@@ -2,6 +2,7 @@ import os
 import sys
 import platform
 import fooocus_version
+import argparse
 
 from modules.launch_util import is_installed, run, python, \
     run_pip, repo_dir, git_clone, requirements_met, script_path, dir_repos
@@ -9,6 +10,7 @@ from modules.model_loader import load_file_from_url
 from modules.path import modelfile_path, lorafile_path, clip_vision_path, controlnet_path
 
 REINSTALL_ALL = False
+DEFAULT_ARGS = ['--disable-smart-memory']
 
 
 def prepare_environment():
@@ -20,7 +22,7 @@ def prepare_environment():
     xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.21')
 
     comfy_repo = os.environ.get('COMFY_REPO', "https://github.com/comfyanonymous/ComfyUI")
-    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "f88f7f413afbe04b42c4422e9deedbaa3269ce76")
+    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "07691e80c3bf9be16c629169e259105ca5327bf0")
 
     print(f"Python {sys.version}")
     print(f"Fooocus version: {fooocus_version.version}")
@@ -92,11 +94,18 @@ def download_models():
     return
 
 
-def clear_comfy_args():
-    argv = sys.argv
+def parse_args():
+    argv = sys.argv + DEFAULT_ARGS
     sys.argv = [sys.argv[0]]
     import comfy.cli_args
     sys.argv = argv
+
+    parser = argparse.ArgumentParser('launch.py', parents=[comfy.cli_args.parser], conflict_handler='resolve')
+    parser.add_argument("--port", type=int, default=None, help="Set the listen port.")
+    parser.add_argument("--share", action='store_true', help="Set whether to share on Gradio.")
+    parser.add_argument("--listen", type=str, default=None, metavar="IP", nargs="?", const="0.0.0.0", help="Set the listen interface.")
+
+    comfy.cli_args.args = parser.parse_args()
 
 
 def cuda_malloc():
@@ -105,7 +114,7 @@ def cuda_malloc():
 
 prepare_environment()
 
-clear_comfy_args()
+parse_args()
 # cuda_malloc()
 
 download_models()
