@@ -1,3 +1,19 @@
+### 1.0.60
+
+* Tune the balance between style and Prompt Expansion.
+
+### 1.0.56
+
+* Begin to use magic split.
+
+### 1.0.55
+
+* Minor changes of Prompt Expansion.
+
+### 1.0.52
+
+* Reduce the semantic corruption of Prompt Expansion.
+
 ### 1.0.51
 
 * Speed up Prompt Expansion a bit.
