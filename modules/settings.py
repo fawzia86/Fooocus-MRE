@@ -16,6 +16,7 @@ def load_settings():
     settings['same_seed_for_all'] = False
     settings['seed'] = 0
     settings['style'] = 'cinematic-default'
+    settings['prompt_expansion'] = False
     settings['prompt'] = ''
     settings['negative_prompt'] = ''
     settings['performance'] = 'Speed'

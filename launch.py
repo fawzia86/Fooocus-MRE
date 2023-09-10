@@ -7,7 +7,8 @@ import argparse
 from modules.launch_util import is_installed, run, python, \
     run_pip, repo_dir, git_clone, requirements_met, script_path, dir_repos
 from modules.model_loader import load_file_from_url
-from modules.path import modelfile_path, lorafile_path, clip_vision_path, controlnet_path
+from modules.path import modelfile_path, lorafile_path, clip_vision_path, controlnet_path, vae_approx_path, fooocus_expansion_path
+
 
 REINSTALL_ALL = False
 DEFAULT_ARGS = ['--disable-smart-memory']
@@ -81,6 +82,11 @@ controlnet_filenames = [
      'https://huggingface.co/stabilityai/control-lora/resolve/main/control-LoRAs-rank256/control-lora-depth-rank256.safetensors')
 ]
 
+vae_approx_filenames = [
+    ('taesdxl_decoder.pth',
+     'https://huggingface.co/lllyasviel/misc/resolve/main/taesdxl_decoder.pth')
+]
+
 
 def download_models():
     for file_name, url in model_filenames:
@@ -91,6 +97,15 @@ def download_models():
         load_file_from_url(url=url, model_dir=clip_vision_path, file_name=file_name)
     for file_name, url in controlnet_filenames:
         load_file_from_url(url=url, model_dir=controlnet_path, file_name=file_name)
+    for file_name, url in vae_approx_filenames:
+        load_file_from_url(url=url, model_dir=vae_approx_path, file_name=file_name)
+
+    load_file_from_url(
+        url='https://huggingface.co/lllyasviel/misc/resolve/main/fooocus_expansion.bin',
+        model_dir=fooocus_expansion_path,
+        file_name='pytorch_model.bin'
+    )
+
     return
 
 

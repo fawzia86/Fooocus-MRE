@@ -42,7 +42,7 @@ def worker():
     import fooocus_version
 
     from modules.resolutions import get_resolution_string, resolutions
-    from modules.sdxl_styles import apply_style
+    from modules.sdxl_styles import apply_style_negative, apply_style_positive
     from modules.private_logger import log
 
     try:
@@ -63,7 +63,7 @@ def worker():
         revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2, \
         revision_strength_3, revision_strength_4, same_seed_for_all, output_format, \
         control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, canny_model, \
-        control_lora_depth, depth_start, depth_stop, depth_strength, depth_model, \
+        control_lora_depth, depth_start, depth_stop, depth_strength, depth_model, prompt_expansion, \
         input_gallery, revision_gallery, keep_input_names = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
@@ -81,6 +81,18 @@ def worker():
         if revision_gallery_size == 0:
             revision_mode = False
 
+
+        outputs.append(['preview', (1, 'Initializing ...', None)])
+        try:
+            seed = int(image_seed) 
+        except Exception as e:
+            seed = -1
+
+        if not isinstance(seed, int) or seed < constants.MIN_SEED or seed > constants.MAX_SEED:
+            seed = random.randint(constants.MIN_SEED, constants.MAX_SEED)
+
+
+        outputs.append(['preview', (3, 'Loading models ...', None)])
         pipeline.refresh_base_model(base_model_name)
         pipeline.refresh_refiner_model(refiner_model_name)
         pipeline.refresh_loras(loras)
@@ -91,45 +103,6 @@ def worker():
         if control_lora_depth:
             pipeline.refresh_controlnet_depth(depth_model)
 
-        p_txt, n_txt = apply_style(style, prompt, negative_prompt)
-
-        if performance == 'Speed':
-            steps = constants.STEPS_SPEED
-            switch = constants.SWITCH_SPEED
-        elif performance == 'Quality':
-            steps = constants.STEPS_QUALITY
-            switch = constants.SWITCH_QUALITY
-        else:
-            steps = custom_steps
-            switch = round(custom_steps * custom_switch)
-
-        if resolution not in resolutions:
-            try:
-                resolution = annotate_resolution_string(resolution)
-            except Exception as e:
-                print(f'Problem with resolution definition: "{resolution}", reverting to default: ' + default_settings['resolution'])
-                resolution = default_settings['resolution']
-        width, height = string_to_dimensions(resolution)
-
-        results = []
-        metadata_strings = []
-
-        try:
-            seed = int(image_seed) 
-        except Exception as e:
-            seed = -1
-
-        if not isinstance(seed, int) or seed < constants.MIN_SEED or seed > constants.MAX_SEED:
-            seed = random.randint(constants.MIN_SEED, constants.MAX_SEED)
-
-        all_steps = steps * image_number
-
-        def callback(step, x0, x, total_steps, y):
-            done_steps = i * steps + step
-            outputs.append(['preview', (
-                int(100.0 * float(done_steps) / float(all_steps)),
-                f'Step {step}/{total_steps} in the {i}-th Sampling',
-                y)])
 
         clip_vision_outputs = []
         if revision_mode:
@@ -137,6 +110,7 @@ def worker():
             revision_images_filenames = list(map(lambda path: os.path.basename(path), revision_images_paths))
             revision_strengths = [revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
             for i in range(revision_gallery_size):
+                outputs.append(['preview', (4, f'Revision for image {i + 1} ...', None)])
                 print(f'Revision for image {i+1} started')
                 if revision_strengths[i % 4] != 0:
                     revision_image = get_image(revision_images_paths[i])
@@ -149,10 +123,85 @@ def worker():
             revision_strengths = []
 
 
+        outputs.append(['preview', (5, 'Encoding negative text ...', None)])
+        n_txt = apply_style_negative(style, negative_prompt)
+        n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, zero_out_negative)
+
+        tasks = []
+        if not prompt_expansion:
+            outputs.append(['preview', (9, 'Encoding positive text ...', None)])
+            p_txt = apply_style_positive(style, prompt)
+            p_cond = pipeline.process_prompt(p_txt, base_clip_skip, refiner_clip_skip, zero_out_positive, revision_mode, revision_strengths, clip_vision_outputs)
+            for i in range(image_number):
+                current_seed = seed if same_seed_for_all else seed + i
+                tasks.append(dict(
+                    prompt=prompt,
+                    negative_prompt=negative_prompt,
+                    seed=current_seed,
+                    n_cond=n_cond,
+                    p_cond=p_cond,
+                    real_positive_prompt=p_txt,
+                    real_negative_prompt=n_txt
+                ))
+        else:
+            for i in range(image_number):
+                outputs.append(['preview', (9, f'Preparing positive text #{i + 1} ...', None)])
+                current_seed = seed if same_seed_for_all else seed + i
+
+                p_txt = pipeline.expand_txt(prompt, current_seed)
+                print(f'Expanded positive prompt: {p_txt}')
+
+                p_txt = apply_style_positive(style, p_txt)
+                tasks.append(dict(
+                    prompt=prompt,
+                    negative_prompt=negative_prompt,
+                    seed=current_seed,
+                    n_cond=n_cond,
+                    real_positive_prompt=p_txt,
+                    real_negative_prompt=n_txt
+                ))
+            for i, t in enumerate(tasks):
+                outputs.append(['preview', (12, f'Encoding positive text #{i + 1} ...', None)])
+                t['p_cond'] = pipeline.process_prompt(t['real_positive_prompt'], base_clip_skip, refiner_clip_skip,
+                    zero_out_positive, revision_mode, revision_strengths, clip_vision_outputs)
+
+
+        if performance == 'Speed':
+            steps = constants.STEPS_SPEED
+            switch = constants.SWITCH_SPEED
+        elif performance == 'Quality':
+            steps = constants.STEPS_QUALITY
+            switch = constants.SWITCH_QUALITY
+        else:
+            steps = custom_steps
+            switch = round(custom_steps * custom_switch)
+
+
+        if resolution not in resolutions:
+            try:
+                resolution = annotate_resolution_string(resolution)
+            except Exception as e:
+                print(f'Problem with resolution definition: "{resolution}", reverting to default: ' + default_settings['resolution'])
+                resolution = default_settings['resolution']
+        width, height = string_to_dimensions(resolution)
+
+
+        results = []
+        metadata_strings = []
+        all_steps = steps * image_number
+
+        def callback(step, x0, x, total_steps, y):
+            done_steps = current_task_idx * steps + step
+            outputs.append(['preview', (
+                int(15.0 + 85.0 * float(done_steps) / float(all_steps)),
+                f'Step {step}/{total_steps} in the {current_task_idx + 1}-th Sampling',
+                y)])
+
+        outputs.append(['preview', (13, 'Starting tasks ...', None)])
         stop_batch = False
-        for i in range(image_number):
+        for current_task_idx, task in enumerate(tasks):
             if img2img_mode or control_lora_canny or control_lora_depth:
-                input_gallery_entry = input_gallery[i % input_gallery_size]
+                input_gallery_entry = input_gallery[current_task_idx % input_gallery_size]
                 input_image_path = input_gallery_entry['name']
                 input_image_filename = None if input_image_path == None else os.path.basename(input_image_path)
             else:
@@ -171,12 +220,10 @@ def worker():
             if input_image_path != None:
                 input_image = get_image(input_image_path)
 
-            pipeline.clean_prompt_cond_caches()
             execution_start_time = time.perf_counter()
             try:
-                imgs = pipeline.process(p_txt, n_txt, steps, switch, width, height, seed, sampler_name, scheduler,
-                    cfg, base_clip_skip, refiner_clip_skip, img2img_mode, input_image, start_step, denoise,
-                    revision_mode, clip_vision_outputs, zero_out_positive, zero_out_negative, revision_strengths,
+                imgs = pipeline.process_diffusion(task['p_cond'], task['n_cond'], steps, switch, width, height, task['seed'], sampler_name, scheduler,
+                    cfg, img2img_mode, input_image, start_step, denoise, revision_mode, clip_vision_outputs, revision_strengths,
                     control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength,
                     control_lora_depth, depth_start, depth_stop, depth_strength, callback=callback)
             except InterruptProcessingException as iex:
@@ -196,7 +243,8 @@ def worker():
                 'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
                 'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode, 'revision': revision_mode,
                 'zero_out_positive': zero_out_positive, 'zero_out_negative': zero_out_negative,
-                'control_lora_canny': control_lora_canny, 'control_lora_depth': control_lora_depth
+                'control_lora_canny': control_lora_canny, 'control_lora_depth': control_lora_depth,
+                'prompt_expansion': prompt_expansion
             }
             if img2img_mode:
                 metadata |= {
@@ -224,10 +272,13 @@ def worker():
 
             for x in imgs:
                 d = [
-                    ('Prompt', prompt),
-                    ('Negative Prompt', negative_prompt),
+                    ('Prompt', task['prompt']),
+                    ('Negative Prompt', task['negative_prompt']),
+                    ('Real Positive Prompt', task['real_positive_prompt']),
+                    ('Real Negative Prompt', task['real_negative_prompt']),
+                    ('Prompt Expansion', str(prompt_expansion)),
                     ('Style', style),
-                    ('Seed', seed),
+                    ('Seed', task['seed']),
                     ('Resolution', get_resolution_string(width, height)),
                     ('Performance', (performance, steps, switch)),
                     ('Sampler & Scheduler', (sampler_name, scheduler)),
@@ -250,8 +301,6 @@ def worker():
                 d.append(('Execution Time', f'{execution_time:.2f} seconds'))
                 log(x, d, metadata_string, save_metadata_json, save_metadata_image, keep_input_names, input_image_filename, output_format)
 
-            if not same_seed_for_all:
-                seed += 1
             results += imgs
 
             if stop_batch:
