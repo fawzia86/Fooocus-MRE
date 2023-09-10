@@ -39,8 +39,8 @@ def load_settings():
     settings['depth_model'] = modules.path.default_controlnet_depth_name
     settings['keep_input_names'] = False
     settings['revision_mode'] = False
-    settings['zero_out_positive'] = False
-    settings['zero_out_negative'] = False
+    settings['positive_prompt_strength'] = 1.0
+    settings['negative_prompt_strength'] = 1.0
     settings['revision_strength_1'] = 1.0
     settings['revision_strength_2'] = 1.0
     settings['revision_strength_3'] = 1.0

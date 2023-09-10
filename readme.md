@@ -121,25 +121,26 @@ Below things are already inside the software, and **users do not need to do anyt
 2. Support for Control-LoRA: Canny Edge (guiding diffusion using edge detection on input, see [Canny Edge description from SAI](https://huggingface.co/stabilityai/control-lora#canny-edge)).
 3. Support for Control-LoRA: Depth (guiding diffusion using depth information from input, see [Depth description from SAI](https://huggingface.co/stabilityai/control-lora#midas-and-clipdrop-depth)).
 4. Support for Control-LoRA: Revision (prompting with images, see [Revision description from SAI](https://huggingface.co/stabilityai/control-lora#revision)).
-5. Support for embeddings (use "embedding:embedding_name" syntax, ComfyUI style).
-6. Customizable sampling parameters (sampler, scheduler, steps, base / refiner switch point, CFG, CLIP Skip).
-7. Displaying full metadata for generated images in the UI.
-8. Support for JPEG format.
-9. Ability to save full metadata for generated images (as JSON or embedded in image, disabled by default).
-10. Ability to load prompt information from JSON and image files (if saved with metadata).
-11. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
-12. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
-13. Ability to retain input files names (when using Image-2-Image mode).
-14. Ability to generate multiple images using same seed (useful in Image-2-Image mode).
-15. Ability to generate images forever (ported from SD web UI - right-click on Generate button to start or stop this mode).
-16. Ability to stop image generation.
-17. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
-18. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
-19. Support for custom resolutions list (loaded from resolutions.json - use resolutions-example.json as a template).
-20. Support for custom resolutions - you can just type it now in Resolution field, like "1280x640".
-21. Support for custom styles (loaded from sdxl_styles folder on start).
-22. Support for playing audio when generation is finished (ported from SD web UI - use notification.ogg or notification.mp3).
-23. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
+5. Adjustable text prompt strengths (useful in Revision mode).
+6. Support for embeddings (use "embedding:embedding_name" syntax, ComfyUI style).
+7. Customizable sampling parameters (sampler, scheduler, steps, base / refiner switch point, CFG, CLIP Skip).
+8. Displaying full metadata for generated images in the UI.
+9. Support for JPEG format.
+10. Ability to save full metadata for generated images (as JSON or embedded in image, disabled by default).
+11. Ability to load prompt information from JSON and image files (if saved with metadata).
+12. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
+13. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
+14. Ability to retain input files names (when using Image-2-Image mode).
+15. Ability to generate multiple images using same seed (useful in Image-2-Image mode).
+16. Ability to generate images forever (ported from SD web UI - right-click on Generate button to start or stop this mode).
+17. Ability to stop image generation.
+18. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+19. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
+20. Support for custom resolutions list (loaded from resolutions.json - use resolutions-example.json as a template).
+21. Support for custom resolutions - you can just type it now in Resolution field, like "1280x640".
+22. Support for custom styles (loaded from sdxl_styles folder on start).
+23. Support for playing audio when generation is finished (ported from SD web UI - use notification.ogg or notification.mp3).
+24. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
 
 ## Thanks
 

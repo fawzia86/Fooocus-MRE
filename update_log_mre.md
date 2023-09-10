@@ -1,5 +1,6 @@
 ### 1.0.51 MRE
 
+* Added support for adjusting text prompt strengths (useful in Revision mode).
 * Updated Comfy.
 
 ### 1.0.50 MRE

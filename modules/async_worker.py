@@ -60,7 +60,7 @@ def worker():
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_image, \
         img2img_mode, img2img_start_step, img2img_denoise, \
-        revision_mode, zero_out_positive, zero_out_negative, revision_strength_1, revision_strength_2, \
+        revision_mode, positive_prompt_strength, negative_prompt_strength, revision_strength_1, revision_strength_2, \
         revision_strength_3, revision_strength_4, same_seed_for_all, output_format, \
         control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, canny_model, \
         control_lora_depth, depth_start, depth_stop, depth_strength, depth_model, prompt_expansion, \
@@ -127,11 +127,11 @@ def worker():
         if not prompt_expansion:
             outputs.append(['preview', (5, 'Encoding negative text ...', None)])
             n_txt = apply_style_negative(style, negative_prompt)
-            n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, zero_out_negative)
+            n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, negative_prompt_strength)
 
             outputs.append(['preview', (9, 'Encoding positive text ...', None)])
             p_txt = apply_style_positive(style, prompt)
-            p_cond = pipeline.process_prompt(p_txt, base_clip_skip, refiner_clip_skip, zero_out_positive, revision_mode, revision_strengths, clip_vision_outputs)
+            p_cond = pipeline.process_prompt(p_txt, base_clip_skip, refiner_clip_skip, positive_prompt_strength, revision_mode, revision_strengths, clip_vision_outputs)
 
             for i in range(image_number):
                 current_seed = seed if same_seed_for_all else seed + i
@@ -162,12 +162,12 @@ def worker():
 
             outputs.append(['preview', (9, 'Encoding negative text ...', None)])
             n_txt = apply_style_negative(style, negative_prompt)
-            n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, zero_out_negative)
+            n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, negative_prompt_strength)
 
             for i, t in enumerate(tasks):
                 outputs.append(['preview', (12, f'Encoding positive text #{i + 1} ...', None)])
                 t['p_cond'] = pipeline.process_prompt(t['real_positive_prompt'], base_clip_skip, refiner_clip_skip,
-                    zero_out_positive, revision_mode, revision_strengths, clip_vision_outputs)
+                    positive_prompt_strength, revision_mode, revision_strengths, clip_vision_outputs)
                 t['real_negative_prompt'] = n_txt
                 t['n_cond'] = n_cond
 
@@ -249,7 +249,7 @@ def worker():
                 'base_model': base_model_name, 'refiner_model': refiner_model_name,
                 'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
                 'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode, 'revision': revision_mode,
-                'zero_out_positive': zero_out_positive, 'zero_out_negative': zero_out_negative,
+                'positive_prompt_strength': positive_prompt_strength, 'negative_prompt_strength': negative_prompt_strength,
                 'control_lora_canny': control_lora_canny, 'control_lora_depth': control_lora_depth,
                 'prompt_expansion': prompt_expansion
             }
@@ -296,7 +296,7 @@ def worker():
                     ('Image-2-Image', (img2img_mode, start_step, denoise, input_image_filename) if img2img_mode else (img2img_mode)),
                     ('Revision', (revision_mode, revision_strength_1, revision_strength_2, revision_strength_3,
                         revision_strength_4, revision_images_filenames) if revision_mode else (revision_mode)),
-                    ('Zero Out Prompts', (zero_out_positive, zero_out_negative)),
+                    ('Prompt Strengths', (positive_prompt_strength, negative_prompt_strength)),
                     ('Canny', (control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop,
                         canny_strength, canny_model, input_image_filename) if control_lora_canny else (control_lora_canny)),
                     ('Depth', (control_lora_depth, depth_start, depth_stop, depth_strength, depth_model, input_image_filename) if control_lora_depth else (control_lora_depth))

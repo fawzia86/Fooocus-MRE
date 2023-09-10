@@ -166,11 +166,11 @@ def expand_txt(*args, **kwargs):
     return expansion_model(*args, **kwargs)
 
 
-def process_prompt(text, base_clip_skip, refiner_clip_skip, zero_out=False, revision=False, revision_strengths=[], clip_vision_outputs=[]):
+def process_prompt(text, base_clip_skip, refiner_clip_skip, prompt_strength=1.0, revision=False, revision_strengths=[], clip_vision_outputs=[]):
     xl_base_patched.clip.clip_layer(base_clip_skip)
     base_cond = core.encode_prompt_condition(clip=xl_base_patched.clip, prompt=text)
-    if zero_out:
-        base_cond = core.zero_out(base_cond)
+    if prompt_strength >= 0 and prompt_strength < 1.0:
+        base_cond = core.set_conditioning_strength(base_cond, prompt_strength)
 
     if revision:
         set_comfy_adm_encoding()
@@ -183,8 +183,8 @@ def process_prompt(text, base_clip_skip, refiner_clip_skip, zero_out=False, revi
     if xl_refiner is not None:
         xl_refiner.clip.clip_layer(refiner_clip_skip)
         refiner_cond = core.encode_prompt_condition(clip=xl_refiner.clip, prompt=text)
-        if zero_out:
-            refiner_cond = core.zero_out(refiner_cond)
+        if prompt_strength >= 0 and prompt_strength < 1.0:
+            refiner_cond = core.set_conditioning_strength(refiner_cond, prompt_strength)
     else:
         refiner_cond = None
     return base_cond, refiner_cond

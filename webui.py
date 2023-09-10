@@ -155,10 +155,14 @@ def metadata_to_ctrls(metadata, ctrls):
             ctrls[31] = metadata['denoise']
     if 'revision' in metadata:
         ctrls[32] = metadata['revision']
-    if 'zero_out' in metadata:
-        ctrls[33] = metadata['zero_out_positive']
-    if 'zero_out' in metadata:
-        ctrls[34] = metadata['zero_out_negative']
+    if 'positive_prompt_strength' in metadata:
+        ctrls[33] = metadata['positive_prompt_strength']
+    elif 'zero_out_positive' in metadata:
+        ctrls[33] = 0.0 if metadata['zero_out_positive'] else 1.0
+    if 'negative_prompt_strength' in metadata:
+        ctrls[34] = metadata['negative_prompt_strength']
+    elif 'zero_out_negative' in metadata:
+        ctrls[34] = 0.0 if metadata['zero_out_negative'] else 1.0
     if 'revision_strength_1' in metadata:
         ctrls[35] = metadata['revision_strength_1']
     if 'revision_strength_2' in metadata:
@@ -329,9 +333,9 @@ with shared.gradio_root:
                 revision_strength_2 = gr.Slider(label='Revision Strength for Image 2', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_2'])
                 revision_strength_3 = gr.Slider(label='Revision Strength for Image 3', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_3'])
                 revision_strength_4 = gr.Slider(label='Revision Strength for Image 4', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_4'])
-                with gr.Row():
-                    zero_out_positive = gr.Checkbox(label='Zero Out Positive Prompt', value=settings['zero_out_positive'])
-                    zero_out_negative = gr.Checkbox(label='Zero Out Negative Prompt', value=settings['zero_out_negative'])
+
+                positive_prompt_strength = gr.Slider(label='Positive Prompt Strength', minimum=0, maximum=1, step=0.01, value=settings['positive_prompt_strength'])
+                negative_prompt_strength = gr.Slider(label='Negative Prompt Strength', minimum=0, maximum=1, step=0.01, value=settings['negative_prompt_strength'])
 
                 img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
                 img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
@@ -349,7 +353,7 @@ with shared.gradio_root:
                 output_to_input_button.click(output_to_input_handler, inputs=output_gallery, outputs=[input_gallery, gallery_tabs])
                 output_to_revision_button.click(output_to_revision_handler, inputs=output_gallery, outputs=[revision_mode, revision_gallery, gallery_tabs])
 
-                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, zero_out_positive, zero_out_negative,
+                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, positive_prompt_strength, negative_prompt_strength,
                     revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
 
                 def verify_revision(rev, gallery_in, gallery_rev, gallery_out):

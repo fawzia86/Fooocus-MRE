@@ -9,7 +9,7 @@ import comfy.utils
 
 from comfy.sd import load_checkpoint_guess_config
 from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode, \
-    ConditioningZeroOut, CLIPVisionEncode, unCLIPConditioning, ControlNetApplyAdvanced
+    ConditioningZeroOut, ConditioningAverage, CLIPVisionEncode, unCLIPConditioning, ControlNetApplyAdvanced
 from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cleanup_additional_models
 from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
 from comfy_extras.nodes_canny import Canny
@@ -25,6 +25,7 @@ opVAEDecode = VAEDecode()
 opVAEEncode = VAEEncode()
 opImageScaleToTotalPixels = ImageScaleToTotalPixels()
 opConditioningZeroOut = ConditioningZeroOut()
+opConditioningAverage = ConditioningAverage()
 opCLIPVisionEncode = CLIPVisionEncode()
 opUnCLIPConditioning = unCLIPConditioning()
 opCanny = Canny()
@@ -100,6 +101,16 @@ def upscale(image, megapixels=1.0):
 @torch.no_grad()
 def zero_out(conditioning):
     return opConditioningZeroOut.zero_out(conditioning=conditioning)[0]
+
+
+@torch.no_grad()
+def average(conditioning_to, conditioning_from, conditioning_to_strength):
+    return opConditioningAverage.addWeighted(conditioning_to=conditioning_to, conditioning_from=conditioning_from, conditioning_to_strength=conditioning_to_strength)[0]
+
+
+@torch.no_grad()
+def set_conditioning_strength(conditioning, strength):
+    return average(conditioning, zero_out(conditioning), strength)
 
 
 @torch.no_grad()
