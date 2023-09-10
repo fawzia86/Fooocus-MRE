@@ -85,7 +85,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[53] = False
+        ctrls[54] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -193,6 +193,8 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[51] = metadata['depth_strength']
     if 'depth_model' in metadata:
         ctrls[52] = metadata['depth_model']
+    if 'prompt_expansion' in metadata:
+        ctrls[53] = metadata['prompt_expansion']
     # seed_random
     return ctrls    
 
@@ -226,7 +228,7 @@ def load_prompt_handler(_file, *args):
                     metadata = json.loads(metadata_string)
                     metadata_to_ctrls(metadata, ctrls)
                 except Exception as e:
-                    print(e)
+                    print('load_prompt_handler, e: ' + str(e))
     return ctrls
 
 
@@ -273,7 +275,7 @@ with shared.gradio_root:
                         output_gallery = gr.Gallery(label='Output', show_label=False, object_fit='contain', height=720, visible=True)
             with gr.Row(elem_classes='type_row'):
                 with gr.Column(scale=17):
-                    prompt = gr.Textbox(show_label=False, placeholder='Type prompt here.', container=False, autofocus=True, elem_classes='type_row', lines=1024, value=settings['prompt'])
+                    prompt = gr.Textbox(show_label=False, placeholder='What do you want to see.', container=False, autofocus=True, elem_classes='type_row', lines=1024, value=settings['prompt'])
                 with gr.Column(scale=3, min_width=0):
                     with gr.Row():
                         img2img_mode = gr.Checkbox(label='Image-2-Image', value=settings['img2img_mode'], elem_classes='type_small_row')
@@ -290,9 +292,10 @@ with shared.gradio_root:
                     custom_steps = gr.Slider(label='Custom Steps', minimum=10, maximum=200, step=1, value=settings['custom_steps'], visible=settings['performance'] == 'Custom')
                     custom_switch = gr.Slider(label='Custom Switch', minimum=0.2, maximum=1.0, step=0.01, value=settings['custom_switch'], visible=settings['performance'] == 'Custom')
                 resolution = gr.Dropdown(label='Resolution (width × height)', choices=list(resolutions.keys()), value=settings['resolution'], allow_custom_value=True)
-                style_selection = gr.Dropdown(label='Style', choices=style_keys, value=settings['style'])
+                style_selection = gr.Dropdown(label='Image Style', choices=style_keys, value=settings['style'])
+                prompt_expansion = gr.Checkbox(label='Prompt Expansion', value=settings['prompt_expansion'])
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=128, step=1, value=settings['image_number'])
-                negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="Type prompt here.", value=settings['negative_prompt'])
+                negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="What you don't want to see.", value=settings['negative_prompt'])
                 with gr.Row():
                    seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
                    same_seed_for_all = gr.Checkbox(label='Same seed for all images', value=settings['same_seed_for_all'])
@@ -453,7 +456,7 @@ with shared.gradio_root:
             custom_steps, custom_switch, cfg
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_image] \
-            + img2img_ctrls + [same_seed_for_all, output_format] + canny_ctrls + depth_ctrls
+            + img2img_ctrls + [same_seed_for_all, output_format] + canny_ctrls + depth_ctrls + [prompt_expansion]
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         generate_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=verify_input, inputs=[img2img_mode, control_lora_canny, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, control_lora_canny, input_gallery]) \

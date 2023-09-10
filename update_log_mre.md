@@ -1,3 +1,6 @@
+### 1.0.50 MRE
+* Renamed Raw Mode (enabled by default in vanilla) to Prompt Expansion (disabled by default in MRE)
+
 ### 1.0.45.1 MRE
 
 * Added support for reading styles from JSON files.

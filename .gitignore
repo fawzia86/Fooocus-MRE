@@ -3,6 +3,7 @@ __pycache__
 **/*.safetensors
 **/*.pth
 **/*.pt
+**/*.bin
 **/*.yaml
 **/*.png
 !taesdxl_decoder.pth

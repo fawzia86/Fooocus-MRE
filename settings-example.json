@@ -8,6 +8,7 @@
     "same_seed_for_all": false,
     "seed": 0,
     "style": "cinematic-default",
+    "prompt_expansion": false,
     "prompt": "",
     "negative_prompt": "",
     "performance": "Speed",
