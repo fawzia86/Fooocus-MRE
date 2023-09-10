@@ -10,7 +10,7 @@ import modules.constants as constants
 from PIL import Image, ImageOps
 from modules.resolutions import annotate_resolution_string, string_to_dimensions
 from modules.settings import default_settings
-from comfy.model_management import InterruptProcessingException
+from comfy.model_management import InterruptProcessingException, throw_exception_if_processing_interrupted
 
 
 buffer = []
@@ -197,6 +197,7 @@ def worker():
         all_steps = steps * image_number
 
         def callback(step, x0, x, total_steps, y):
+            throw_exception_if_processing_interrupted()
             done_steps = current_task_idx * steps + step
             outputs.append(['preview', (
                 int(15.0 + 85.0 * float(done_steps) / float(all_steps)),
