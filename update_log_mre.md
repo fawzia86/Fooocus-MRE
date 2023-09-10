@@ -1,3 +1,7 @@
+### 1.0.61 MRE
+
+* Restored allowed random seed range (entropy reduction applied only to transformers / numpy related calls)
+
 ### 1.0.51 MRE
 
 * Added support for adjusting text prompt strengths (useful in Revision mode).

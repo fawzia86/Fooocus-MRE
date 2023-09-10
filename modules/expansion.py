@@ -1,6 +1,7 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, set_seed
 from modules.path import fooocus_expansion_path
+import modules.constants as constants
 
 
 fooocus_magic_split = [
@@ -31,7 +32,7 @@ class FooocusExpansion:
         print('Fooocus Expansion engine loaded.')
 
     def __call__(self, prompt, seed):
-        seed = int(seed)
+        seed = int(seed) % constants.SEED_LIMIT_NUMPY
         set_seed(seed)
 
         prompt = safe_str(prompt) + fooocus_magic_split[seed % len(fooocus_magic_split)]
