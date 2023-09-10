@@ -29,7 +29,7 @@ GALLERY_ID_OUTPUT = 2
 
 def generate_clicked(*args):
     yield gr.update(interactive=False, visible=False), gr.update(interactive=True, visible=True), \
-        gr.update(visible=True, value=modules.html.make_progress_html(1, 'Processing text encoding ...')), \
+        gr.update(visible=True, value=modules.html.make_progress_html(1, 'Initializing ...')), \
         gr.update(visible=True, value=None), \
         gr.update(visible=False), \
         gr.update(), \

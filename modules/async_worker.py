@@ -123,15 +123,16 @@ def worker():
             revision_strengths = []
 
 
-        outputs.append(['preview', (5, 'Encoding negative text ...', None)])
-        n_txt = apply_style_negative(style, negative_prompt)
-        n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, zero_out_negative)
-
         tasks = []
         if not prompt_expansion:
+            outputs.append(['preview', (5, 'Encoding negative text ...', None)])
+            n_txt = apply_style_negative(style, negative_prompt)
+            n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, zero_out_negative)
+
             outputs.append(['preview', (9, 'Encoding positive text ...', None)])
             p_txt = apply_style_positive(style, prompt)
             p_cond = pipeline.process_prompt(p_txt, base_clip_skip, refiner_clip_skip, zero_out_positive, revision_mode, revision_strengths, clip_vision_outputs)
+
             for i in range(image_number):
                 current_seed = seed if same_seed_for_all else seed + i
                 tasks.append(dict(
@@ -145,7 +146,7 @@ def worker():
                 ))
         else:
             for i in range(image_number):
-                outputs.append(['preview', (9, f'Preparing positive text #{i + 1} ...', None)])
+                outputs.append(['preview', (5, f'Preparing positive text #{i + 1} ...', None)])
                 current_seed = seed if same_seed_for_all else seed + i
 
                 p_txt = pipeline.expand_txt(prompt, current_seed)
@@ -156,14 +157,19 @@ def worker():
                     prompt=prompt,
                     negative_prompt=negative_prompt,
                     seed=current_seed,
-                    n_cond=n_cond,
                     real_positive_prompt=p_txt,
-                    real_negative_prompt=n_txt
                 ))
+
+            outputs.append(['preview', (9, 'Encoding negative text ...', None)])
+            n_txt = apply_style_negative(style, negative_prompt)
+            n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, zero_out_negative)
+
             for i, t in enumerate(tasks):
                 outputs.append(['preview', (12, f'Encoding positive text #{i + 1} ...', None)])
                 t['p_cond'] = pipeline.process_prompt(t['real_positive_prompt'], base_clip_skip, refiner_clip_skip,
                     zero_out_positive, revision_mode, revision_strengths, clip_vision_outputs)
+                t['real_negative_prompt'] = n_txt
+                t['n_cond'] = n_cond
 
 
         if performance == 'Speed':
