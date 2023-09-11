@@ -45,6 +45,7 @@ def worker():
     from modules.sdxl_styles import apply_style_negative, apply_style_positive
     from modules.private_logger import log
     from modules.expansion import safe_str
+    from modules.util import join_prompts
 
     try:
         async_gradio_app = shared.gradio_root
@@ -153,11 +154,16 @@ def worker():
                 outputs.append(['preview', (5, f'Preparing positive text #{i + 1} ...', None)])
                 current_seed = seed if same_seed_for_all else seed + i
 
+                expansion_weight = 0.1
+
                 suffix = pipeline.expansion(prompt, current_seed)
+                suffix = f'({suffix}:{expansion_weight})'
                 print(f'[Prompt Expansion] New suffix: {suffix}')
 
                 p_txt = apply_style_positive(style, prompt)
-                p_txt = safe_str(p_txt) + suffix
+                p_txt = safe_str(p_txt)
+
+                p_txt = join_prompts(p_txt, suffix)
 
                 tasks.append(dict(
                     prompt=prompt,

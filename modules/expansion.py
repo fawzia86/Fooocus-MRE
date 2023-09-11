@@ -7,8 +7,7 @@ import modules.constants as constants
 fooocus_magic_split = [
     ', extremely',
     ', trending',
-    ', intricate',
-    '. The',
+    ', intricate,',
 ]
 dangrous_patterns = '[]【】()（）|:：'
 
@@ -17,7 +16,7 @@ def safe_str(x):
     x = str(x)
     for _ in range(16):
         x = x.replace('  ', ' ')
-    return x.rstrip(",. \r\n")
+    return x.strip(",. \r\n")
 
 
 def remove_pattern(x, pattern):
