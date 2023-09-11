@@ -44,6 +44,7 @@ def worker():
     from modules.resolutions import get_resolution_string, resolutions
     from modules.sdxl_styles import apply_style_negative, apply_style_positive
     from modules.private_logger import log
+    from modules.expansion import safe_str
 
     try:
         async_gradio_app = shared.gradio_root
@@ -83,11 +84,14 @@ def worker():
 
 
         outputs.append(['preview', (1, 'Initializing ...', None)])
+
+        prompt = safe_str(prompt)
+        negative_prompt = safe_str(negative_prompt)
+
         try:
             seed = int(image_seed) 
         except Exception as e:
             seed = -1
-
         if not isinstance(seed, int) or seed < constants.MIN_SEED or seed > constants.MAX_SEED:
             seed = random.randint(constants.MIN_SEED, constants.MAX_SEED)
 
@@ -130,8 +134,7 @@ def worker():
             n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, negative_prompt_strength)
 
             outputs.append(['preview', (9, 'Encoding positive text ...', None)])
-            p_txt_a, p_txt_b = apply_style_positive(style, prompt)
-            p_txt = p_txt_a + p_txt_b
+            p_txt = apply_style_positive(style, prompt)
             p_cond = pipeline.process_prompt(p_txt, base_clip_skip, refiner_clip_skip, positive_prompt_strength, revision_mode, revision_strengths, clip_vision_outputs)
 
             for i in range(image_number):
@@ -150,11 +153,11 @@ def worker():
                 outputs.append(['preview', (5, f'Preparing positive text #{i + 1} ...', None)])
                 current_seed = seed if same_seed_for_all else seed + i
 
-                p_txt_a, p_txt_b = apply_style_positive(style, prompt)
-                p_txt_e = pipeline.expand_txt(p_txt_a, current_seed)
-                print(f'Expanded positive prompt: {p_txt_e}')
+                suffix = pipeline.expansion(prompt, current_seed)
+                print(f'[Prompt Expansion] New suffix: {suffix}')
 
-                p_txt = p_txt_e + p_txt_b
+                p_txt = apply_style_positive(style, prompt)
+                p_txt = safe_str(p_txt) + suffix
 
                 tasks.append(dict(
                     prompt=prompt,

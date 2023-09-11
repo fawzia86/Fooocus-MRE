@@ -159,11 +159,7 @@ def refresh_controlnet_depth(name=None):
 
 refresh_base_model(default_settings['base_model'])
 
-expansion_model = FooocusExpansion()
-
-
-def expand_txt(*args, **kwargs):
-    return expansion_model(*args, **kwargs)
+expansion = FooocusExpansion()
 
 
 def process_prompt(text, base_clip_skip, refiner_clip_skip, prompt_strength=1.0, revision=False, revision_strengths=[], clip_vision_outputs=[]):

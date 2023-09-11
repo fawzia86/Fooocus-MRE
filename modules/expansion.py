@@ -7,10 +7,10 @@ import modules.constants as constants
 fooocus_magic_split = [
     ', extremely',
     ', trending',
-    ', perfect',
     ', intricate',
     '. The',
 ]
+dangrous_patterns = '[]【】()（）|:：'
 
 
 def safe_str(x):
@@ -18,6 +18,12 @@ def safe_str(x):
     for _ in range(16):
         x = x.replace('  ', ' ')
     return x.rstrip(",. \r\n")
+
+
+def remove_pattern(x, pattern):
+    for p in pattern:
+        x = x.replace(p, '')
+    return x
 
 
 class FooocusExpansion:
@@ -34,10 +40,10 @@ class FooocusExpansion:
     def __call__(self, prompt, seed):
         seed = int(seed) % constants.SEED_LIMIT_NUMPY
         set_seed(seed)
-
-        prompt = safe_str(prompt) + fooocus_magic_split[seed % len(fooocus_magic_split)]
-
+        origin = safe_str(prompt)
+        prompt = origin + fooocus_magic_split[seed % len(fooocus_magic_split)]
         response = self.pipe(prompt, max_length=len(prompt) + 256)
-        result = response[0]['generated_text']
+        result = response[0]['generated_text'][len(origin):]
         result = safe_str(result)
+        result = remove_pattern(result, dangrous_patterns)
         return result
