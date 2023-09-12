@@ -302,7 +302,7 @@ def worker():
                 'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode, 'revision': revision_mode,
                 'positive_prompt_strength': positive_prompt_strength, 'negative_prompt_strength': negative_prompt_strength,
                 'control_lora_canny': control_lora_canny, 'control_lora_depth': control_lora_depth,
-                'prompt_expansion': task['expansion']
+                'prompt_expansion': use_expansion
             }
             if img2img_mode:
                 metadata |= {
