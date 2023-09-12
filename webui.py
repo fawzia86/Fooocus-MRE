@@ -306,8 +306,16 @@ with shared.gradio_root:
                    seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
                    same_seed_for_all = gr.Checkbox(label='Same seed for all images', value=settings['same_seed_for_all'])
                 image_seed = gr.Textbox(label='Seed', value=settings['seed'], max_lines=1, visible=not settings['seed_random'])
-                with gr.Row():
-                    load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png', '.jpg'], elem_classes='type_small_row', min_width=0)
+                load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png', '.jpg'], elem_classes='type_small_row', min_width=0)
+
+                def get_current_links():
+                    return '<a href="https://github.com/lllyasviel/Fooocus/discussions/117">&#128212; Fooocus Advanced</a>' \
+                        + ' <a href="https://github.com/MoonRide303/Fooocus-MRE/wiki">&#128212; Fooocus-MRE Wiki</a>' \
+                        + ' <a href="https://ko-fi.com/moonride" target="_blank">&#9749; Ko-fi</a> <br>' \
+                        + f' <a href="/file={get_current_log_path()}" target="_blank">&#128212; Current Log</a>' \
+                        + f' <a href="/file={get_previous_log_path()}" target="_blank">&#128212; Previous Log</a>'
+
+                links = gr.HTML(value=get_current_links())
 
                 def random_checked(r):
                     return gr.update(visible=not r)
@@ -413,7 +421,6 @@ with shared.gradio_root:
                     'dpmpp_sde_gpu', 'dpmpp_sde', 'dpmpp_2m', 'dpmpp_2s_ancestral', 'euler', 'euler_ancestral', 'heun', 'dpm_2', 'dpm_2_ancestral'], value=settings['sampler'])
                 scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'simple', 'ddim_uniform'], value=settings['scheduler'])
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=30.0, step=0.01, value=settings['sharpness'])
-                gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117">\U0001F4D4 Document</a>')
 
                 def model_refresh_clicked():
                     modules.path.update_all_model_names()
@@ -427,17 +434,10 @@ with shared.gradio_root:
 
 
             with gr.Tab(label='Misc'):
-                def get_current_links():
-                    return '<a href="https://github.com/MoonRide303/Fooocus-MRE/wiki">&#128212; Fooocus-MRE Wiki</a>' \
-                        + f' <a href="/file={get_current_log_path()}" target="_blank">&#128212; Current Log</a>' \
-                        + f' <a href="/file={get_previous_log_path()}" target="_blank">&#128212; Previous Log</a>' \
-                        + f' <a href="https://ko-fi.com/moonride" target="_blank">&#9749; Ko-fi</a>'
-
                 output_format = gr.Radio(label='Output Format', choices=['png', 'jpg'], value=settings['output_format'])
                 with gr.Row():
                     save_metadata_json = gr.Checkbox(label='Save Metadata in JSON', value=settings['save_metadata_json'])
                     save_metadata_image = gr.Checkbox(label='Save Metadata in Image', value=settings['save_metadata_image'])
-                links = gr.HTML(value=get_current_links())
                 metadata_viewer = gr.JSON(label='Metadata')
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, advanced_column)
