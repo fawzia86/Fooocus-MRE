@@ -294,9 +294,9 @@ with shared.gradio_root:
         with gr.Column(scale=1, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):
                 performance = gr.Radio(label='Performance', choices=['Speed', 'Quality', 'Custom'], value=settings['performance'])
-                with gr.Row():
-                    custom_steps = gr.Slider(label='Custom Steps', minimum=10, maximum=200, step=1, value=settings['custom_steps'], visible=settings['performance'] == 'Custom')
-                    custom_switch = gr.Slider(label='Custom Switch', minimum=0.2, maximum=1.0, step=0.01, value=settings['custom_switch'], visible=settings['performance'] == 'Custom')
+                with gr.Row(visible=settings['performance'] == 'Custom') as custom_row:
+                    custom_steps = gr.Slider(label='Custom Steps', minimum=10, maximum=200, step=1, value=settings['custom_steps'])
+                    custom_switch = gr.Slider(label='Custom Switch', minimum=0.2, maximum=1.0, step=0.01, value=settings['custom_switch'])
                 resolution = gr.Dropdown(label='Resolution (width × height)', choices=list(resolutions.keys()), value=settings['resolution'], allow_custom_value=True)
                 style_selections = gr.Dropdown(label='Image Style(s)', choices=style_keys, value=settings['styles'], multiselect=True, max_choices=8)
                 prompt_expansion = gr.Checkbox(label=fooocus_expansion, value=settings['prompt_expansion'])
@@ -333,9 +333,9 @@ with shared.gradio_root:
                 seed_random.change(random_checked, inputs=[seed_random], outputs=[image_seed])
 
                 def performance_changed(value):
-                    return gr.update(visible=value == 'Custom'), gr.update(visible=value == 'Custom')
+                    return gr.update(visible=value == 'Custom')
 
-                performance.change(fn=performance_changed, inputs=[performance], outputs=[custom_steps, custom_switch])
+                performance.change(fn=performance_changed, inputs=[performance], outputs=[custom_row])
 
             with gr.Tab(label='Image-2-Image'):
                 revision_mode = gr.Checkbox(label='Revision (prompting with images)', value=settings['revision_mode'])
