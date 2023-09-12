@@ -36,16 +36,17 @@ def worker():
     import time
     import shared
     import random
+    import copy
     import modules.default_pipeline as pipeline
     import modules.path
     import modules.patch
     import fooocus_version
 
     from modules.resolutions import get_resolution_string, resolutions
-    from modules.sdxl_styles import apply_style_negative, apply_style_positive
+    from modules.sdxl_styles import apply_style
     from modules.private_logger import log
     from modules.expansion import safe_str
-    from modules.util import join_prompts
+    from modules.util import join_prompts, remove_empty_str
 
     try:
         async_gradio_app = shared.gradio_root
@@ -56,8 +57,13 @@ def worker():
     except Exception as e:
         print(e)
 
+
+    def progressbar(number, text):
+        outputs.append(['preview', (number, text, None)])
+
+
     def handler(task):
-        prompt, negative_prompt, style, performance, resolution, image_number, image_seed, \
+        prompt, negative_prompt, style_selections, performance, resolution, image_number, image_seed, \
         sharpness, sampler_name, scheduler, custom_steps, custom_switch, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_image, \
@@ -65,10 +71,14 @@ def worker():
         revision_mode, positive_prompt_strength, negative_prompt_strength, revision_strength_1, revision_strength_2, \
         revision_strength_3, revision_strength_4, same_seed_for_all, output_format, \
         control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, canny_model, \
-        control_lora_depth, depth_start, depth_stop, depth_strength, depth_model, prompt_expansion, \
+        control_lora_depth, depth_start, depth_stop, depth_strength, depth_model, use_expansion, \
         input_gallery, revision_gallery, keep_input_names = task
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
+
+        raw_style_selections = copy.deepcopy(style_selections)
+
+        use_style = len(style_selections) > 0
 
         modules.patch.sharpness = sharpness
 
@@ -84,10 +94,19 @@ def worker():
             revision_mode = False
 
 
-        outputs.append(['preview', (1, 'Initializing ...', None)])
+        progressbar(1, 'Initializing ...')
 
-        prompt = safe_str(prompt)
-        negative_prompt = safe_str(negative_prompt)
+        raw_prompt = prompt
+        raw_negative_prompt = negative_prompt
+
+        prompts = remove_empty_str([safe_str(p) for p in prompt.split('\n')], default='')
+        negative_prompts = remove_empty_str([safe_str(p) for p in negative_prompt.split('\n')], default='')
+
+        prompt = prompts[0]
+        negative_prompt = negative_prompts[0]
+
+        extra_positive_prompts = prompts[1:] if len(prompts) > 1 else []
+        extra_negative_prompts = negative_prompts[1:] if len(negative_prompts) > 1 else []
 
         try:
             seed = int(image_seed) 
@@ -97,10 +116,11 @@ def worker():
             seed = random.randint(constants.MIN_SEED, constants.MAX_SEED)
 
 
-        outputs.append(['preview', (3, 'Loading models ...', None)])
+        progressbar(3, 'Loading models ...')
         pipeline.refresh_base_model(base_model_name)
         pipeline.refresh_refiner_model(refiner_model_name)
         pipeline.refresh_loras(loras)
+        pipeline.set_clip_skips(base_clip_skip, refiner_clip_skip)
         if revision_mode:
             pipeline.refresh_clip_vision()
         if control_lora_canny:
@@ -115,7 +135,7 @@ def worker():
             revision_images_filenames = list(map(lambda path: os.path.basename(path), revision_images_paths))
             revision_strengths = [revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
             for i in range(revision_gallery_size):
-                outputs.append(['preview', (4, f'Revision for image {i + 1} ...', None)])
+                progressbar(4, f'Revision for image {i + 1} ...')
                 print(f'Revision for image {i+1} started')
                 if revision_strengths[i % 4] != 0:
                     revision_image = get_image(revision_images_paths[i])
@@ -128,60 +148,78 @@ def worker():
             revision_strengths = []
 
 
-        tasks = []
-        if not prompt_expansion:
-            outputs.append(['preview', (5, 'Encoding negative text ...', None)])
-            n_txt = apply_style_negative(style, negative_prompt)
-            n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, negative_prompt_strength)
+        pipeline.clear_all_caches()
 
-            outputs.append(['preview', (9, 'Encoding positive text ...', None)])
-            p_txt = apply_style_positive(style, prompt)
-            p_cond = pipeline.process_prompt(p_txt, base_clip_skip, refiner_clip_skip, positive_prompt_strength, revision_mode, revision_strengths, clip_vision_outputs)
+        progressbar(5, 'Processing prompts ...')
 
-            for i in range(image_number):
-                current_seed = seed if same_seed_for_all else seed + i
-                tasks.append(dict(
-                    prompt=prompt,
-                    negative_prompt=negative_prompt,
-                    seed=current_seed,
-                    n_cond=n_cond,
-                    p_cond=p_cond,
-                    real_positive_prompt=p_txt,
-                    real_negative_prompt=n_txt
-                ))
+        positive_basic_workloads = []
+        negative_basic_workloads = []
+
+        if use_style:
+            for s in style_selections:
+                p, n = apply_style(s, positive=prompt)
+                positive_basic_workloads.append(p)
+                negative_basic_workloads.append(n)
         else:
-            for i in range(image_number):
-                outputs.append(['preview', (5, f'Preparing positive text #{i + 1} ...', None)])
-                current_seed = seed if same_seed_for_all else seed + i
+            positive_basic_workloads.append(prompt)
 
-                expansion_weight = 0.1
+        negative_basic_workloads.append(negative_prompt)  # Always use independent workload for negative.
 
-                suffix = pipeline.expansion(prompt, current_seed)
-                suffix = f'({suffix}:{expansion_weight})'
-                print(f'[Prompt Expansion] New suffix: {suffix}')
+        positive_basic_workloads = positive_basic_workloads + extra_positive_prompts
+        negative_basic_workloads = negative_basic_workloads + extra_negative_prompts
 
-                p_txt = apply_style_positive(style, prompt)
-                p_txt = safe_str(p_txt)
+        positive_basic_workloads = remove_empty_str(positive_basic_workloads, default=prompt)
+        negative_basic_workloads = remove_empty_str(negative_basic_workloads, default=negative_prompt)
 
-                p_txt = join_prompts(p_txt, suffix)
+        positive_top_k = len(positive_basic_workloads)
+        negative_top_k = len(negative_basic_workloads)
 
-                tasks.append(dict(
-                    prompt=prompt,
-                    negative_prompt=negative_prompt,
-                    seed=current_seed,
-                    real_positive_prompt=p_txt,
-                ))
+        tasks = [dict(
+            task_seed=seed if same_seed_for_all else seed + i,
+            positive=positive_basic_workloads,
+            negative=negative_basic_workloads,
+            expansion='',
+            c=[None, None],
+            uc=[None, None],
+        ) for i in range(image_number)]
 
-            outputs.append(['preview', (9, 'Encoding negative text ...', None)])
-            n_txt = apply_style_negative(style, negative_prompt)
-            n_cond = pipeline.process_prompt(n_txt, base_clip_skip, refiner_clip_skip, negative_prompt_strength)
+        if use_expansion:
+            for i, t in enumerate(tasks):
+                progressbar(5, f'Preparing Fooocus text #{i + 1} ...')
+                expansion = pipeline.expansion(prompt, t['task_seed'])
+                print(f'[Prompt Expansion] New suffix: {expansion}')
+                t['expansion'] = expansion
+                t['positive'] = copy.deepcopy(t['positive']) + [join_prompts(prompt, expansion)]  # Deep copy.
+
+        for i, t in enumerate(tasks):
+            progressbar(7, f'Encoding base positive #{i + 1} ...')
+            t['c'][0] = pipeline.clip_encode(sd=pipeline.xl_base_patched, texts=t['positive'],
+                                             pool_top_k=positive_top_k)
+
+        for i, t in enumerate(tasks):
+            progressbar(9, f'Encoding base negative #{i + 1} ...')
+            t['uc'][0] = pipeline.clip_encode(sd=pipeline.xl_base_patched, texts=t['negative'],
+                                              pool_top_k=negative_top_k)
+
+        if pipeline.xl_refiner is not None:
+            for i, t in enumerate(tasks):
+                progressbar(11, f'Encoding refiner positive #{i + 1} ...')
+                t['c'][1] = pipeline.clip_encode(sd=pipeline.xl_refiner, texts=t['positive'],
+                                                 pool_top_k=positive_top_k)
 
             for i, t in enumerate(tasks):
-                outputs.append(['preview', (12, f'Encoding positive text #{i + 1} ...', None)])
-                t['p_cond'] = pipeline.process_prompt(t['real_positive_prompt'], base_clip_skip, refiner_clip_skip,
-                    positive_prompt_strength, revision_mode, revision_strengths, clip_vision_outputs)
-                t['real_negative_prompt'] = n_txt
-                t['n_cond'] = n_cond
+                progressbar(13, f'Encoding refiner negative #{i + 1} ...')
+                t['uc'][1] = pipeline.clip_encode(sd=pipeline.xl_refiner, texts=t['negative'],
+                                                  pool_top_k=negative_top_k)
+
+        for i, t in enumerate(tasks):
+            progressbar(13, f'Applying prompt strengths #{i + 1} ...')
+            t['c'][0], t['c'][1] = pipeline.apply_prompt_strength(t['c'][0], t['c'][1], positive_prompt_strength)
+            t['uc'][0], t['uc'][1] = pipeline.apply_prompt_strength(t['uc'][0], t['uc'][1], negative_prompt_strength)
+
+        for i, t in enumerate(tasks):
+            progressbar(13, f'Applying Revision #{i + 1} ...')
+            t['c'][0] = pipeline.apply_revision(t['c'][0], revision_mode, revision_strengths, clip_vision_outputs)
 
 
         if performance == 'Speed':
@@ -203,6 +241,7 @@ def worker():
                 resolution = default_settings['resolution']
         width, height = string_to_dimensions(resolution)
 
+        pipeline.clear_all_caches()  # save memory
 
         results = []
         metadata_strings = []
@@ -241,8 +280,8 @@ def worker():
 
             execution_start_time = time.perf_counter()
             try:
-                imgs = pipeline.process_diffusion(task['p_cond'], task['n_cond'], steps, switch, width, height, task['seed'], sampler_name, scheduler,
-                    cfg, img2img_mode, input_image, start_step, denoise, revision_mode, clip_vision_outputs, revision_strengths,
+                imgs = pipeline.process_diffusion(task['c'], task['uc'], steps, switch, width, height, task['task_seed'],
+                    sampler_name, scheduler, cfg, img2img_mode, input_image, start_step, denoise,
                     control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength,
                     control_lora_depth, depth_start, depth_stop, depth_strength, callback=callback)
             except InterruptProcessingException as iex:
@@ -253,8 +292,8 @@ def worker():
             print(f'Prompt executed in {execution_time:.2f} seconds')
 
             metadata = {
-                'prompt': prompt, 'negative_prompt': negative_prompt, 'style': style,
-                'seed': seed, 'width': width, 'height': height, 'p_txt': p_txt, 'n_txt': n_txt,
+                'prompt': raw_prompt, 'negative_prompt': raw_negative_prompt, 'styles': raw_style_selections,
+                'seed': task['task_seed'], 'width': width, 'height': height,
                 'sampler': sampler_name, 'scheduler': scheduler, 'performance': performance,
                 'steps': steps, 'switch': switch, 'sharpness': sharpness, 'cfg': cfg,
                 'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
@@ -263,7 +302,7 @@ def worker():
                 'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode, 'revision': revision_mode,
                 'positive_prompt_strength': positive_prompt_strength, 'negative_prompt_strength': negative_prompt_strength,
                 'control_lora_canny': control_lora_canny, 'control_lora_depth': control_lora_depth,
-                'prompt_expansion': prompt_expansion
+                'prompt_expansion': task['expansion']
             }
             if img2img_mode:
                 metadata |= {
@@ -291,13 +330,11 @@ def worker():
 
             for x in imgs:
                 d = [
-                    ('Prompt', task['prompt']),
-                    ('Negative Prompt', task['negative_prompt']),
-                    ('Real Positive Prompt', task['real_positive_prompt']),
-                    ('Real Negative Prompt', task['real_negative_prompt']),
-                    ('Prompt Expansion', str(prompt_expansion)),
-                    ('Style', style),
-                    ('Seed', task['seed']),
+                    ('Prompt', raw_prompt),
+                    ('Negative Prompt', raw_negative_prompt),
+                    ('Fooocus V2 (Prompt Expansion)', task['expansion']),
+                    ('Styles', str(raw_style_selections)),
+                    ('Seed', task['task_seed']),
                     ('Resolution', get_resolution_string(width, height)),
                     ('Performance', (performance, steps, switch)),
                     ('Sampler & Scheduler', (sampler_name, scheduler)),
@@ -318,7 +355,7 @@ def worker():
                         d.append((f'LoRA [{n}] weight', w))
                 d.append(('Software', fooocus_version.full_version))
                 d.append(('Execution Time', f'{execution_time:.2f} seconds'))
-                log(x, d, metadata_string, save_metadata_json, save_metadata_image, keep_input_names, input_image_filename, output_format)
+                log(x, d, 3, metadata_string, save_metadata_json, save_metadata_image, keep_input_names, input_image_filename, output_format)
 
             results += imgs
 

@@ -1,3 +1,7 @@
+### 2.0.0 MRE
+
+* Changed Prompt Expansion (aka Fooocus V2) to be enabled by default.
+
 ### 1.0.67 MRE
 
 * Updated Comfy (fixes CLIP issue).

@@ -6,7 +6,6 @@ import modules.constants as constants
 
 fooocus_magic_split = [
     ', extremely',
-    ', trending',
     ', intricate,',
 ]
 dangrous_patterns = '[]【】()（）|:：'

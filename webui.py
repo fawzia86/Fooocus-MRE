@@ -11,7 +11,7 @@ import json
 
 from modules.settings import default_settings
 from modules.resolutions import get_resolution_string, resolutions
-from modules.sdxl_styles import style_keys
+from modules.sdxl_styles import style_keys, fooocus_expansion, migrate_style_from_v1
 from collections.abc import Mapping
 from PIL import Image
 from comfy.model_management import interrupt_current_processing
@@ -74,8 +74,10 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[0] = metadata['prompt']
     if 'negative_prompt' in metadata:
         ctrls[1] = metadata['negative_prompt']
-    if 'style' in metadata:
-        ctrls[2] = metadata['style']
+    if 'styles' in metadata:
+        ctrls[2] = metadata['styles']
+    elif 'style' in metadata:
+        ctrls[2] = migrate_style_from_v1(metadata['style'])
     if 'performance' in metadata:
         ctrls[3] = metadata['performance']
     if 'width' in metadata and 'height' in metadata:
@@ -296,8 +298,8 @@ with shared.gradio_root:
                     custom_steps = gr.Slider(label='Custom Steps', minimum=10, maximum=200, step=1, value=settings['custom_steps'], visible=settings['performance'] == 'Custom')
                     custom_switch = gr.Slider(label='Custom Switch', minimum=0.2, maximum=1.0, step=0.01, value=settings['custom_switch'], visible=settings['performance'] == 'Custom')
                 resolution = gr.Dropdown(label='Resolution (width × height)', choices=list(resolutions.keys()), value=settings['resolution'], allow_custom_value=True)
-                style_selection = gr.Dropdown(label='Image Style', choices=style_keys, value=settings['style'])
-                prompt_expansion = gr.Checkbox(label='Prompt Expansion', value=settings['prompt_expansion'])
+                style_selections = gr.Dropdown(label='Image Style(s)', choices=style_keys, value=settings['styles'], multiselect=True, max_choices=8)
+                prompt_expansion = gr.Checkbox(label=fooocus_expansion, value=settings['prompt_expansion'])
                 image_number = gr.Slider(label='Image Number', minimum=1, maximum=128, step=1, value=settings['image_number'])
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="What you don't want to see.", value=settings['negative_prompt'])
                 with gr.Row():
@@ -455,7 +457,7 @@ with shared.gradio_root:
                 return gr.update(), gr.update(), gr.update()
 
         ctrls = [
-            prompt, negative_prompt, style_selection,
+            prompt, negative_prompt, style_selections,
             performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
             custom_steps, custom_switch, cfg
         ]

@@ -162,23 +162,18 @@ refresh_base_model(default_settings['base_model'])
 expansion = FooocusExpansion()
 
 
-def process_prompt(text, base_clip_skip, refiner_clip_skip, prompt_strength=1.0, revision=False, revision_strengths=[], clip_vision_outputs=[]):
+def set_clip_skips(base_clip_skip, refiner_clip_skip):
     xl_base_patched.clip.clip_layer(base_clip_skip)
-    base_cond = core.encode_prompt_condition(clip=xl_base_patched.clip, prompt=text)
+    if xl_refiner is not None:
+        xl_refiner.clip.clip_layer(refiner_clip_skip)
+    return
+
+
+def apply_prompt_strength(base_cond, refiner_cond, prompt_strength=1.0):
     if prompt_strength >= 0 and prompt_strength < 1.0:
         base_cond = core.set_conditioning_strength(base_cond, prompt_strength)
 
-    if revision:
-        set_comfy_adm_encoding()
-        for i in range(len(clip_vision_outputs)):
-            if revision_strengths[i % 4] != 0:
-                base_cond = core.apply_adm(base_cond, clip_vision_outputs[i % 4], revision_strengths[i % 4], 0)
-    else:
-        set_fooocus_adm_encoding()
-
     if xl_refiner is not None:
-        xl_refiner.clip.clip_layer(refiner_clip_skip)
-        refiner_cond = core.encode_prompt_condition(clip=xl_refiner.clip, prompt=text)
         if prompt_strength >= 0 and prompt_strength < 1.0:
             refiner_cond = core.set_conditioning_strength(refiner_cond, prompt_strength)
     else:
@@ -186,9 +181,71 @@ def process_prompt(text, base_clip_skip, refiner_clip_skip, prompt_strength=1.0,
     return base_cond, refiner_cond
 
 
+def apply_revision(base_cond, revision=False, revision_strengths=[], clip_vision_outputs=[]):
+    if revision:
+        set_comfy_adm_encoding()
+        for i in range(len(clip_vision_outputs)):
+            if revision_strengths[i % 4] != 0:
+                base_cond = core.apply_adm(base_cond, clip_vision_outputs[i % 4], revision_strengths[i % 4], 0)
+    else:
+        set_fooocus_adm_encoding()
+    return base_cond
+
+
+def clip_encode_single(clip, text, verbose=False):
+    cached = clip.fcs_cond_cache.get(text, None)
+    if cached is not None:
+        if verbose:
+            print(f'[CLIP Cached] {text}')
+        return cached
+    tokens = clip.tokenize(text)
+    result = clip.encode_from_tokens(tokens, return_pooled=True)
+    clip.fcs_cond_cache[text] = result
+    if verbose:
+        print(f'[CLIP Encoded] {text}')
+    return result
+
+
+def clip_encode(sd, texts, pool_top_k=1):
+    if sd is None:
+        return None
+    if sd.clip is None:
+        return None
+    if not isinstance(texts, list):
+        return None
+    if len(texts) == 0:
+        return None
+
+    clip = sd.clip
+    cond_list = []
+    pooled_acc = 0
+
+    for i, text in enumerate(texts):
+        cond, pooled = clip_encode_single(clip, text)
+        cond_list.append(cond)
+        if i < pool_top_k:
+            pooled_acc += pooled
+
+    return [[torch.cat(cond_list, dim=1), {"pooled_output": pooled_acc}]]
+
+
+def clear_sd_cond_cache(sd):
+    if sd is None:
+        return None
+    if sd.clip is None:
+        return None
+    sd.clip.fcs_cond_cache = {}
+    return
+
+
+def clear_all_caches():
+    clear_sd_cond_cache(xl_base_patched)
+    clear_sd_cond_cache(xl_refiner)
+
+
 @torch.no_grad()
 def process_diffusion(positive_cond, negative_cond, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg,
-    img2img, input_image, start_step, denoise, revision, clip_vision_outputs, revision_strengths,
+    img2img, input_image, start_step, denoise,
     control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength,
     control_lora_depth, depth_start, depth_stop, depth_strength, callback):
 
