@@ -201,6 +201,8 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[52] = metadata['depth_model']
     if 'prompt_expansion' in metadata:
         ctrls[53] = metadata['prompt_expansion']
+    elif 'software' in metadata and metadata['software'].startswith('Fooocus 1.'):
+        ctrls[53] = False
     # seed_random
     return ctrls    
 
