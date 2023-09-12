@@ -1,6 +1,10 @@
+### 1.0.67 MRE
+
+* Updated Comfy (fixes CLIP issue).
+
 ### 1.0.61 MRE
 
-* Restored allowed random seed range (entropy reduction applied only to transformers / numpy related calls)
+* Restored allowed random seed range (entropy reduction applied only to transformers / numpy related calls).
 
 ### 1.0.51 MRE
 
