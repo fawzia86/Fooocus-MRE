@@ -1,6 +1,6 @@
 # Fooocus-MRE
 
-![image](https://github.com/MoonRide303/Fooocus-MRE/assets/130458190/ce430ea0-0995-4067-98dd-cef1d7dc1ab6)
+![image](https://github.com/MoonRide303/Fooocus-MRE/assets/130458190/8ed7c450-20c5-4aac-8b30-a474a4b9a4a5)
 
 Fooocus-MRE is an image generating software, enhanced variant of the [original Fooocus](https://github.com/lllyasviel/Fooocus) dedicated for a bit more advanced users.
 
