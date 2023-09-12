@@ -11,6 +11,7 @@ def load_paths():
     path_clip_vision = '../models/clip_vision/'
     path_controlnet = '../models/controlnet/'
     path_vae_approx = '../models/vae_approx/'
+    path_fooocus_expansion = '../models/prompt_expansion/fooocus_expansion/'
     path_styles = '../sdxl_styles/'
     path_outputs = '../outputs/'
 
@@ -30,6 +31,8 @@ def load_paths():
                     path_controlnet = paths_obj['path_controlnet']
                 if 'path_vae_approx' in paths_obj:
                     path_vae_approx = paths_obj['path_vae_approx']
+                if 'path_fooocus_expansion' in paths_obj:
+                    path_fooocus_expansion = paths_obj['path_fooocus_expansion']
                 if 'path_styles' in paths_obj:
                     path_styles = paths_obj['path_styles']
                 if 'path_outputs' in paths_obj:
@@ -40,10 +43,10 @@ def load_paths():
             finally:
                 paths_file.close()
 
-    return path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_styles, path_outputs
+    return path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_fooocus_expansion, path_styles, path_outputs
 
 
-path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_styles, path_outputs = load_paths()
+path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_fooocus_expansion, path_styles, path_outputs = load_paths()
 
 modelfile_path = path_checkpoints if os.path.isabs(path_checkpoints) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_checkpoints))
 lorafile_path = path_loras if os.path.isabs(path_loras) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_loras))
@@ -51,10 +54,9 @@ embeddings_path = path_embeddings if os.path.isabs(path_embeddings) else os.path
 clip_vision_path = path_clip_vision if os.path.isabs(path_clip_vision) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_clip_vision))
 controlnet_path = path_controlnet if os.path.isabs(path_controlnet) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_controlnet))
 vae_approx_path = path_vae_approx if os.path.isabs(path_vae_approx) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_vae_approx))
+fooocus_expansion_path = path_fooocus_expansion if os.path.isabs(path_fooocus_expansion) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_fooocus_expansion))
 styles_path = path_styles if os.path.isabs(path_styles) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_styles))
 temp_outputs_path = path_outputs if os.path.isabs(path_outputs) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_outputs))
-
-fooocus_expansion_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../models/prompt_expansion/fooocus_expansion'))
 
 os.makedirs(temp_outputs_path, exist_ok=True)
 

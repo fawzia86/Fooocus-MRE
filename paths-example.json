@@ -4,6 +4,8 @@
     "path_embeddings": "../models/embeddings/",
     "path_clip_vision": "../models/clip_vision/",
     "path_controlnet": "../models/controlnet/",
+    "path_vae_approx": "../models/vae_approx/",
+    "path_fooocus_expansion": "../models/prompt_expansion/fooocus_expansion/",
     "path_styles": "../sdxl_styles/",
     "path_outputs": "../outputs/"
 }
