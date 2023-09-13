@@ -62,6 +62,7 @@ def worker():
         outputs.append(['preview', (number, text, None)])
 
 
+    @torch.no_grad()
     def handler(task):
         prompt, negative_prompt, style_selections, performance, resolution, image_number, image_seed, \
         sharpness, sampler_name, scheduler, custom_steps, custom_switch, cfg, \

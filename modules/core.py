@@ -19,7 +19,6 @@ from modules.path import embeddings_path
 
 
 patch_all()
-opCLIPTextEncode = CLIPTextEncode()
 opEmptyLatentImage = EmptyLatentImage()
 opVAEDecode = VAEDecode()
 opVAEEncode = VAEEncode()
