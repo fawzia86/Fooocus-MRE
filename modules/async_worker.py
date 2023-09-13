@@ -59,6 +59,7 @@ def worker():
 
 
     def progressbar(number, text):
+        print(f'[Fooocus] {text}')
         outputs.append(['preview', (number, text, None)])
 
 
