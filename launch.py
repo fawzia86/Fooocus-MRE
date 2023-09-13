@@ -11,7 +11,7 @@ from modules.path import modelfile_path, lorafile_path, clip_vision_path, contro
 
 
 REINSTALL_ALL = False
-DEFAULT_ARGS = ['--disable-smart-memory']
+DEFAULT_ARGS = ['--disable-smart-memory', '--disable-cuda-malloc']
 
 
 def prepare_environment():
@@ -130,7 +130,6 @@ def cuda_malloc():
 prepare_environment()
 
 parse_args()
-# cuda_malloc()
 
 download_models()
 
