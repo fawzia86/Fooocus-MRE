@@ -1,3 +1,7 @@
+### 2.0.12 MRE
+
+* Added support for higher resolutions in Image-2-Image mode (can be used for upscaling).
+
 ### 2.0.0 MRE
 
 * Changed Prompt Expansion (aka Fooocus V2) to be enabled by default.

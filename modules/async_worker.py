@@ -17,7 +17,7 @@ buffer = []
 outputs = []
 
 
-def get_image(path):
+def get_image(path, megapixels=1.0):
     image = None
     with open(path, 'rb') as image_file:
         pil_image = Image.open(image_file)
@@ -26,7 +26,7 @@ def get_image(path):
         image = image.convert("RGB")
         image = np.array(image).astype(np.float32) / 255.0
         image = torch.from_numpy(image)[None,]
-        image = core.upscale(image)
+        image = core.upscale(image, megapixels)
     return image
 
 
@@ -243,6 +243,12 @@ def worker():
                 resolution = default_settings['resolution']
         width, height = string_to_dimensions(resolution)
 
+        img2img_megapixels = width * height / 2**20
+        if img2img_megapixels < constants.MIN_MEGAPIXELS:
+            img2img_megapixels = constants.MIN_MEGAPIXELS
+        elif img2img_megapixels > constants.MAX_MEGAPIXELS:
+            img2img_megapixels = constants.MAX_MEGAPIXELS
+
         pipeline.clear_all_caches()  # save memory
 
         results = []
@@ -278,7 +284,7 @@ def worker():
 
             input_image = None
             if input_image_path != None:
-                input_image = get_image(input_image_path)
+                input_image = get_image(input_image_path, img2img_megapixels)
 
             execution_start_time = time.perf_counter()
             try:
