@@ -139,9 +139,10 @@ Below things are already inside the software, and **users do not need to do anyt
 19. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
 20. Support for custom resolutions list (loaded from resolutions.json - use resolutions-example.json as a template).
 21. Support for custom resolutions - you can just type it now in Resolution field, like "1280x640".
-22. Support for custom styles (loaded from sdxl_styles folder on start).
-23. Support for playing audio when generation is finished (ported from SD web UI - use notification.ogg or notification.mp3).
-24. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
+22. Support for upscaling via Image-2-Image (see [example in Wiki](https://github.com/MoonRide303/Fooocus-MRE/wiki/Upscaling-using-Image%E2%80%902%E2%80%90Image)).
+23. Support for custom styles (loaded from sdxl_styles folder on start).
+24. Support for playing audio when generation is finished (ported from SD web UI - use notification.ogg or notification.mp3).
+25. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
 
 ## Thanks
 
