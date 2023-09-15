@@ -19,6 +19,7 @@ from comfy.cli_args import args
 from fastapi import FastAPI
 from modules.ui_gradio_extensions import reload_javascript
 from modules.util import get_current_log_path, get_previous_log_path
+from modules.auth import auth_enabled, check_auth
 from os.path import exists
 
 
@@ -485,4 +486,4 @@ with shared.gradio_root:
 
 
 app = gr.mount_gradio_app(app, shared.gradio_root, '/')
-shared.gradio_root.launch(inbrowser=True, server_name=args.listen, server_port=args.port, share=args.share)
+shared.gradio_root.launch(inbrowser=True, server_name=args.listen, server_port=args.port, share=args.share, auth=check_auth if args.share and auth_enabled else None)

@@ -1,3 +1,7 @@
+### 2.0.18 MRE
+
+* Added support for authentication in --share mode (via auth.json).
+
 ### 2.0.14 MRE
 
 * Added support for loading models from subfolders (ported from RuinedFooocus).
