@@ -41,6 +41,7 @@ def worker():
     import modules.path
     import modules.patch
     import fooocus_version
+    import modules.virtual_memory as virtual_memory
 
     from modules.resolutions import get_resolution_string, resolutions
     from modules.sdxl_styles import apply_style
@@ -119,9 +120,11 @@ def worker():
 
 
         progressbar(3, 'Loading models ...')
-        pipeline.refresh_base_model(base_model_name)
-        pipeline.refresh_refiner_model(refiner_model_name)
-        pipeline.refresh_loras(loras)
+        pipeline.refresh_everything(
+            refiner_model_name=refiner_model_name,
+            base_model_name=base_model_name,
+            loras=loras)
+
         pipeline.set_clip_skips(base_clip_skip, refiner_clip_skip)
         if revision_mode:
             pipeline.refresh_clip_vision()
@@ -149,8 +152,6 @@ def worker():
             revision_images_filenames = []
             revision_strengths = []
 
-
-        pipeline.clear_all_caches()
 
         progressbar(5, 'Processing prompts ...')
 
@@ -204,6 +205,8 @@ def worker():
                                               pool_top_k=negative_top_k)
 
         if pipeline.xl_refiner is not None:
+            virtual_memory.load_from_virtual_memory(pipeline.xl_refiner.clip.cond_stage_model)
+
             for i, t in enumerate(tasks):
                 progressbar(11, f'Encoding refiner positive #{i + 1} ...')
                 t['c'][1] = pipeline.clip_encode(sd=pipeline.xl_refiner, texts=t['positive'],
@@ -213,6 +216,9 @@ def worker():
                 progressbar(13, f'Encoding refiner negative #{i + 1} ...')
                 t['uc'][1] = pipeline.clip_encode(sd=pipeline.xl_refiner, texts=t['negative'],
                                                   pool_top_k=negative_top_k)
+
+            virtual_memory.try_move_to_virtual_memory(pipeline.xl_refiner.clip.cond_stage_model)
+
 
         for i, t in enumerate(tasks):
             progressbar(13, f'Applying prompt strengths #{i + 1} ...')
@@ -372,6 +378,9 @@ def worker():
 
         outputs.append(['results', results])
         outputs.append(['metadatas', metadata_strings])
+
+        pipeline.clear_all_caches() # cleanup after generation
+
         return
 
     while True:

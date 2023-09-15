@@ -4,6 +4,7 @@ import gc
 import torch
 import numpy as np
 import modules.path
+import modules.virtual_memory as virtual_memory
 import comfy.model_management as model_management
 
 from comfy.model_base import SDXL, SDXLRefiner
@@ -33,10 +34,12 @@ controlnet_depth_hash = ''
 
 def refresh_base_model(name):
     global xl_base, xl_base_hash, xl_base_patched, xl_base_patched_hash
-    if xl_base_hash == str(name):
-        return
 
-    filename = os.path.join(modules.path.modelfile_path, name)
+    filename = os.path.abspath(os.path.realpath(os.path.join(modules.path.modelfile_path, name)))
+    model_hash = filename
+
+    if xl_base_hash == model_hash:
+        return
 
     if xl_base is not None:
         xl_base.to_meta()
@@ -48,21 +51,25 @@ def refresh_base_model(name):
         xl_base = None
         xl_base_hash = ''
         refresh_base_model(modules.path.default_base_model_name)
-        xl_base_hash = name
+        xl_base_hash = model_hash
         xl_base_patched = xl_base
         xl_base_patched_hash = ''
         return
 
-    xl_base_hash = name
+    xl_base_hash = model_hash
     xl_base_patched = xl_base
     xl_base_patched_hash = ''
-    print(f'Base model loaded: {xl_base_hash}')
+    print(f'Base model loaded: {model_hash}')
     return
 
 
 def refresh_refiner_model(name):
     global xl_refiner, xl_refiner_hash
-    if xl_refiner_hash == str(name):
+
+    filename = os.path.abspath(os.path.realpath(os.path.join(modules.path.modelfile_path, name)))
+    model_hash = filename
+
+    if xl_refiner_hash == model_hash:
         return
 
     if name == 'None':
@@ -70,8 +77,6 @@ def refresh_refiner_model(name):
         xl_refiner_hash = ''
         print(f'Refiner unloaded.')
         return
-
-    filename = os.path.join(modules.path.modelfile_path, name)
 
     if xl_refiner is not None:
         xl_refiner.to_meta()
@@ -85,8 +90,8 @@ def refresh_refiner_model(name):
         print(f'Refiner unloaded.')
         return
 
-    xl_refiner_hash = name
-    print(f'Refiner model loaded: {xl_refiner_hash}')
+    xl_refiner_hash = model_hash
+    print(f'Refiner model loaded: {model_hash}')
 
     xl_refiner.vae.first_stage_model.to('meta')
     xl_refiner.vae = None
@@ -157,11 +162,6 @@ def refresh_controlnet_depth(name=None):
     return
 
 
-refresh_base_model(default_settings['base_model'])
-
-expansion = FooocusExpansion()
-
-
 @torch.no_grad()
 def set_clip_skips(base_clip_skip, refiner_clip_skip):
     xl_base_patched.clip.clip_layer(base_clip_skip)
@@ -221,8 +221,6 @@ def clip_encode(sd, texts, pool_top_k=1):
     if len(texts) == 0:
         return None
 
-    model_management.soft_empty_cache()
-
     clip = sd.clip
     cond_list = []
     pooled_acc = 0
@@ -250,6 +248,35 @@ def clear_sd_cond_cache(sd):
 def clear_all_caches():
     clear_sd_cond_cache(xl_base_patched)
     clear_sd_cond_cache(xl_refiner)
+    gc.collect()
+    model_management.soft_empty_cache()
+
+
+def refresh_everything(refiner_model_name, base_model_name, loras):
+    refresh_refiner_model(refiner_model_name)
+    if xl_refiner is not None:
+        virtual_memory.try_move_to_virtual_memory(xl_refiner.unet.model)
+        virtual_memory.try_move_to_virtual_memory(xl_refiner.clip.cond_stage_model)
+
+    refresh_base_model(base_model_name)
+    virtual_memory.load_from_virtual_memory(xl_base.unet.model)
+
+    refresh_loras(loras)
+    clear_all_caches()
+    return
+
+
+refresh_everything(
+    refiner_model_name=default_settings['refiner_model'],
+    base_model_name=default_settings['base_model'],
+    loras=[(default_settings['lora_1_model'], default_settings['lora_1_weight']),
+        (default_settings['lora_2_model'], default_settings['lora_2_weight']),
+        (default_settings['lora_3_model'], default_settings['lora_3_weight']),
+        (default_settings['lora_4_model'], default_settings['lora_4_weight']),
+        (default_settings['lora_5_model'], default_settings['lora_5_weight'])]
+)
+
+expansion = FooocusExpansion()
 
 
 @torch.no_grad()
@@ -273,7 +300,10 @@ def process_diffusion(positive_cond, negative_cond, steps, switch, width, height
         control_lora_depth, depth_start, depth_stop, depth_strength, callback):
 
     patch_all_models()
-    model_management.soft_empty_cache()
+
+    if xl_refiner is not None:
+        virtual_memory.try_move_to_virtual_memory(xl_refiner.unet.model)
+    virtual_memory.load_from_virtual_memory(xl_base.unet.model)
 
     if img2img and input_image != None:
         initial_latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
@@ -333,8 +363,5 @@ def process_diffusion(positive_cond, negative_cond, steps, switch, width, height
 
     decoded_latent = core.decode_vae(vae=xl_base_patched.vae, latent_image=sampled_latent)
     images = core.image_to_numpy(decoded_latent)
-
-    gc.collect()
-    model_management.soft_empty_cache()
 
     return images
