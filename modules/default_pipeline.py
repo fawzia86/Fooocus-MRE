@@ -4,9 +4,9 @@ import gc
 import torch
 import numpy as np
 import modules.path
+import comfy.model_management as model_management
 
 from comfy.model_base import SDXL, SDXLRefiner
-from comfy.model_management import soft_empty_cache
 from modules.settings import default_settings
 from modules.patch import set_comfy_adm_encoding, set_fooocus_adm_encoding, cfg_patched
 from modules.expansion import FooocusExpansion
@@ -221,6 +221,8 @@ def clip_encode(sd, texts, pool_top_k=1):
     if len(texts) == 0:
         return None
 
+    model_management.soft_empty_cache()
+
     clip = sd.clip
     cond_list = []
     pooled_acc = 0
@@ -251,22 +253,27 @@ def clear_all_caches():
 
 
 @torch.no_grad()
-def process_diffusion(positive_cond, negative_cond, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg,
-    img2img, input_image, start_step, denoise,
-    control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength,
-    control_lora_depth, depth_start, depth_stop, depth_strength, callback):
+def patch_all_models():
+    assert xl_base is not None
+    assert xl_base_patched is not None
 
-    if xl_base is not None:
-        xl_base.unet.model_options['sampler_cfg_function'] = cfg_patched
-
-    if xl_base_patched is not None:
-        xl_base_patched.unet.model_options['sampler_cfg_function'] = cfg_patched
+    xl_base.unet.model_options['sampler_cfg_function'] = cfg_patched
+    xl_base_patched.unet.model_options['sampler_cfg_function'] = cfg_patched
 
     if xl_refiner is not None:
         xl_refiner.unet.model_options['sampler_cfg_function'] = cfg_patched
 
-    positive_conditions = positive_cond[0]
-    negative_conditions = negative_cond[0]
+    return
+
+
+@torch.no_grad()
+def process_diffusion(positive_cond, negative_cond, steps, switch, width, height, image_seed, sampler_name, scheduler, cfg,
+        img2img, input_image, start_step, denoise,
+        control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength,
+        control_lora_depth, depth_start, depth_stop, depth_strength, callback):
+
+    patch_all_models()
+    model_management.soft_empty_cache()
 
     if img2img and input_image != None:
         initial_latent = core.encode_vae(vae=xl_base_patched.vae, pixels=input_image)
@@ -275,6 +282,9 @@ def process_diffusion(positive_cond, negative_cond, steps, switch, width, height
         initial_latent = core.generate_empty_latent(width=width, height=height, batch_size=1)
         force_full_denoise = True
         denoise = None
+
+    positive_conditions = positive_cond[0]
+    negative_conditions = negative_cond[0]
 
     if control_lora_canny and input_image != None:
         edges_image = core.detect_edge(input_image, canny_edge_low, canny_edge_high)
@@ -325,6 +335,6 @@ def process_diffusion(positive_cond, negative_cond, steps, switch, width, height
     images = core.image_to_numpy(decoded_latent)
 
     gc.collect()
-    soft_empty_cache()
+    model_management.soft_empty_cache()
 
     return images
