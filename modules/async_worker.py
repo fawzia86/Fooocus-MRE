@@ -70,7 +70,7 @@ def worker():
         sharpness, sampler_name, scheduler, custom_steps, custom_switch, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, save_metadata_json, save_metadata_image, \
-        img2img_mode, img2img_start_step, img2img_denoise, \
+        img2img_mode, img2img_start_step, img2img_denoise, img2img_scale, \
         revision_mode, positive_prompt_strength, negative_prompt_strength, revision_strength_1, revision_strength_2, \
         revision_strength_3, revision_strength_4, same_seed_for_all, output_format, \
         control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, canny_model, \
@@ -249,11 +249,6 @@ def worker():
                 resolution = default_settings['resolution']
         width, height = string_to_dimensions(resolution)
 
-        img2img_megapixels = width * height / 2**20
-        if img2img_megapixels < constants.MIN_MEGAPIXELS:
-            img2img_megapixels = constants.MIN_MEGAPIXELS
-        elif img2img_megapixels > constants.MAX_MEGAPIXELS:
-            img2img_megapixels = constants.MAX_MEGAPIXELS
 
         pipeline.clear_all_caches()  # save memory
 
@@ -290,6 +285,11 @@ def worker():
 
             input_image = None
             if input_image_path != None:
+                img2img_megapixels = width * height * img2img_scale ** 2 / 2**20
+                if img2img_megapixels < constants.MIN_MEGAPIXELS:
+                    img2img_megapixels = constants.MIN_MEGAPIXELS
+                elif img2img_megapixels > constants.MAX_MEGAPIXELS:
+                    img2img_megapixels = constants.MAX_MEGAPIXELS
                 input_image = get_image(input_image_path, img2img_megapixels)
 
             execution_start_time = time.perf_counter()
@@ -320,7 +320,7 @@ def worker():
             }
             if img2img_mode:
                 metadata |= {
-                    'start_step': start_step, 'denoise': denoise, 'input_image': input_image_filename
+                    'start_step': start_step, 'denoise': denoise, 'scale': img2img_scale, 'input_image': input_image_filename
                 }
             if revision_mode:
                 metadata |= {
@@ -356,7 +356,7 @@ def worker():
                     ('CFG & CLIP Skips', (cfg, base_clip_skip, refiner_clip_skip)),
                     ('Base Model', base_model_name),
                     ('Refiner Model', refiner_model_name),
-                    ('Image-2-Image', (img2img_mode, start_step, denoise, input_image_filename) if img2img_mode else (img2img_mode)),
+                    ('Image-2-Image', (img2img_mode, start_step, denoise, img2img_scale, input_image_filename) if img2img_mode else (img2img_mode)),
                     ('Revision', (revision_mode, revision_strength_1, revision_strength_2, revision_strength_3,
                         revision_strength_4, revision_images_filenames) if revision_mode else (revision_mode)),
                     ('Prompt Strengths', (positive_prompt_strength, negative_prompt_strength)),

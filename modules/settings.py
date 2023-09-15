@@ -25,6 +25,7 @@ def load_settings():
     settings['img2img_mode'] = False
     settings['img2img_start_step'] = 0.06
     settings['img2img_denoise'] = 0.94
+    settings['img2img_scale'] = 1.0
     settings['control_lora_canny'] = False
     settings['canny_edge_low'] = 0.2
     settings['canny_edge_high'] = 0.8

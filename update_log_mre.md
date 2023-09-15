@@ -1,6 +1,8 @@
 ### 2.0.18 MRE
 
 * Added support for authentication in --share mode (via auth.json).
+* Added Image-2-Image Scale slider.
+* Displaying Revision and Control-LoRAs controls only when needed.
 
 ### 2.0.14 MRE
 

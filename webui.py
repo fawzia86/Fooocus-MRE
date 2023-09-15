@@ -88,7 +88,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[54] = False
+        ctrls[55] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -156,54 +156,56 @@ def metadata_to_ctrls(metadata, ctrls):
                 ctrls[30] = round(metadata['start_step'] / ctrls[10], 2)
         if 'denoise' in metadata:
             ctrls[31] = metadata['denoise']
+        if 'scale' in metadata:
+            ctrls[32] = metadata['scale']
     if 'revision' in metadata:
-        ctrls[32] = metadata['revision']
+        ctrls[33] = metadata['revision']
     if 'positive_prompt_strength' in metadata:
-        ctrls[33] = metadata['positive_prompt_strength']
+        ctrls[34] = metadata['positive_prompt_strength']
     elif 'zero_out_positive' in metadata:
-        ctrls[33] = 0.0 if metadata['zero_out_positive'] else 1.0
+        ctrls[34] = 0.0 if metadata['zero_out_positive'] else 1.0
     if 'negative_prompt_strength' in metadata:
-        ctrls[34] = metadata['negative_prompt_strength']
+        ctrls[35] = metadata['negative_prompt_strength']
     elif 'zero_out_negative' in metadata:
-        ctrls[34] = 0.0 if metadata['zero_out_negative'] else 1.0
+        ctrls[35] = 0.0 if metadata['zero_out_negative'] else 1.0
     if 'revision_strength_1' in metadata:
-        ctrls[35] = metadata['revision_strength_1']
+        ctrls[36] = metadata['revision_strength_1']
     if 'revision_strength_2' in metadata:
-        ctrls[36] = metadata['revision_strength_2']
+        ctrls[37] = metadata['revision_strength_2']
     if 'revision_strength_3' in metadata:
-        ctrls[37] = metadata['revision_strength_3']
+        ctrls[38] = metadata['revision_strength_3']
     if 'revision_strength_4' in metadata:
-        ctrls[38] = metadata['revision_strength_4']
+        ctrls[39] = metadata['revision_strength_4']
     # same_seed_for_all
     # output_format
     if 'control_lora_canny' in metadata:
-        ctrls[41] = metadata['control_lora_canny']
+        ctrls[42] = metadata['control_lora_canny']
     if 'canny_edge_low' in metadata:
-        ctrls[42] = metadata['canny_edge_low']
+        ctrls[43] = metadata['canny_edge_low']
     if 'canny_edge_high' in metadata:
-        ctrls[43] = metadata['canny_edge_high']
+        ctrls[44] = metadata['canny_edge_high']
     if 'canny_start' in metadata:
-        ctrls[44] = metadata['canny_start']
+        ctrls[45] = metadata['canny_start']
     if 'canny_stop' in metadata:
-        ctrls[45] = metadata['canny_stop']
+        ctrls[46] = metadata['canny_stop']
     if 'canny_strength' in metadata:
-        ctrls[46] = metadata['canny_strength']
+        ctrls[47] = metadata['canny_strength']
     if 'canny_model' in metadata:
-        ctrls[47] = metadata['canny_model']
+        ctrls[48] = metadata['canny_model']
     if 'control_lora_depth' in metadata:
-        ctrls[48] = metadata['control_lora_depth']
+        ctrls[49] = metadata['control_lora_depth']
     if 'depth_start' in metadata:
-        ctrls[49] = metadata['depth_start']
+        ctrls[50] = metadata['depth_start']
     if 'depth_stop' in metadata:
-        ctrls[50] = metadata['depth_stop']
+        ctrls[51] = metadata['depth_stop']
     if 'depth_strength' in metadata:
-        ctrls[51] = metadata['depth_strength']
+        ctrls[52] = metadata['depth_strength']
     if 'depth_model' in metadata:
-        ctrls[52] = metadata['depth_model']
+        ctrls[53] = metadata['depth_model']
     if 'prompt_expansion' in metadata:
-        ctrls[53] = metadata['prompt_expansion']
+        ctrls[54] = metadata['prompt_expansion']
     elif 'software' in metadata and metadata['software'].startswith('Fooocus 1.'):
-        ctrls[53] = False
+        ctrls[54] = False
     # seed_random
     return ctrls    
 
@@ -342,16 +344,27 @@ with shared.gradio_root:
 
             with gr.Tab(label='Image-2-Image'):
                 revision_mode = gr.Checkbox(label='Revision (prompting with images)', value=settings['revision_mode'])
-                revision_strength_1 = gr.Slider(label='Revision Strength for Image 1', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_1'])
-                revision_strength_2 = gr.Slider(label='Revision Strength for Image 2', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_2'])
-                revision_strength_3 = gr.Slider(label='Revision Strength for Image 3', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_3'])
-                revision_strength_4 = gr.Slider(label='Revision Strength for Image 4', minimum=-2, maximum=2, step=0.01, value=settings['revision_strength_4'])
+                revision_strength_1 = gr.Slider(label='Revision Strength for Image 1', minimum=-2, maximum=2, step=0.01,
+                    value=settings['revision_strength_1'], visible=settings['revision_mode'])
+                revision_strength_2 = gr.Slider(label='Revision Strength for Image 2', minimum=-2, maximum=2, step=0.01,
+                    value=settings['revision_strength_2'], visible=settings['revision_mode'])
+                revision_strength_3 = gr.Slider(label='Revision Strength for Image 3', minimum=-2, maximum=2, step=0.01,
+                    value=settings['revision_strength_3'], visible=settings['revision_mode'])
+                revision_strength_4 = gr.Slider(label='Revision Strength for Image 4', minimum=-2, maximum=2, step=0.01,
+                    value=settings['revision_strength_4'], visible=settings['revision_mode'])
+
+                def revision_changed(value):
+                    return gr.update(visible=value == True), gr.update(visible=value == True), gr.update(visible=value == True), gr.update(visible=value == True)
+
+                revision_mode.change(fn=revision_changed, inputs=[revision_mode], outputs=[revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4])
 
                 positive_prompt_strength = gr.Slider(label='Positive Prompt Strength', minimum=0, maximum=1, step=0.01, value=settings['positive_prompt_strength'])
                 negative_prompt_strength = gr.Slider(label='Negative Prompt Strength', minimum=0, maximum=1, step=0.01, value=settings['negative_prompt_strength'])
 
                 img2img_start_step = gr.Slider(label='Image-2-Image Start Step', minimum=0.0, maximum=0.8, step=0.01, value=settings['img2img_start_step'])
                 img2img_denoise = gr.Slider(label='Image-2-Image Denoise', minimum=0.2, maximum=1.0, step=0.01, value=settings['img2img_denoise'])
+                img2img_scale = gr.Slider(label='Image-2-Image Scale', minimum=1.0, maximum=2.0, step=0.25, value=settings['img2img_scale'],
+                    info='For upscaling - use with low denoise values')
 
                 keep_input_names = gr.Checkbox(label='Keep Input Names', value=settings['keep_input_names'], elem_classes='type_small_row')
                 with gr.Row():
@@ -366,7 +379,7 @@ with shared.gradio_root:
                 output_to_input_button.click(output_to_input_handler, inputs=output_gallery, outputs=[input_gallery, gallery_tabs])
                 output_to_revision_button.click(output_to_revision_handler, inputs=output_gallery, outputs=[revision_mode, revision_gallery, gallery_tabs])
 
-                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, revision_mode, positive_prompt_strength, negative_prompt_strength,
+                img2img_ctrls = [img2img_mode, img2img_start_step, img2img_denoise, img2img_scale, revision_mode, positive_prompt_strength, negative_prompt_strength,
                     revision_strength_1, revision_strength_2, revision_strength_3, revision_strength_4]
 
                 def verify_revision(rev, gallery_in, gallery_rev, gallery_out):
@@ -385,16 +398,35 @@ with shared.gradio_root:
 
             with gr.Tab(label='CN'):
                 control_lora_canny = gr.Checkbox(label='Control-LoRA: Canny', value=settings['control_lora_canny'])
-                canny_edge_low = gr.Slider(label='Edge Detection Low', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_edge_low'])
-                canny_edge_high = gr.Slider(label='Edge Detection High', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_edge_high'])
-                canny_start = gr.Slider(label='Canny Start', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_start'])
-                canny_stop = gr.Slider(label='Canny Stop', minimum=0.0, maximum=1.0, step=0.01, value=settings['canny_stop'])
-                canny_strength = gr.Slider(label='Canny Strength', minimum=0.0, maximum=2.0, step=0.01, value=settings['canny_strength'])
+                canny_edge_low = gr.Slider(label='Edge Detection Low', minimum=0.0, maximum=1.0, step=0.01,
+                    value=settings['canny_edge_low'], visible=settings['control_lora_canny'])
+                canny_edge_high = gr.Slider(label='Edge Detection High', minimum=0.0, maximum=1.0, step=0.01,
+                    value=settings['canny_edge_high'], visible=settings['control_lora_canny'])
+                canny_start = gr.Slider(label='Canny Start', minimum=0.0, maximum=1.0, step=0.01,
+                    value=settings['canny_start'], visible=settings['control_lora_canny'])
+                canny_stop = gr.Slider(label='Canny Stop', minimum=0.0, maximum=1.0, step=0.01,
+                    value=settings['canny_stop'], visible=settings['control_lora_canny'])
+                canny_strength = gr.Slider(label='Canny Strength', minimum=0.0, maximum=2.0, step=0.01,
+                    value=settings['canny_strength'], visible=settings['control_lora_canny'])
+
+                def canny_changed(value):
+                    return gr.update(visible=value == True), gr.update(visible=value == True), gr.update(visible=value == True), \
+                        gr.update(visible=value == True), gr.update(visible=value == True)
+
+                control_lora_canny.change(fn=canny_changed, inputs=[control_lora_canny], outputs=[canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength])
 
                 control_lora_depth = gr.Checkbox(label='Control-LoRA: Depth', value=settings['control_lora_depth'])
-                depth_start = gr.Slider(label='Depth Start', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_start'])
-                depth_stop = gr.Slider(label='Depth Stop', minimum=0.0, maximum=1.0, step=0.01, value=settings['depth_stop'])
-                depth_strength = gr.Slider(label='Depth Strength', minimum=0.0, maximum=2.0, step=0.01, value=settings['depth_strength'])
+                depth_start = gr.Slider(label='Depth Start', minimum=0.0, maximum=1.0, step=0.01,
+                    value=settings['depth_start'], visible=settings['control_lora_depth'])
+                depth_stop = gr.Slider(label='Depth Stop', minimum=0.0, maximum=1.0, step=0.01,
+                    value=settings['depth_stop'], visible=settings['control_lora_depth'])
+                depth_strength = gr.Slider(label='Depth Strength', minimum=0.0, maximum=2.0, step=0.01,
+                    value=settings['depth_strength'], visible=settings['control_lora_depth'])
+
+                def depth_changed(value):
+                    return gr.update(visible=value == True), gr.update(visible=value == True), gr.update(visible=value == True)
+
+                control_lora_depth.change(fn=depth_changed, inputs=[control_lora_depth], outputs=[depth_start, depth_stop, depth_strength])
 
             with gr.Tab(label='Models'):
                 with gr.Row():
