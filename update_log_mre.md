@@ -1,5 +1,6 @@
 ### 2.0.14 MRE
 
+* Added support for loading models from subfolders (ported from RuinedFooocus).
 * Updated Comfy.
 
 ### 2.0.12 MRE

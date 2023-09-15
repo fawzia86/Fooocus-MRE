@@ -79,13 +79,18 @@ def get_files_from_folder(folder_path, exensions=None, name_filter=None):
         raise ValueError("Folder path is not a valid directory.")
 
     filenames = []
-    for filename in os.listdir(folder_path):
-        if os.path.isfile(os.path.join(folder_path, filename)):
+
+    for root, dirs, files in os.walk(folder_path):
+        relative_path = os.path.relpath(root, folder_path)
+        if relative_path == ".":
+            relative_path = ""
+        for filename in files:
             _, file_extension = os.path.splitext(filename)
             if (exensions == None or file_extension.lower() in exensions) and (name_filter == None or name_filter in _):
-                filenames.append(filename)
+                path = os.path.join(relative_path, filename)
+                filenames.append(path)
 
-    return filenames
+    return sorted(filenames, key=lambda x: -1 if os.sep in x else 1)
 
 
 def get_model_filenames(folder_path, name_filter=None):

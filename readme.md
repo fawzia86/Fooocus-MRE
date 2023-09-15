@@ -181,6 +181,7 @@ Below things are already inside the software, and **users do not need to do anyt
 23. Support for custom styles (loaded from sdxl_styles folder on start).
 24. Support for playing audio when generation is finished (ported from SD web UI - use notification.ogg or notification.mp3).
 25. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
+26. Support for loading models from subfolders (ported from RuinedFooocus).
 
 ## Thanks
 
