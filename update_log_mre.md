@@ -1,6 +1,14 @@
+### 2.0.14 MRE
+
+* Updated Comfy.
+
 ### 2.0.12 MRE
 
 * Added support for higher resolutions in Image-2-Image mode (can be used for upscaling).
+
+### 2.0.3 MRE
+
+* Updated Comfy (CLIP Vision optimizations).
 
 ### 2.0.0 MRE
 
