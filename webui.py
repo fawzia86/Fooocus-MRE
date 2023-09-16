@@ -518,4 +518,5 @@ with shared.gradio_root:
 
 
 app = gr.mount_gradio_app(app, shared.gradio_root, '/')
-shared.gradio_root.launch(inbrowser=True, server_name=args.listen, server_port=args.port, share=args.share, auth=check_auth if args.share and auth_enabled else None)
+shared.gradio_root.launch(inbrowser=True, server_name=args.listen, server_port=args.port, share=args.share,
+    auth=check_auth if args.share and auth_enabled else None, allowed_paths=[modules.path.temp_outputs_path])

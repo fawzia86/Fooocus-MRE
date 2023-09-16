@@ -1,3 +1,7 @@
+### 2.0.19 MRE
+
+* Fixed links to log files not working with customized outputs path.
+
 ### 2.0.18 MRE
 
 * Added support for authentication in --share mode (via auth.json).

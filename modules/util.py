@@ -1,6 +1,8 @@
-from datetime import datetime, timedelta
 import random
 import os
+import modules.path
+
+from datetime import datetime, timedelta
 
 
 def remove_empty_str(items, default=None):
@@ -32,7 +34,13 @@ def generate_temp_filename(folder='./outputs/', extension='png', base=None):
     return date_string, os.path.abspath(os.path.realpath(result)), filename
 
 
-def get_log_path(time, folder='./outputs/'):
+def get_log_path(time):
+    current_dir = os.path.abspath(os.curdir)
+    outputs_dir = os.path.abspath(modules.path.temp_outputs_path)
+    if outputs_dir.startswith(current_dir):
+        folder = os.path.relpath(outputs_dir, current_dir)
+    else:
+        folder = outputs_dir
     return os.path.join(folder, time.strftime("%Y-%m-%d"), 'log.html')
 
 
