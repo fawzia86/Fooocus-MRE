@@ -1,6 +1,6 @@
 # Fooocus-MRE
 
-![image](https://github.com/MoonRide303/Fooocus-MRE/assets/130458190/8ed7c450-20c5-4aac-8b30-a474a4b9a4a5)
+![image](https://github.com/MoonRide303/Fooocus-MRE/assets/130458190/1d40c428-c30f-4e3f-b419-017bd395d00b)
 
 Fooocus-MRE is an image generating software (based on [Gradio](https://www.gradio.app/)), an enhanced variant of the [original Fooocus](https://github.com/lllyasviel/Fooocus) dedicated for a bit more advanced users.
 
@@ -26,7 +26,7 @@ Fooocus also developed many "fooocus-only" features for advanced users to get pe
 
 You can directly download Fooocus with:
 
-**[>>> Click here to download <<<](https://github.com/MoonRide303/Fooocus-MRE/releases/download/v2.0.3/Fooocus-MRE-v2.0.3.7z)**
+**[>>> Click here to download <<<](https://github.com/MoonRide303/Fooocus-MRE/releases/download/v2.0.19/Fooocus-MRE-v2.0.19.7z)**
 
 After you download the file, please uncompress it, and then run the "run.bat".
 
