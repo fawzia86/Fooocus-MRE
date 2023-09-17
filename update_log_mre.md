@@ -1,6 +1,7 @@
 ### 2.0.19 MRE
 
 * Fixed links to log files not working with customized outputs path.
+* Fixed calls to non-existing Comfy functions (vanilla still using old Comfy).
 
 ### 2.0.18 MRE
 

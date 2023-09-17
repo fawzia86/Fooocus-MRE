@@ -72,7 +72,7 @@ def move_to_virtual_memory(model, comfy_unload=True):
     timer = time.time()
 
     if comfy_unload:
-        model_management.unload_model()
+        model_management.cleanup_models()
 
     virtual_memory_dict = getattr(model, 'virtual_memory_dict', None)
     if isinstance(virtual_memory_dict, dict):
