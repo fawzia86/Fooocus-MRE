@@ -183,6 +183,7 @@ Below things are already inside the software, and **users do not need to do anyt
 25. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
 26. Support for loading models from subfolders (ported from RuinedFooocus).
 27. Support for authentication in --share mode (credentials loaded from auth.json - use auth-example.json as a template).
+28. Support for wildcards (ported from RuinedFooocus - put them in wildcards folder, then try prompts like `__color__ sports car` with different seeds).
 
 ## Thanks
 

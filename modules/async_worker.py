@@ -44,7 +44,7 @@ def worker():
     import modules.virtual_memory as virtual_memory
 
     from modules.resolutions import get_resolution_string, resolutions
-    from modules.sdxl_styles import apply_style
+    from modules.sdxl_styles import apply_style, apply_wildcards
     from modules.private_logger import log
     from modules.expansion import safe_str
     from modules.util import join_prompts, remove_empty_str
@@ -154,55 +154,59 @@ def worker():
 
 
         progressbar(5, 'Processing prompts ...')
+        tasks = []
+        for i in range(image_number):
+            positive_basic_workloads = []
+            negative_basic_workloads = []
+            task_seed = seed if same_seed_for_all else seed + i
+            task_prompt = apply_wildcards(prompt, task_seed)
 
-        positive_basic_workloads = []
-        negative_basic_workloads = []
+            if use_style:
+                for s in style_selections:
+                    p, n = apply_style(s, positive=task_prompt)
+                    positive_basic_workloads.append(p)
+                    negative_basic_workloads.append(n)
+            else:
+                positive_basic_workloads.append(task_prompt)
+    
+            negative_basic_workloads.append(negative_prompt)  # Always use independent workload for negative.
 
-        if use_style:
-            for s in style_selections:
-                p, n = apply_style(s, positive=prompt)
-                positive_basic_workloads.append(p)
-                negative_basic_workloads.append(n)
-        else:
-            positive_basic_workloads.append(prompt)
+            positive_basic_workloads = positive_basic_workloads + extra_positive_prompts
+            negative_basic_workloads = negative_basic_workloads + extra_negative_prompts
 
-        negative_basic_workloads.append(negative_prompt)  # Always use independent workload for negative.
+            positive_basic_workloads = remove_empty_str(positive_basic_workloads, default=task_prompt)
+            negative_basic_workloads = remove_empty_str(negative_basic_workloads, default=negative_prompt)
 
-        positive_basic_workloads = positive_basic_workloads + extra_positive_prompts
-        negative_basic_workloads = negative_basic_workloads + extra_negative_prompts
+            tasks.append(dict(
+                task_seed=task_seed,
+                prompt=task_prompt,
+                positive=positive_basic_workloads,
+                negative=negative_basic_workloads,
+                positive_top_k=len(positive_basic_workloads),
+                negative_top_k=len(negative_basic_workloads),
+                expansion='',
+                c=[None, None],
+                uc=[None, None]
+            ))
 
-        positive_basic_workloads = remove_empty_str(positive_basic_workloads, default=prompt)
-        negative_basic_workloads = remove_empty_str(negative_basic_workloads, default=negative_prompt)
-
-        positive_top_k = len(positive_basic_workloads)
-        negative_top_k = len(negative_basic_workloads)
-
-        tasks = [dict(
-            task_seed=seed if same_seed_for_all else seed + i,
-            positive=positive_basic_workloads,
-            negative=negative_basic_workloads,
-            expansion='',
-            c=[None, None],
-            uc=[None, None],
-        ) for i in range(image_number)]
 
         if use_expansion:
             for i, t in enumerate(tasks):
                 progressbar(5, f'Preparing Fooocus text #{i + 1} ...')
-                expansion = pipeline.expansion(prompt, t['task_seed'])
+                expansion = pipeline.expansion(t['prompt'], t['task_seed'])
                 print(f'[Prompt Expansion] New suffix: {expansion}')
                 t['expansion'] = expansion
-                t['positive'] = copy.deepcopy(t['positive']) + [join_prompts(prompt, expansion)]  # Deep copy.
+                t['positive'] = copy.deepcopy(t['positive']) + [join_prompts(t['prompt'], expansion)]  # Deep copy.
 
         for i, t in enumerate(tasks):
             progressbar(7, f'Encoding base positive #{i + 1} ...')
             t['c'][0] = pipeline.clip_encode(sd=pipeline.xl_base_patched, texts=t['positive'],
-                                             pool_top_k=positive_top_k)
+                                             pool_top_k=t['positive_top_k'])
 
         for i, t in enumerate(tasks):
             progressbar(9, f'Encoding base negative #{i + 1} ...')
             t['uc'][0] = pipeline.clip_encode(sd=pipeline.xl_base_patched, texts=t['negative'],
-                                              pool_top_k=negative_top_k)
+                                              pool_top_k=t['negative_top_k'])
 
         if pipeline.xl_refiner is not None:
             virtual_memory.load_from_virtual_memory(pipeline.xl_refiner.clip.cond_stage_model)
@@ -210,12 +214,12 @@ def worker():
             for i, t in enumerate(tasks):
                 progressbar(11, f'Encoding refiner positive #{i + 1} ...')
                 t['c'][1] = pipeline.clip_encode(sd=pipeline.xl_refiner, texts=t['positive'],
-                                                 pool_top_k=positive_top_k)
+                                                 pool_top_k=t['positive_top_k'])
 
             for i, t in enumerate(tasks):
                 progressbar(13, f'Encoding refiner negative #{i + 1} ...')
                 t['uc'][1] = pipeline.clip_encode(sd=pipeline.xl_refiner, texts=t['negative'],
-                                                  pool_top_k=negative_top_k)
+                                                  pool_top_k=t['negative_top_k'])
 
             virtual_memory.try_move_to_virtual_memory(pipeline.xl_refiner.clip.cond_stage_model)
 
@@ -307,6 +311,7 @@ def worker():
 
             metadata = {
                 'prompt': raw_prompt, 'negative_prompt': raw_negative_prompt, 'styles': raw_style_selections,
+                'real_prompt': task['positive'], 'real_negative_prompt': task['negative'],
                 'seed': task['task_seed'], 'width': width, 'height': height,
                 'sampler': sampler_name, 'scheduler': scheduler, 'performance': performance,
                 'steps': steps, 'switch': switch, 'sharpness': sharpness, 'cfg': cfg,
@@ -348,6 +353,8 @@ def worker():
                     ('Negative Prompt', raw_negative_prompt),
                     ('Fooocus V2 (Prompt Expansion)', task['expansion']),
                     ('Styles', str(raw_style_selections)),
+                    ('Real Prompt', task['positive']),
+                    ('Real Negative Prompt', task['negative']),
                     ('Seed', task['task_seed']),
                     ('Resolution', get_resolution_string(width, height)),
                     ('Performance', (performance, steps, switch)),

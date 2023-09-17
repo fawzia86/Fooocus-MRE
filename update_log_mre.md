@@ -1,5 +1,7 @@
 ### 2.0.19 MRE
 
+* Added support for wildcards (ported from RuinedFooocus, adjusted to Fooocus V2).
+* Restored saving information about real prompt in metadata and log file (adjusted to Fooocus V2).
 * Fixed links to log files not working with customized outputs path.
 * Fixed calls to non-existing Comfy functions (vanilla still using old Comfy).
 

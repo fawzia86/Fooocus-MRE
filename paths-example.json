@@ -7,5 +7,6 @@
     "path_vae_approx": "../models/vae_approx/",
     "path_fooocus_expansion": "../models/prompt_expansion/fooocus_expansion/",
     "path_styles": "../sdxl_styles/",
+    "path_wildcards": "../wildcards/",
     "path_outputs": "../outputs/"
 }

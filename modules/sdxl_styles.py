@@ -1,8 +1,10 @@
 import os
 import json
+import re
+import random
 
 from os.path import exists
-from modules.path import styles_path, get_files_from_folder
+from modules.path import styles_path, wildcards_path, get_files_from_folder
 from modules.util import join_prompts
 
 
@@ -84,3 +86,19 @@ style_keys = list(styles.keys())
 def apply_style(style, positive):
     p, n = styles[style]
     return p.replace('{prompt}', positive), n
+
+
+
+def apply_wildcards(wildcard_text, seed=None, directory=wildcards_path):
+    placeholders = re.findall(r'__(\w+)__', wildcard_text)
+    for placeholder in placeholders:
+        try:
+            with open(os.path.join(directory, f'{placeholder}.txt')) as f:
+                words = f.read().splitlines()
+                f.close()
+                rng = random.Random(seed)
+                wildcard_text = re.sub(rf'__{placeholder}__', rng.choice(words), wildcard_text)
+        except IOError:
+            print(f'Error: could not open wildcard file {placeholder}.txt, using as normal word.')
+            wildcard_text = wildcard_text.replace(f'__{placeholder}__', placeholder)
+    return wildcard_text

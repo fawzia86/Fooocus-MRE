@@ -13,6 +13,7 @@ def load_paths():
     path_vae_approx = '../models/vae_approx/'
     path_fooocus_expansion = '../models/prompt_expansion/fooocus_expansion/'
     path_styles = '../sdxl_styles/'
+    path_wildcards = '../wildcards/'
     path_outputs = '../outputs/'
 
     if exists('paths.json'):
@@ -35,6 +36,8 @@ def load_paths():
                     path_fooocus_expansion = paths_obj['path_fooocus_expansion']
                 if 'path_styles' in paths_obj:
                     path_styles = paths_obj['path_styles']
+                if 'path_wildcards' in paths_obj:
+                    path_wildcards = paths_obj['path_wildcards']
                 if 'path_outputs' in paths_obj:
                     path_outputs = paths_obj['path_outputs']
 
@@ -43,10 +46,10 @@ def load_paths():
             finally:
                 paths_file.close()
 
-    return path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_fooocus_expansion, path_styles, path_outputs
+    return path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_fooocus_expansion, path_styles, path_wildcards, path_outputs
 
 
-path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_fooocus_expansion, path_styles, path_outputs = load_paths()
+path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_fooocus_expansion, path_styles, path_wildcards, path_outputs = load_paths()
 
 modelfile_path = path_checkpoints if os.path.isabs(path_checkpoints) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_checkpoints))
 lorafile_path = path_loras if os.path.isabs(path_loras) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_loras))
@@ -56,6 +59,7 @@ controlnet_path = path_controlnet if os.path.isabs(path_controlnet) else os.path
 vae_approx_path = path_vae_approx if os.path.isabs(path_vae_approx) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_vae_approx))
 fooocus_expansion_path = path_fooocus_expansion if os.path.isabs(path_fooocus_expansion) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_fooocus_expansion))
 styles_path = path_styles if os.path.isabs(path_styles) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_styles))
+wildcards_path = path_wildcards if os.path.isabs(path_wildcards) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_wildcards))
 temp_outputs_path = path_outputs if os.path.isabs(path_outputs) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_outputs))
 
 os.makedirs(temp_outputs_path, exist_ok=True)
