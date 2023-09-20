@@ -1,3 +1,8 @@
+from modules.patch import patch_all
+
+patch_all()
+
+
 import os
 import random
 import einops
@@ -16,11 +21,9 @@ from comfy_extras.nodes_canny import Canny
 from comfy.model_base import SDXLRefiner
 from comfy.lora import model_lora_keys_unet, model_lora_keys_clip, load_lora
 from modules.samplers_advanced import KSamplerBasic, KSamplerWithRefiner
-from modules.patch import patch_all
 from modules.path import embeddings_path
 
 
-patch_all()
 opEmptyLatentImage = EmptyLatentImage()
 opVAEDecode = VAEDecode()
 opVAEEncode = VAEEncode()

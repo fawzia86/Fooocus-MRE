@@ -1,18 +1,17 @@
 import threading
 
-import numpy as np
-import torch
 
 buffer = []
 outputs = []
-default_image = None
 
 
 def worker():
-    global buffer, outputs, default_image
+    global buffer, outputs
 
     import os
     import json
+    import numpy as np
+    import torch
     import time
     import shared
     import random
@@ -68,8 +67,6 @@ def worker():
     @torch.no_grad()
     @torch.inference_mode()
     def handler(task):
-        global default_image
-
         prompt, negative_prompt, style_selections, performance, resolution, image_number, image_seed, \
         sharpness, sampler_name, scheduler, custom_steps, custom_switch, cfg, \
         base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
@@ -129,7 +126,6 @@ def worker():
             progressbar(0, 'Image processing ...')
             if current_tab == 'uov' and uov_method != flags.disabled and uov_input_image is not None:
                 uov_input_image = HWC3(uov_input_image)
-                default_image = uov_input_image
                 if 'vary' in uov_method:
                     if not image_is_generated_in_current_ui(uov_input_image, ui_width=width, ui_height=height):
                         uov_input_image = resize_image(uov_input_image, width=width, height=height)
@@ -207,7 +203,6 @@ def worker():
             if current_tab == 'inpaint' and isinstance(inpaint_input_image, dict):
                 inpaint_image = inpaint_input_image['image']
                 inpaint_mask = inpaint_input_image['mask'][:, :, 0]
-                default_image = inpaint_image
                 if isinstance(inpaint_image, np.ndarray) and isinstance(inpaint_mask, np.ndarray) \
                         and (np.any(inpaint_mask > 127) or len(outpaint_selections) > 0):
                     if len(outpaint_selections) > 0:

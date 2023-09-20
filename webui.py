@@ -9,6 +9,7 @@ import modules.async_worker as worker
 import modules.constants as constants
 import json
 import modules.flags as flags
+import modules.gradio_hijack as grh
 import comfy.model_management as model_management
 
 from modules.settings import default_settings
@@ -278,7 +279,7 @@ shared.gradio_root = gr.Blocks(title=fooocus_version.full_version, css=modules.h
 with shared.gradio_root:
     with gr.Row():
         with gr.Column(scale=2):
-            progress_window = gr.Image(label='Preview', show_label=True, height=640, visible=False)
+            progress_window = grh.Image(label='Preview', show_label=True, height=640, visible=False)
             progress_html = gr.HTML(value=modules.html.make_progress_html(32, 'Progress 32%'), visible=False, elem_id='progress-bar', elem_classes='progress-bar')
             with gr.Column() as gallery_holder:
                 with gr.Tabs(selected=GALLERY_ID_OUTPUT) as gallery_tabs:
@@ -313,12 +314,12 @@ with shared.gradio_root:
                     with gr.TabItem(label='Upscale or Variation') as uov_tab:
                         with gr.Row():
                             with gr.Column():
-                                uov_input_image = gr.Image(label='Drag above image to here', source='upload', type='numpy')
+                                uov_input_image = grh.Image(label='Drag above image to here', source='upload', type='numpy')
                             with gr.Column():
                                 uov_method = gr.Radio(label='Upscale or Variation:', choices=flags.uov_list, value=flags.disabled)
                                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/390">\U0001F4D4 Document</a>')
                     with gr.TabItem(label='Inpaint or Outpaint (beta)') as inpaint_tab:
-                        inpaint_input_image = gr.Image(label='Drag above image to here', source='upload', type='numpy', tool='sketch', height=500, brush_color="#FFFFFF")
+                        inpaint_input_image = grh.Image(label='Drag above image to here', source='upload', type='numpy', tool='sketch', height=500, brush_color="#FFFFFF")
                         gr.HTML('Outpaint Expansion (<a href="https://github.com/lllyasviel/Fooocus/discussions/414">\U0001F4D4 Document</a>):')
                         outpaint_selections = gr.CheckboxGroup(choices=['Left', 'Right', 'Top', 'Bottom'], value=[], label='Outpaint', show_label=False, container=False)
                         gr.HTML('* \"Inpaint or Outpaint\" is powered by the sampler \"DPMPP Fooocus Seamless 2M SDE Karras Inpaint Sampler\" (beta)')
@@ -328,8 +329,29 @@ with shared.gradio_root:
 
             current_tab = gr.Textbox(value='uov', visible=False)
 
-            uov_tab.select(lambda: ['uov', worker.default_image], outputs=[current_tab, uov_input_image], queue=False)
-            inpaint_tab.select(lambda: ['inpaint', worker.default_image], outputs=[current_tab, inpaint_input_image], queue=False)
+            default_image = None
+
+            def update_default_image(x):
+                global default_image
+                if isinstance(x, dict):
+                    default_image = x['image']
+                else:
+                    default_image = x
+                return
+
+            def clear_default_image():
+                global default_image
+                default_image = None
+                return
+
+            uov_input_image.upload(update_default_image, inputs=uov_input_image, queue=False)
+            inpaint_input_image.upload(update_default_image, inputs=inpaint_input_image, queue=False)
+
+            uov_input_image.clear(clear_default_image, queue=False)
+            inpaint_input_image.clear(clear_default_image, queue=False)
+
+            uov_tab.select(lambda: ['uov', default_image], outputs=[current_tab, uov_input_image], queue=False)
+            inpaint_tab.select(lambda: ['inpaint', default_image], outputs=[current_tab, inpaint_input_image], queue=False)
 
         with gr.Column(scale=1, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):

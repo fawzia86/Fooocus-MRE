@@ -397,7 +397,7 @@ def process_diffusion(positive_cond, negative_cond, steps, switch, width, height
             callback_function=callback
         )
 
-    decoded_latent = core.decode_vae(vae=xl_base_patched.vae, latent_image=sampled_latent)
+    decoded_latent = core.decode_vae(vae=xl_base_patched.vae, latent_image=sampled_latent, tiled=tiled)
     images = core.pytorch_to_numpy(decoded_latent)
 
     return images
