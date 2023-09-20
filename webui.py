@@ -8,13 +8,14 @@ import modules.html
 import modules.async_worker as worker
 import modules.constants as constants
 import json
+import modules.flags as flags
+import comfy.model_management as model_management
 
 from modules.settings import default_settings
 from modules.resolutions import get_resolution_string, resolutions
 from modules.sdxl_styles import style_keys, fooocus_expansion, migrate_style_from_v1
 from collections.abc import Mapping
 from PIL import Image
-from comfy.model_management import interrupt_current_processing
 from comfy.cli_args import args
 from fastapi import FastAPI
 from modules.ui_gradio_extensions import reload_javascript
@@ -29,8 +30,7 @@ GALLERY_ID_OUTPUT = 2
 
 
 def generate_clicked(*args):
-    yield gr.update(interactive=False, visible=False), gr.update(interactive=True, visible=True), \
-        gr.update(visible=True, value=modules.html.make_progress_html(1, 'Initializing ...')), \
+    yield gr.update(visible=True, value=modules.html.make_progress_html(1, 'Initializing ...')), \
         gr.update(visible=True, value=None), \
         gr.update(visible=False), \
         gr.update(), \
@@ -46,23 +46,21 @@ def generate_clicked(*args):
             flag, product = worker.outputs.pop(0)
             if flag == 'preview':
                 percentage, title, image = product
-                yield gr.update(interactive=False, visible=False), gr.update(interactive=True, visible=True), \
-                    gr.update(visible=True, value=modules.html.make_progress_html(percentage, title)), \
+                yield gr.update(visible=True, value=modules.html.make_progress_html(percentage, title)), \
                     gr.update(visible=True, value=image) if image is not None else gr.update(), \
                     gr.update(visible=False), \
                     gr.update(), \
                     gr.update(), \
                     gr.update()
             if flag == 'results':
-                yield gr.update(interactive=True, visible=True), gr.update(interactive=False, visible=False), \
-                    gr.update(visible=False), \
+                yield gr.update(visible=False), \
                     gr.update(visible=False), \
                     gr.update(visible=True), \
                     gr.update(value=product), \
                     gr.update(), \
                     gr.update()
             if flag == 'metadatas':
-                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=GALLERY_ID_OUTPUT)
+                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=GALLERY_ID_OUTPUT)
                 finished = True
     return
 
@@ -88,7 +86,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[55] = False
+        ctrls[61] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -206,6 +204,12 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[54] = metadata['prompt_expansion']
     elif 'software' in metadata and metadata['software'].startswith('Fooocus 1.'):
         ctrls[54] = False
+    # input_image_checkbox
+    # current_tab
+    # uov_method
+    # uov_input_image
+    # outpaint_selections
+    # inpaint_input_image
     # seed_random
     return ctrls    
 
@@ -291,10 +295,41 @@ with shared.gradio_root:
                     with gr.Row():
                         img2img_mode = gr.Checkbox(label='Image-2-Image', value=settings['img2img_mode'], elem_classes='type_small_row')
                     with gr.Row():
-                        generate_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row', elem_id='generate_button')
-                        stop_button = gr.Button(label='Stop', value='Stop', elem_classes='type_small_row', elem_id='stop_button', interactive=False, visible=False)
-            with gr.Row():
-                advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False)
+                        generate_button = gr.Button(label='Generate', value='Generate', elem_classes='type_small_row', elem_id='generate_button', visible=True)
+                        stop_button = gr.Button(label='Stop', value='Stop', elem_classes='type_small_row', elem_id='stop_button', visible=False)
+
+                        def stop_clicked():
+                            model_management.interrupt_current_processing()
+                            return gr.update(interactive=False)
+
+                        stop_button.click(fn=stop_clicked, outputs=stop_button, queue=False)
+
+            with gr.Row(elem_classes='advanced_check_row'):
+                input_image_checkbox = gr.Checkbox(label='Enhance Image', value=False, container=False, elem_classes='min_check')
+                advanced_checkbox = gr.Checkbox(label='Advanced', value=settings['advanced_mode'], container=False, elem_classes='min_check')
+
+            with gr.Row(visible=False) as image_input_panel:
+                with gr.Tabs():
+                    with gr.TabItem(label='Upscale or Variation') as uov_tab:
+                        with gr.Row():
+                            with gr.Column():
+                                uov_input_image = gr.Image(label='Drag above image to here', source='upload', type='numpy')
+                            with gr.Column():
+                                uov_method = gr.Radio(label='Upscale or Variation:', choices=flags.uov_list, value=flags.disabled)
+                                gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/390">\U0001F4D4 Document</a>')
+                    with gr.TabItem(label='Inpaint or Outpaint (beta)') as inpaint_tab:
+                        inpaint_input_image = gr.Image(label='Drag above image to here', source='upload', type='numpy', tool='sketch', height=500, brush_color="#FFFFFF")
+                        gr.HTML('Outpaint Expansion (<a href="https://github.com/lllyasviel/Fooocus/discussions/414">\U0001F4D4 Document</a>):')
+                        outpaint_selections = gr.CheckboxGroup(choices=['Left', 'Right', 'Top', 'Bottom'], value=[], label='Outpaint', show_label=False, container=False)
+                        gr.HTML('* \"Inpaint or Outpaint\" is powered by the sampler \"DPMPP Fooocus Seamless 2M SDE Karras Inpaint Sampler\" (beta)')
+
+            input_image_checkbox.change(lambda x: gr.update(visible=x), inputs=input_image_checkbox, outputs=image_input_panel, queue=False,
+                                        _js="(x) => {if(x){setTimeout(() => window.scrollTo({ top: window.scrollY + 500, behavior: 'smooth' }), 50);}else{setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);} return x}")
+
+            current_tab = gr.Textbox(value='uov', visible=False)
+
+            uov_tab.select(lambda: ['uov', worker.default_image], outputs=[current_tab, uov_input_image], queue=False)
+            inpaint_tab.select(lambda: ['inpaint', worker.default_image], outputs=[current_tab, inpaint_input_image], queue=False)
 
         with gr.Column(scale=1, visible=settings['advanced_mode']) as advanced_column:
             with gr.Tab(label='Settings'):
@@ -335,7 +370,7 @@ with shared.gradio_root:
                     else:
                         return seed_value
 
-                seed_random.change(random_checked, inputs=[seed_random], outputs=[image_seed])
+                seed_random.change(random_checked, inputs=[seed_random], outputs=[image_seed], queue=False)
 
                 def performance_changed(value):
                     return gr.update(visible=value == 'Custom')
@@ -454,7 +489,7 @@ with shared.gradio_root:
                 refiner_clip_skip = gr.Slider(label='Refiner CLIP Skip', minimum=-10, maximum=-1, step=1, value=settings['refiner_clip_skip'])
                 sampler_name = gr.Dropdown(label='Sampler', choices=['dpmpp_2m_sde_gpu', 'dpmpp_2m_sde', 'dpmpp_3m_sde_gpu', 'dpmpp_3m_sde',
                     'dpmpp_sde_gpu', 'dpmpp_sde', 'dpmpp_2m', 'dpmpp_2s_ancestral', 'euler', 'euler_ancestral', 'heun', 'dpm_2', 'dpm_2_ancestral', 'ddpm'], value=settings['sampler'])
-                scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'simple', 'ddim_uniform'], value=settings['scheduler'])
+                scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'sgm_uniform', 'simple', 'ddim_uniform'], value=settings['scheduler'])
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=30.0, step=0.01, value=settings['sharpness'])
 
                 def model_refresh_clicked():
@@ -465,7 +500,7 @@ with shared.gradio_root:
                         results += [gr.update(choices=['None'] + modules.path.lora_filenames), gr.update()]
                     return results
 
-                model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls)
+                model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls, queue=False)
 
 
             with gr.Tab(label='Misc'):
@@ -475,42 +510,44 @@ with shared.gradio_root:
                     save_metadata_image = gr.Checkbox(label='Save Metadata in Image', value=settings['save_metadata_image'])
                 metadata_viewer = gr.JSON(label='Metadata')
 
-        advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, advanced_column)
+        advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, advanced_column, queue=False)
 
-        def verify_input(img2img, canny, gallery_in, gallery_rev, gallery_out):
-            if (img2img or canny) and len(gallery_in) == 0:
+        def verify_input(img2img, canny, depth, gallery_in, gallery_rev, gallery_out):
+            if (img2img or canny or depth) and len(gallery_in) == 0:
                 if len(gallery_rev) > 0:
                     gr.Info('Image-2-Image / CL: imported revision as input')
-                    return gr.update(), gr.update(), list(map(lambda x: x['name'], gallery_rev[:1]))
+                    return gr.update(), gr.update(), gr.update(), list(map(lambda x: x['name'], gallery_rev[:1]))
                 elif len(gallery_out) > 0:
                     gr.Info('Image-2-Image / CL: imported output as input')
-                    return gr.update(), gr.update(), list(map(lambda x: x['name'], gallery_out[:1]))
+                    return gr.update(), gr.update(), gr.update(), list(map(lambda x: x['name'], gallery_out[:1]))
                 else:
                     gr.Warning('Image-2-Image / CL: disabled (no images available)')
-                    return gr.update(value=False), gr.update(value=False), gr.update()
+                    return gr.update(value=False), gr.update(value=False), gr.update(value=False), gr.update()
             else:
-                return gr.update(), gr.update(), gr.update()
+                return gr.update(), gr.update(), gr.update(), gr.update()
 
         ctrls = [
             prompt, negative_prompt, style_selections,
             performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler,
             custom_steps, custom_switch, cfg
         ]
-        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls + [save_metadata_json, save_metadata_image] \
-            + img2img_ctrls + [same_seed_for_all, output_format] + canny_ctrls + depth_ctrls + [prompt_expansion]
+        ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls
+        ctrls += [save_metadata_json, save_metadata_image] + img2img_ctrls + [same_seed_for_all, output_format]
+        ctrls += canny_ctrls + depth_ctrls + [prompt_expansion]
+        ctrls += [input_image_checkbox, current_tab]
+        ctrls += [uov_method, uov_input_image]
+        ctrls += [outpaint_selections, inpaint_input_image]
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
-        generate_button.click(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
-            .then(fn=verify_input, inputs=[img2img_mode, control_lora_canny, input_gallery, revision_gallery, output_gallery], outputs=[img2img_mode, control_lora_canny, input_gallery]) \
+        generate_button.click(lambda: (gr.update(visible=True, interactive=True), gr.update(visible=False), []), outputs=[stop_button, generate_button, output_gallery]) \
+            .then(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
+            .then(fn=verify_input, inputs=[img2img_mode, control_lora_canny, control_lora_depth, input_gallery, revision_gallery, output_gallery],
+                outputs=[img2img_mode, control_lora_canny, control_lora_depth, input_gallery]) \
             .then(fn=verify_revision, inputs=[revision_mode, input_gallery, revision_gallery, output_gallery], outputs=[revision_mode, revision_gallery]) \
             .then(fn=generate_clicked, inputs=ctrls + [input_gallery, revision_gallery, keep_input_names],
-                outputs=[generate_button, stop_button, progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs]) \
+                outputs=[progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs]) \
+            .then(lambda: (gr.update(visible=True), gr.update(visible=False)), outputs=[generate_button, stop_button]) \
             .then(fn=get_current_links, inputs=None, outputs=links) \
             .then(fn=None, _js='playNotification()')
-
-        def stop_clicked():
-            interrupt_current_processing()
-
-        stop_button.click(fn=stop_clicked, queue=False)
 
         notification_file = 'notification.ogg' if exists('notification.ogg') else 'notification.mp3' if exists('notification.mp3') else None
         if notification_file != None:

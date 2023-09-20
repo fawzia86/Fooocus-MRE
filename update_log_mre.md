@@ -1,3 +1,7 @@
+### 2.0.73 MRE
+
+* Renamed Input Image from vanilla to Enhance Image (to avoid confusion with Input tab)
+
 ### 2.0.19 MRE
 
 * Added support for wildcards (ported from RuinedFooocus, adjusted to Fooocus V2).

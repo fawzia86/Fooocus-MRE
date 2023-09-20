@@ -1,3 +1,15 @@
+### 2.0.72
+
+* Allow users to choose path of models.
+
+### 2.0.65
+
+* Inpaint model released.
+
+### 2.0.50
+
+* Variation/Upscale (Midjourney Toolbar) implemented.
+
 ### 2.0.16
 
 * Virtual memory system implemented. Now Colab can run both base model and refiner model with 7.8GB RAM + 5.3GB VRAM, and it never crashes.

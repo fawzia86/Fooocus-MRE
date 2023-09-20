@@ -36,6 +36,7 @@ In the first time you launch the software, it will automatically download models
 
 1. It will download [sd_xl_base_1.0_0.9vae.safetensors from here](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0_0.9vae.safetensors) as the file "Fooocus\models\checkpoints\sd_xl_base_1.0_0.9vae.safetensors".
 2. It will download [sd_xl_refiner_1.0_0.9vae.safetensors from here](https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0_0.9vae.safetensors) as the file "Fooocus\models\checkpoints\sd_xl_refiner_1.0_0.9vae.safetensors".
+3. Note that if you use inpaint, at the first time you inpaint an image, it will download [Fooocus's own inpaint control model from here](https://huggingface.co/lllyasviel/fooocus_inpaint/resolve/main/inpaint.fooocus.patch) as the file "Fooocus\models\inpaint\inpaint.fooocus.patch" (the size of this file is 1.28GB).
 
 ![image](https://github.com/lllyasviel/Fooocus/assets/19834515/d386f817-4bd7-490c-ad89-c1e228c23447)
 
@@ -81,7 +82,7 @@ If you want to use Anaconda/Miniconda, you can
     cd Fooocus-MRE
     conda env create -f environment.yaml
     conda activate fooocus
-    pip install -r requirements_versions.txt
+    pip install pygit2==1.12.2
 
 Then download the models: download [sd_xl_base_1.0_0.9vae.safetensors from here](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0_0.9vae.safetensors) as the file "Fooocus\models\checkpoints\sd_xl_base_1.0_0.9vae.safetensors", and download [sd_xl_refiner_1.0_0.9vae.safetensors from here](https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0_0.9vae.safetensors) as the file "Fooocus\models\checkpoints\sd_xl_refiner_1.0_0.9vae.safetensors". **Or let Fooocus automatically download the models** using the launcher:
 
@@ -101,7 +102,7 @@ Your Linux needs to have **Python 3.10** installed, and lets say your Python can
     cd Fooocus-MRE
     python3 -m venv fooocus_env
     source fooocus_env/bin/activate
-    pip install -r requirements_versions.txt
+    pip install pygit2==1.12.2
 
 See the above sections for model downloads. You can launch the software with:
 
@@ -119,7 +120,7 @@ If you know what you are doing, and your Linux already has **Python 3.10** insta
 
     git clone https://github.com/MoonRide303/Fooocus-MRE.git
     cd Fooocus-MRE
-    pip3 install -r requirements_versions.txt
+    pip3 install pygit2==1.12.2
 
 See the above sections for model downloads. You can launch the software with:
 
@@ -128,6 +129,10 @@ See the above sections for model downloads. You can launch the software with:
 Or if you want to open a remote port, use
 
     python3 entry_with_update.py --listen
+
+### Linux (AMD GPUs)
+
+Installation is the same as Linux part. It has been tested for 6700XT. Works for both Pytorch 1.13 and Pytorch 2. 
 
 ### Mac/Windows(AMD GPUs)
 
@@ -149,6 +154,8 @@ Below things are already inside the software, and **users do not need to do anyt
 9. Separated prompts for two different text encoders seem unnecessary. Separated prompts for base model and refiner may work but the effects are random, and we refrain from implement this.
 10. DPM family seems well-suited for XL, since XL sometimes generates overly smooth texture but DPM family sometimes generate overly dense detail in texture. Their joint effect looks neutral and appealing to human perception.
 11. A carefully designed system for balancing multiple styles as well as prompt expansion.
+12. Using automatic1111's method to normalize prompt emphasizing. This significantly improve results when users directly copy prompts from civitai.
+13. The joint swap system of refiner now also support img2img and upscale in a seamless way.
 
 ## Advanced Features
 
