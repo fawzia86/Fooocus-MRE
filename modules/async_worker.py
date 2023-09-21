@@ -201,6 +201,7 @@ def worker():
                     height = H * 8
                     print(f'Final resolution is {str((height, width))}.')
             if current_tab == 'inpaint' and isinstance(inpaint_input_image, dict):
+                sampler_name = 'dpmpp_fooocus_2m_sde_inpaint_seamless'
                 inpaint_image = inpaint_input_image['image']
                 inpaint_mask = inpaint_input_image['mask'][:, :, 0]
                 if isinstance(inpaint_image, np.ndarray) and isinstance(inpaint_mask, np.ndarray) \
