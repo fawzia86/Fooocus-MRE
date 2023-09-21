@@ -31,6 +31,8 @@ GALLERY_ID_OUTPUT = 2
 
 
 def generate_clicked(*args):
+    execution_start_time = time.perf_counter()
+
     yield gr.update(visible=True, value=modules.html.make_progress_html(1, 'Initializing ...')), \
         gr.update(visible=True, value=None), \
         gr.update(visible=False), \
@@ -63,6 +65,9 @@ def generate_clicked(*args):
             if flag == 'metadatas':
                 yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=GALLERY_ID_OUTPUT)
                 finished = True
+
+    execution_time = time.perf_counter() - execution_start_time
+    print(f'Total time: {execution_time:.2f} seconds')
     return
 
 

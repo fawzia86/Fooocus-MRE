@@ -456,8 +456,9 @@ def worker():
                     img2img_megapixels = constants.MAX_MEGAPIXELS
                 input_image = get_image(input_image_path, img2img_megapixels)
 
-            execution_start_time = time.perf_counter()
             try:
+                execution_start_time = time.perf_counter()
+
                 imgs = pipeline.process_diffusion(
                     positive_cond=task['c'],
                     negative_cond=task['uc'],
@@ -491,7 +492,7 @@ def worker():
                     imgs = [inpaint_worker.current_task.post_process(x) for x in imgs]
 
                 execution_time = time.perf_counter() - execution_start_time
-                print(f'Prompt executed in {execution_time:.2f} seconds')
+                print(f'Diffusion time: {execution_time:.2f} seconds')
     
                 metadata = {
                     'prompt': raw_prompt, 'negative_prompt': raw_negative_prompt, 'styles': raw_style_selections,
