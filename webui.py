@@ -539,6 +539,13 @@ with shared.gradio_root:
 
         advanced_checkbox.change(lambda x: gr.update(visible=x), advanced_checkbox, advanced_column, queue=False)
 
+        def verify_enhance_image(enhance_image, img2img):
+            if enhance_image and img2img:
+                gr.Warning('Image-2-Image: disabled (Enhance Image priority)')
+                return gr.update(value=False)
+            else:
+                return gr.update()
+
         def verify_input(img2img, canny, depth, gallery_in, gallery_rev, gallery_out):
             if (img2img or canny or depth) and len(gallery_in) == 0:
                 if len(gallery_rev) > 0:
@@ -567,6 +574,7 @@ with shared.gradio_root:
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         generate_button.click(lambda: (gr.update(visible=True, interactive=True), gr.update(visible=False), []), outputs=[stop_button, generate_button, output_gallery]) \
             .then(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
+            .then(fn=verify_enhance_image, inputs=[input_image_checkbox, img2img_mode], outputs=[img2img_mode]) \
             .then(fn=verify_input, inputs=[img2img_mode, control_lora_canny, control_lora_depth, input_gallery, revision_gallery, output_gallery],
                 outputs=[img2img_mode, control_lora_canny, control_lora_depth, input_gallery]) \
             .then(fn=verify_revision, inputs=[revision_mode, input_gallery, revision_gallery, output_gallery], outputs=[revision_mode, revision_gallery]) \
