@@ -82,7 +82,7 @@ def get_config_or_set_default(key, default):
     dp = v if os.path.isabs(v) else os.path.abspath(os.path.join(os.path.dirname(__file__), v))
     if not os.path.exists(dp) or not os.path.isdir(dp):
         os.makedirs(dp, exist_ok=True)
-        config_dict[key] = dp
+    config_dict[key] = dp
     return dp
 
 
