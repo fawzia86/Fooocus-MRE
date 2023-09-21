@@ -2,65 +2,102 @@ import os
 import json
 
 from os.path import exists
-
+from modules.model_loader import load_file_from_url
 
 def load_paths():
-    path_checkpoints = '../models/checkpoints/'
-    path_loras = '../models/loras/'
-    path_embeddings = '../models/embeddings/'
-    path_clip_vision = '../models/clip_vision/'
-    path_controlnet = '../models/controlnet/'
-    path_vae_approx = '../models/vae_approx/'
-    path_fooocus_expansion = '../models/prompt_expansion/fooocus_expansion/'
-    path_styles = '../sdxl_styles/'
-    path_wildcards = '../wildcards/'
-    path_outputs = '../outputs/'
+    paths_dict = {
+        'modelfile_path': '../models/checkpoints/',
+        'lorafile_path': '../models/loras/',
+        'embeddings_path': '../models/embeddings/',
+        'clip_vision_path': '../models/clip_vision/',
+        'controlnet_path': '../models/controlnet/',
+        'vae_approx_path': '../models/vae_approx/',
+        'fooocus_expansion_path': '../models/prompt_expansion/fooocus_expansion/',
+        'styles_path': '../sdxl_styles/',
+        'wildcards_path': '../wildcards/',
+        'temp_outputs_path': '../outputs/'
+    }
 
     if exists('paths.json'):
         with open('paths.json', encoding='utf-8') as paths_file:
             try:
                 paths_obj = json.load(paths_file)
                 if 'path_checkpoints' in paths_obj:
-                    path_checkpoints = paths_obj['path_checkpoints']
+                    paths_dict['modelfile_path'] = paths_obj['path_checkpoints']
                 if 'path_loras' in paths_obj:
-                    path_loras = paths_obj['path_loras']
+                    paths_dict['lorafile_path'] = paths_obj['path_loras']
                 if 'path_embeddings' in paths_obj:
-                    path_embeddings = paths_obj['path_embeddings']
+                    paths_dict['embeddings_path'] = paths_obj['path_embeddings']
                 if 'path_clip_vision' in paths_obj:
-                    path_clip_vision = paths_obj['path_clip_vision']
+                    paths_dict['clip_vision_path'] = paths_obj['path_clip_vision']
                 if 'path_controlnet' in paths_obj:
-                    path_controlnet = paths_obj['path_controlnet']
+                    paths_dict['controlnet_path'] = paths_obj['path_controlnet']
                 if 'path_vae_approx' in paths_obj:
-                    path_vae_approx = paths_obj['path_vae_approx']
+                    paths_dict['vae_approx_path'] = paths_obj['path_vae_approx']
                 if 'path_fooocus_expansion' in paths_obj:
-                    path_fooocus_expansion = paths_obj['path_fooocus_expansion']
+                    paths_dict['fooocus_expansion_path'] = paths_obj['path_fooocus_expansion']
                 if 'path_styles' in paths_obj:
-                    path_styles = paths_obj['path_styles']
+                    paths_dict['styles_path'] = paths_obj['path_styles']
                 if 'path_wildcards' in paths_obj:
-                    path_wildcards = paths_obj['path_wildcards']
+                    paths_dict['wildcards_path'] = paths_obj['path_wildcards']
                 if 'path_outputs' in paths_obj:
-                    path_outputs = paths_obj['path_outputs']
+                    paths_dict['temp_outputs_path'] = paths_obj['path_outputs']
 
             except Exception as e:
                 print('load_paths, e: ' + str(e))
             finally:
                 paths_file.close()
 
-    return path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_fooocus_expansion, path_styles, path_wildcards, path_outputs
+    return paths_dict
 
 
-path_checkpoints, path_loras, path_embeddings, path_clip_vision, path_controlnet, path_vae_approx, path_fooocus_expansion, path_styles, path_wildcards, path_outputs = load_paths()
+config_path_mre = "paths.json"
+config_path = "user_path_config.txt"
+config_dict = {}
 
-modelfile_path = path_checkpoints if os.path.isabs(path_checkpoints) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_checkpoints))
-lorafile_path = path_loras if os.path.isabs(path_loras) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_loras))
-embeddings_path = path_embeddings if os.path.isabs(path_embeddings) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_embeddings))
-clip_vision_path = path_clip_vision if os.path.isabs(path_clip_vision) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_clip_vision))
-controlnet_path = path_controlnet if os.path.isabs(path_controlnet) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_controlnet))
-vae_approx_path = path_vae_approx if os.path.isabs(path_vae_approx) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_vae_approx))
-fooocus_expansion_path = path_fooocus_expansion if os.path.isabs(path_fooocus_expansion) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_fooocus_expansion))
-styles_path = path_styles if os.path.isabs(path_styles) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_styles))
-wildcards_path = path_wildcards if os.path.isabs(path_wildcards) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_wildcards))
-temp_outputs_path = path_outputs if os.path.isabs(path_outputs) else os.path.abspath(os.path.join(os.path.dirname(__file__), path_outputs))
+
+try:
+    if os.path.exists(config_path_mre):
+        with open(config_path_mre, "r", encoding="utf-8") as json_file:
+            config_dict = load_paths(config_path_mre)
+    elif os.path.exists(config_path):
+        with open(config_path, "r", encoding="utf-8") as json_file:
+            config_dict = json.load(json_file)
+except Exception as e:
+    print('Load path config failed')
+    print(e)
+
+
+def get_config_or_set_default(key, default):
+    global config_dict
+    v = config_dict.get(key, None)
+    if isinstance(v, str) and os.path.exists(v) and os.path.isdir(v):
+        return v
+    else:
+        dp = os.path.abspath(os.path.join(os.path.dirname(__file__), default))
+        os.makedirs(dp, exist_ok=True)
+        config_dict[key] = dp
+        return dp
+
+
+modelfile_path = get_config_or_set_default('modelfile_path', '../models/checkpoints/')
+lorafile_path = get_config_or_set_default('lorafile_path', '../models/loras/')
+embeddings_path = get_config_or_set_default('embeddings_path', '../models/embeddings/')
+clip_vision_path = get_config_or_set_default('clip_vision_path', '../models/clip_vision/')
+controlnet_path = get_config_or_set_default('controlnet_path', '../models/controlnet/')
+styles_path = get_config_or_set_default('styles_path', '../sdxl_styles/')
+wildcards_path = get_config_or_set_default('wildcards_path', '../wildcards/')
+vae_approx_path = get_config_or_set_default('vae_approx_path', '../models/vae_approx/')
+upscale_models_path = get_config_or_set_default('upscale_models_path', '../models/upscale_models/')
+inpaint_models_path = get_config_or_set_default('inpaint_models_path', '../models/inpaint/')
+fooocus_expansion_path = get_config_or_set_default('fooocus_expansion_path',
+                                                   '../models/prompt_expansion/fooocus_expansion')
+
+temp_outputs_path = get_config_or_set_default('temp_outputs_path', '../outputs/')
+
+with open(config_path, "w", encoding="utf-8") as json_file:
+    json.dump(config_dict, json_file, indent=4)
+
 
 os.makedirs(temp_outputs_path, exist_ok=True)
 
@@ -108,6 +145,20 @@ def update_all_model_names():
     canny_filenames = get_model_filenames(controlnet_path, 'control-lora-canny')
     depth_filenames = get_model_filenames(controlnet_path, 'control-lora-depth')
     return
+
+
+def downloading_inpaint_models():
+    load_file_from_url(
+        url='https://huggingface.co/lllyasviel/fooocus_inpaint/resolve/main/fooocus_inpaint_head.pth',
+        model_dir=inpaint_models_path,
+        file_name='fooocus_inpaint_head.pth'
+    )
+    load_file_from_url(
+        url='https://huggingface.co/lllyasviel/fooocus_inpaint/resolve/main/inpaint.fooocus.patch',
+        model_dir=inpaint_models_path,
+        file_name='inpaint.fooocus.patch'
+    )
+    return os.path.join(inpaint_models_path, 'fooocus_inpaint_head.pth'), os.path.join(inpaint_models_path, 'inpaint.fooocus.patch')
 
 
 update_all_model_names()

@@ -1,7 +1,6 @@
 import os
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
-
 import sys
 import platform
 import fooocus_version
@@ -10,12 +9,11 @@ import argparse
 from modules.launch_util import is_installed, run, python, \
     run_pip, repo_dir, git_clone, requirements_met, script_path, dir_repos
 from modules.model_loader import load_file_from_url
-from modules.path import modelfile_path, lorafile_path, clip_vision_path, controlnet_path, vae_approx_path, fooocus_expansion_path
+from modules.path import modelfile_path, lorafile_path, clip_vision_path, controlnet_path, vae_approx_path, fooocus_expansion_path, upscale_models_path
 
 
 REINSTALL_ALL = False
 DEFAULT_ARGS = ['--disable-smart-memory', '--disable-cuda-malloc']
-
 
 def prepare_environment():
     torch_index_url = os.environ.get('TORCH_INDEX_URL', "https://download.pytorch.org/whl/cu118")
@@ -26,7 +24,7 @@ def prepare_environment():
     xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.21')
 
     comfy_repo = os.environ.get('COMFY_REPO', "https://github.com/comfyanonymous/ComfyUI")
-    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "321c5fa2958a2cdb05a08f6792fd2f72336e8c90")
+    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "492db2de8db7e082addf131b40adb4a1b7535821")
 
     print(f"Python {sys.version}")
     print(f"Fooocus version: {fooocus_version.version}")
@@ -86,8 +84,14 @@ controlnet_filenames = [
 ]
 
 vae_approx_filenames = [
-    ('taesdxl_decoder.pth',
-     'https://huggingface.co/lllyasviel/misc/resolve/main/taesdxl_decoder.pth')
+    ('xlvaeapp.pth',
+     'https://huggingface.co/lllyasviel/misc/resolve/main/xlvaeapp.pth')
+]
+
+
+upscaler_filenames = [
+    ('fooocus_upscaler_s409985e5.bin',
+     'https://huggingface.co/lllyasviel/misc/resolve/main/fooocus_upscaler_s409985e5.bin')
 ]
 
 
@@ -102,6 +106,8 @@ def download_models():
         load_file_from_url(url=url, model_dir=controlnet_path, file_name=file_name)
     for file_name, url in vae_approx_filenames:
         load_file_from_url(url=url, model_dir=vae_approx_path, file_name=file_name)
+    for file_name, url in upscaler_filenames:
+        load_file_from_url(url=url, model_dir=upscale_models_path, file_name=file_name)
 
     load_file_from_url(
         url='https://huggingface.co/lllyasviel/misc/resolve/main/fooocus_expansion.bin',

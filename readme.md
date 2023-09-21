@@ -36,6 +36,7 @@ In the first time you launch the software, it will automatically download models
 
 1. It will download [sd_xl_base_1.0_0.9vae.safetensors from here](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0_0.9vae.safetensors) as the file "Fooocus\models\checkpoints\sd_xl_base_1.0_0.9vae.safetensors".
 2. It will download [sd_xl_refiner_1.0_0.9vae.safetensors from here](https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0_0.9vae.safetensors) as the file "Fooocus\models\checkpoints\sd_xl_refiner_1.0_0.9vae.safetensors".
+3. Note that if you use inpaint, at the first time you inpaint an image, it will download [Fooocus's own inpaint control model from here](https://huggingface.co/lllyasviel/fooocus_inpaint/resolve/main/inpaint.fooocus.patch) as the file "Fooocus\models\inpaint\inpaint.fooocus.patch" (the size of this file is 1.28GB).
 
 ![image](https://github.com/lllyasviel/Fooocus/assets/19834515/d386f817-4bd7-490c-ad89-c1e228c23447)
 
@@ -81,7 +82,7 @@ If you want to use Anaconda/Miniconda, you can
     cd Fooocus-MRE
     conda env create -f environment.yaml
     conda activate fooocus
-    pip install -r requirements_versions.txt
+    pip install pygit2==1.12.2
 
 Then download the models: download [sd_xl_base_1.0_0.9vae.safetensors from here](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0_0.9vae.safetensors) as the file "Fooocus\models\checkpoints\sd_xl_base_1.0_0.9vae.safetensors", and download [sd_xl_refiner_1.0_0.9vae.safetensors from here](https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0_0.9vae.safetensors) as the file "Fooocus\models\checkpoints\sd_xl_refiner_1.0_0.9vae.safetensors". **Or let Fooocus automatically download the models** using the launcher:
 
@@ -101,7 +102,7 @@ Your Linux needs to have **Python 3.10** installed, and lets say your Python can
     cd Fooocus-MRE
     python3 -m venv fooocus_env
     source fooocus_env/bin/activate
-    pip install -r requirements_versions.txt
+    pip install pygit2==1.12.2
 
 See the above sections for model downloads. You can launch the software with:
 
@@ -119,7 +120,7 @@ If you know what you are doing, and your Linux already has **Python 3.10** insta
 
     git clone https://github.com/MoonRide303/Fooocus-MRE.git
     cd Fooocus-MRE
-    pip3 install -r requirements_versions.txt
+    pip3 install pygit2==1.12.2
 
 See the above sections for model downloads. You can launch the software with:
 
@@ -128,6 +129,10 @@ See the above sections for model downloads. You can launch the software with:
 Or if you want to open a remote port, use
 
     python3 entry_with_update.py --listen
+
+### Linux (AMD GPUs)
+
+Installation is the same as Linux part. It has been tested for 6700XT. Works for both Pytorch 1.13 and Pytorch 2. 
 
 ### Mac/Windows(AMD GPUs)
 
@@ -149,6 +154,8 @@ Below things are already inside the software, and **users do not need to do anyt
 9. Separated prompts for two different text encoders seem unnecessary. Separated prompts for base model and refiner may work but the effects are random, and we refrain from implement this.
 10. DPM family seems well-suited for XL, since XL sometimes generates overly smooth texture but DPM family sometimes generate overly dense detail in texture. Their joint effect looks neutral and appealing to human perception.
 11. A carefully designed system for balancing multiple styles as well as prompt expansion.
+12. Using automatic1111's method to normalize prompt emphasizing. This significantly improve results when users directly copy prompts from civitai.
+13. The joint swap system of refiner now also support img2img and upscale in a seamless way.
 
 ## Advanced Features
 
@@ -168,22 +175,20 @@ Below things are already inside the software, and **users do not need to do anyt
 10. Ability to save full metadata for generated images (as JSON or embedded in image, disabled by default).
 11. Ability to load prompt information from JSON and image files (if saved with metadata).
 12. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
-13. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
-14. Ability to retain input files names (when using Image-2-Image mode).
-15. Ability to generate multiple images using same seed (useful in Image-2-Image mode).
-16. Ability to generate images forever (ported from SD web UI - right-click on Generate button to start or stop this mode).
-17. Ability to stop image generation.
-18. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
-19. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
-20. Support for custom resolutions list (loaded from resolutions.json - use resolutions-example.json as a template).
-21. Support for custom resolutions - you can just type it now in Resolution field, like "1280x640".
-22. Support for upscaling via Image-2-Image (see [example in Wiki](https://github.com/MoonRide303/Fooocus-MRE/wiki/Upscaling-using-Image%E2%80%902%E2%80%90Image)).
-23. Support for custom styles (loaded from sdxl_styles folder on start).
-24. Support for playing audio when generation is finished (ported from SD web UI - use notification.ogg or notification.mp3).
-25. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
-26. Support for loading models from subfolders (ported from RuinedFooocus).
-27. Support for authentication in --share mode (credentials loaded from auth.json - use auth-example.json as a template).
-28. Support for wildcards (ported from RuinedFooocus - put them in wildcards folder, then try prompts like `__color__ sports car` with different seeds).
+13. Ability to retain input files names (when using Image-2-Image mode).
+14. Ability to generate multiple images using same seed (useful in Image-2-Image mode).
+15. Ability to generate images forever (ported from SD web UI - right-click on Generate button to start or stop this mode).
+16. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+17. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
+18. Support for custom resolutions list (loaded from resolutions.json - use resolutions-example.json as a template).
+19. Support for custom resolutions - you can just type it now in Resolution field, like "1280x640".
+20. Support for upscaling via Image-2-Image (see [example in Wiki](https://github.com/MoonRide303/Fooocus-MRE/wiki/Upscaling-using-Image%E2%80%902%E2%80%90Image)).
+21. Support for custom styles (loaded from sdxl_styles folder on start).
+22. Support for playing audio when generation is finished (ported from SD web UI - use notification.ogg or notification.mp3).
+23. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
+24. Support for loading models from subfolders (ported from RuinedFooocus).
+25. Support for authentication in --share mode (credentials loaded from auth.json - use auth-example.json as a template).
+26. Support for wildcards (ported from RuinedFooocus - put them in wildcards folder, then try prompts like `__color__ sports car` with different seeds).
 
 ## Thanks
 
