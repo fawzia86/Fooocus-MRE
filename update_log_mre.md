@@ -1,3 +1,9 @@
+### 2.0.76 MRE
+
+* Added information about total execution time.
+* Enforced 'dpmpp_fooocus_2m_sde_inpaint_seamless' sampler for inpainting workflow.
+* Updated Comfy and patched Comfy functions.
+
 ### 2.0.73 MRE
 
 * Renamed Input Image from vanilla to Enhance Image (to avoid confusion with Input tab)
