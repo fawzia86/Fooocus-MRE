@@ -1,3 +1,7 @@
+### 2.0.78.1 MRE
+
+* Fixed reading paths from paths.json (broken in 2.0.73 MRE).
+
 ### 2.0.76 MRE
 
 * Added information about total execution time.

@@ -4,7 +4,7 @@ import json
 from os.path import exists
 from modules.model_loader import load_file_from_url
 
-def load_paths():
+def load_paths(paths_filename):
     paths_dict = {
         'modelfile_path': '../models/checkpoints/',
         'lorafile_path': '../models/loras/',
@@ -13,13 +13,15 @@ def load_paths():
         'controlnet_path': '../models/controlnet/',
         'vae_approx_path': '../models/vae_approx/',
         'fooocus_expansion_path': '../models/prompt_expansion/fooocus_expansion/',
+        'upscale_models_path': '../models/upscale_models/',
+        'inpaint_models_path': '../models/inpaint/',
         'styles_path': '../sdxl_styles/',
         'wildcards_path': '../wildcards/',
         'temp_outputs_path': '../outputs/'
     }
 
-    if exists('paths.json'):
-        with open('paths.json', encoding='utf-8') as paths_file:
+    if exists(paths_filename):
+        with open(paths_filename, encoding='utf-8') as paths_file:
             try:
                 paths_obj = json.load(paths_file)
                 if 'path_checkpoints' in paths_obj:
@@ -36,6 +38,10 @@ def load_paths():
                     paths_dict['vae_approx_path'] = paths_obj['path_vae_approx']
                 if 'path_fooocus_expansion' in paths_obj:
                     paths_dict['fooocus_expansion_path'] = paths_obj['path_fooocus_expansion']
+                if 'path_upscale_models' in paths_obj:
+                    paths_dict['upscale_models_path'] = paths_obj['path_upscale_models']
+                if 'path_inpaint_models' in paths_obj:
+                    paths_dict['inpaint_models_path'] = paths_obj['path_inpaint_models']
                 if 'path_styles' in paths_obj:
                     paths_dict['styles_path'] = paths_obj['path_styles']
                 if 'path_wildcards' in paths_obj:
@@ -71,13 +77,13 @@ except Exception as e:
 def get_config_or_set_default(key, default):
     global config_dict
     v = config_dict.get(key, None)
-    if isinstance(v, str) and os.path.exists(v) and os.path.isdir(v):
-        return v
-    else:
-        dp = os.path.abspath(os.path.join(os.path.dirname(__file__), default))
+    if not isinstance(v, str):
+        v = default
+    dp = v if os.path.isabs(v) else os.path.abspath(os.path.join(os.path.dirname(__file__), v))
+    if not os.path.exists(dp) or not os.path.isdir(dp):
         os.makedirs(dp, exist_ok=True)
         config_dict[key] = dp
-        return dp
+    return dp
 
 
 modelfile_path = get_config_or_set_default('modelfile_path', '../models/checkpoints/')
