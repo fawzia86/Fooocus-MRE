@@ -582,7 +582,7 @@ with shared.gradio_root:
                 outputs=[progress_html, progress_window, gallery_holder, output_gallery, metadata_viewer, gallery_tabs]) \
             .then(lambda: (gr.update(visible=True), gr.update(visible=False)), outputs=[generate_button, stop_button]) \
             .then(fn=get_current_links, inputs=None, outputs=links) \
-            .then(fn=None, _js='playNotification()')
+            .then(fn=None, _js='playNotification')
 
         notification_file = 'notification.ogg' if exists('notification.ogg') else 'notification.mp3' if exists('notification.mp3') else None
         if notification_file != None:

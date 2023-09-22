@@ -1,6 +1,7 @@
 ### 2.0.78.1 MRE
 
 * Fixed reading paths from paths.json (broken in 2.0.73 MRE).
+* Fixed error related to playing audio notification.
 * Disabling Image-2-Image when Enhance Image is active.
 
 ### 2.0.76 MRE
