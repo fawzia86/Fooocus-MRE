@@ -92,7 +92,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[61] = False
+        ctrls[55] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -210,12 +210,6 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[54] = metadata['prompt_expansion']
     elif 'software' in metadata and metadata['software'].startswith('Fooocus 1.'):
         ctrls[54] = False
-    # input_image_checkbox
-    # current_tab
-    # uov_method
-    # uov_input_image
-    # outpaint_selections
-    # inpaint_input_image
     # seed_random
     return ctrls    
 
@@ -568,10 +562,10 @@ with shared.gradio_root:
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls
         ctrls += [save_metadata_json, save_metadata_image] + img2img_ctrls + [same_seed_for_all, output_format]
         ctrls += canny_ctrls + depth_ctrls + [prompt_expansion]
+        load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         ctrls += [input_image_checkbox, current_tab]
         ctrls += [uov_method, uov_input_image]
         ctrls += [outpaint_selections, inpaint_input_image]
-        load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         generate_button.click(lambda: (gr.update(visible=True, interactive=True), gr.update(visible=False), []), outputs=[stop_button, generate_button, output_gallery]) \
             .then(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=verify_enhance_image, inputs=[input_image_checkbox, img2img_mode], outputs=[img2img_mode]) \
