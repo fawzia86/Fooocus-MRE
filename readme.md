@@ -189,6 +189,7 @@ Below things are already inside the software, and **users do not need to do anyt
 24. Support for loading models from subfolders (ported from RuinedFooocus).
 25. Support for authentication in --share mode (credentials loaded from auth.json - use auth-example.json as a template).
 26. Support for wildcards (ported from RuinedFooocus - put them in wildcards folder, then try prompts like `__color__ sports car` with different seeds).
+27. Support for [FreeU](https://chenyangsi.top/FreeU/).
 
 ## Thanks
 

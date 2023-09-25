@@ -1,3 +1,8 @@
+### 2.0.78.2 MRE
+
+* Added support for FreeU.
+* Updated Comfy.
+
 ### 2.0.78.1 MRE
 
 * Fixed reading paths from paths.json (broken in 2.0.73 MRE).

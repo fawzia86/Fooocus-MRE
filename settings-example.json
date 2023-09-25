@@ -56,5 +56,10 @@
     "lora_4_model": "None",
     "lora_4_weight": 0.5,
     "lora_5_model": "None",
-    "lora_5_weight": 0.5
+    "lora_5_weight": 0.5,
+    "freeu": false,
+    "freeu_b1": 1.01,
+    "freeu_b2": 1.02,
+    "freeu_s1": 0.99,
+    "freeu_s2": 0.95
 }

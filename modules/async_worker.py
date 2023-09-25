@@ -77,6 +77,7 @@ def worker():
         revision_strength_3, revision_strength_4, same_seed_for_all, output_format, \
         control_lora_canny, canny_edge_low, canny_edge_high, canny_start, canny_stop, canny_strength, canny_model, \
         control_lora_depth, depth_start, depth_stop, depth_strength, depth_model, use_expansion, \
+        freeu, freeu_b1, freeu_b2, freeu_s1, freeu_s2, \
         input_image_checkbox, current_tab, \
         uov_method, uov_input_image, outpaint_selections, inpaint_input_image, \
         input_gallery, revision_gallery, keep_input_names = task
@@ -302,7 +303,12 @@ def worker():
         pipeline.refresh_everything(
             refiner_model_name=refiner_model_name,
             base_model_name=base_model_name,
-            loras=loras)
+            loras=loras,
+            freeu=freeu,
+            b1=freeu_b1,
+            b2=freeu_b2,
+            s1=freeu_s1,
+            s2=freeu_s2)
 
         pipeline.set_clip_skips(base_clip_skip, refiner_clip_skip)
         if revision_mode:
@@ -503,11 +509,16 @@ def worker():
                     'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
                     'base_model': base_model_name, 'refiner_model': refiner_model_name,
                     'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
-                    'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'img2img': img2img_mode, 'revision': revision_mode,
+                    'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'freeu': freeu,
+                    'img2img': img2img_mode, 'revision': revision_mode,
                     'positive_prompt_strength': positive_prompt_strength, 'negative_prompt_strength': negative_prompt_strength,
                     'control_lora_canny': control_lora_canny, 'control_lora_depth': control_lora_depth,
                     'prompt_expansion': use_expansion
                 }
+                if freeu:
+                    metadata |= {
+                        'freeu_b1': freeu_b1, 'freeu_b2': freeu_b2, 'freeu_s1': freeu_s1, 'freeu_s2': freeu_s2
+                    }
                 if img2img_mode:
                     metadata |= {
                         'start_step': start_step, 'denoise': denoise, 'scale': img2img_scale, 'input_image': input_image_filename
@@ -548,6 +559,7 @@ def worker():
                         ('CFG & CLIP Skips', (cfg, base_clip_skip, refiner_clip_skip)),
                         ('Base Model', base_model_name),
                         ('Refiner Model', refiner_model_name),
+                        ('FreeU', (freeu, freeu_b1, freeu_b2, freeu_s1, freeu_s2) if freeu else (freeu)),
                         ('Image-2-Image', (img2img_mode, start_step, denoise, img2img_scale, input_image_filename) if img2img_mode else (img2img_mode)),
                         ('Revision', (revision_mode, revision_strength_1, revision_strength_2, revision_strength_3,
                             revision_strength_4, revision_images_filenames) if revision_mode else (revision_mode)),

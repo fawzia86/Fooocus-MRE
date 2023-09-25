@@ -92,7 +92,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[55] = False
+        ctrls[60] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -210,6 +210,16 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[54] = metadata['prompt_expansion']
     elif 'software' in metadata and metadata['software'].startswith('Fooocus 1.'):
         ctrls[54] = False
+    if 'freeu' in metadata:
+        ctrls[55] = metadata['freeu']
+    if 'freeu_b1' in metadata:
+        ctrls[56] = metadata['freeu_b1']
+    if 'freeu_b2' in metadata:
+        ctrls[57] = metadata['freeu_b2']
+    if 'freeu_s1' in metadata:
+        ctrls[58] = metadata['freeu_s1']
+    if 'freeu_s2' in metadata:
+        ctrls[59] = metadata['freeu_s2']
     # seed_random
     return ctrls    
 
@@ -513,6 +523,16 @@ with shared.gradio_root:
                 scheduler = gr.Dropdown(label='Scheduler', choices=['karras', 'exponential', 'sgm_uniform', 'simple', 'ddim_uniform'], value=settings['scheduler'])
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=30.0, step=0.01, value=settings['sharpness'])
 
+                freeu_enabled = gr.Checkbox(label='FreeU', value=settings['freeu'])
+                freeu_b1 = gr.Slider(label='Backbone Scaling Factor 1', minimum=0, maximum=2, step=0.01,
+                    value=settings['freeu_b1'], visible=settings['freeu'])
+                freeu_b2 = gr.Slider(label='Backbone Scaling Factor 2', minimum=0, maximum=2, step=0.01,
+                    value=settings['freeu_b2'], visible=settings['freeu'])
+                freeu_s1 = gr.Slider(label='Skip Scaling Factor 1', minimum=0, maximum=2, step=0.01,
+                    value=settings['freeu_s1'], visible=settings['freeu'])
+                freeu_s2 = gr.Slider(label='Skip Scaling Factor 2', minimum=0, maximum=2, step=0.01,
+                    value=settings['freeu_s2'], visible=settings['freeu'])
+
                 def model_refresh_clicked():
                     modules.path.update_all_model_names()
                     results = []
@@ -523,6 +543,12 @@ with shared.gradio_root:
 
                 model_refresh.click(model_refresh_clicked, [], [base_model, refiner_model] + lora_ctrls, queue=False)
 
+                def freeu_changed(value):
+                    return gr.update(visible=value == True), gr.update(visible=value == True), gr.update(visible=value == True), gr.update(visible=value == True)
+
+                freeu_enabled.change(fn=freeu_changed, inputs=[freeu_enabled], outputs=[freeu_b1, freeu_b2, freeu_s1, freeu_s2])
+
+                freeu_ctrls = [freeu_enabled, freeu_b1, freeu_b2, freeu_s1, freeu_s2]
 
             with gr.Tab(label='Misc'):
                 output_format = gr.Radio(label='Output Format', choices=['png', 'jpg'], value=settings['output_format'])
@@ -561,7 +587,7 @@ with shared.gradio_root:
         ]
         ctrls += [base_model, refiner_model, base_clip_skip, refiner_clip_skip] + lora_ctrls
         ctrls += [save_metadata_json, save_metadata_image] + img2img_ctrls + [same_seed_for_all, output_format]
-        ctrls += canny_ctrls + depth_ctrls + [prompt_expansion]
+        ctrls += canny_ctrls + depth_ctrls + [prompt_expansion] + freeu_ctrls
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
         ctrls += [input_image_checkbox, current_tab]
         ctrls += [uov_method, uov_input_image]

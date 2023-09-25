@@ -18,6 +18,7 @@ from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode, VAEEnc
 from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cleanup_additional_models
 from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
 from comfy_extras.nodes_canny import Canny
+from comfy_extras.nodes_freelunch import FreeU
 from comfy.model_base import SDXLRefiner
 from comfy.lora import model_lora_keys_unet, model_lora_keys_clip, load_lora
 from modules.samplers_advanced import KSamplerBasic, KSamplerWithRefiner
@@ -36,6 +37,7 @@ opConditioningAverage = ConditioningAverage()
 opCLIPVisionEncode = CLIPVisionEncode()
 opUnCLIPConditioning = unCLIPConditioning()
 opCanny = Canny()
+opFreeU = FreeU()
 opControlNetApplyAdvanced = ControlNetApplyAdvanced()
 
 
@@ -180,6 +182,12 @@ def apply_adm(conditioning, clip_vision_output, strength, noise_augmentation):
 @torch.inference_mode()
 def detect_edge(image, low_threshold, high_threshold):
     return opCanny.detect_edge(image=image, low_threshold=low_threshold, high_threshold=high_threshold)[0]
+
+
+@torch.no_grad()
+@torch.inference_mode()
+def freeu(model, b1, b2, s1, s2):
+    return opFreeU.patch(model=model, b1=b1, b2=b2, s1=s1, s2=s2)[0]
 
 
 @torch.no_grad()

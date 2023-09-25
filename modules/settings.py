@@ -65,6 +65,11 @@ def load_settings():
     settings['lora_4_weight'] = modules.path.default_lora_weight
     settings['lora_5_model'] = 'None'
     settings['lora_5_weight'] = modules.path.default_lora_weight
+    settings['freeu'] = False
+    settings['freeu_b1'] = 1.01
+    settings['freeu_b2'] = 1.02
+    settings['freeu_s1'] = 0.99
+    settings['freeu_s2'] = 0.95
 
     if exists('settings.json'):
         with open('settings.json') as settings_file:

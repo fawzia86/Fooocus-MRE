@@ -104,9 +104,9 @@ def refresh_refiner_model(name):
 
 @torch.no_grad()
 @torch.inference_mode()
-def refresh_loras(loras):
+def patch_base(loras, freeu, b1, b2, s1, s2):
     global xl_base, xl_base_patched, xl_base_patched_hash
-    if xl_base_patched_hash == str(loras):
+    if xl_base_patched_hash == str(loras + [freeu, b1, b2, s1, s2]):
         return
 
     model = xl_base
@@ -123,11 +123,14 @@ def refresh_loras(loras):
 
         model = core.load_sd_lora(model, filename, strength_model=weight, strength_clip=weight)
     xl_base_patched = model
-    xl_base_patched_hash = str(loras)
-    print(f'LoRAs loaded: {xl_base_patched_hash}')
+    if freeu:
+        xl_base_patched.unet = core.freeu(xl_base_patched.unet, b1, b2, s1, s2)
+    xl_base_patched_hash = str(loras + [freeu, b1, b2, s1, s2])
+    print(f'LoRAs loaded: {loras}')
+    if freeu:
+        print(f'FreeU applied: {[b1, b2, s1, s2]}')
 
     return
-
 
 
 @torch.no_grad()
@@ -281,7 +284,7 @@ def clear_all_caches():
 
 @torch.no_grad()
 @torch.inference_mode()
-def refresh_everything(refiner_model_name, base_model_name, loras):
+def refresh_everything(refiner_model_name, base_model_name, loras, freeu, b1, b2, s1, s2):
     refresh_refiner_model(refiner_model_name)
     if xl_refiner is not None:
         virtual_memory.try_move_to_virtual_memory(xl_refiner.unet.model)
@@ -290,7 +293,7 @@ def refresh_everything(refiner_model_name, base_model_name, loras):
     refresh_base_model(base_model_name)
     virtual_memory.load_from_virtual_memory(xl_base.unet.model)
 
-    refresh_loras(loras)
+    patch_base(loras, freeu, b1, b2, s1, s2)
     clear_all_caches()
     return
 
@@ -302,7 +305,12 @@ refresh_everything(
         (default_settings['lora_2_model'], default_settings['lora_2_weight']),
         (default_settings['lora_3_model'], default_settings['lora_3_weight']),
         (default_settings['lora_4_model'], default_settings['lora_4_weight']),
-        (default_settings['lora_5_model'], default_settings['lora_5_weight'])]
+        (default_settings['lora_5_model'], default_settings['lora_5_weight'])],
+    freeu=default_settings['freeu'],
+    b1=default_settings['freeu_b1'],
+    b2=default_settings['freeu_b2'],
+    s1=default_settings['freeu_s1'],
+    s2=default_settings['freeu_s2']
 )
 
 expansion = FooocusExpansion()

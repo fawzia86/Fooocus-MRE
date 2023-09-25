@@ -305,15 +305,24 @@ def sample_dpmpp_fooocus_2m_sde_inpaint_seamless(model, x, sigmas, extra_args=No
 
 
 def patched_unet_forward(self, x, timesteps=None, context=None, y=None, control=None, transformer_options={}, **kwargs):
+    """
+    Apply the model to an input batch.
+    :param x: an [N x C x ...] Tensor of inputs.
+    :param timesteps: a 1-D batch of timesteps.
+    :param context: conditioning plugged in via crossattn
+    :param y: an [N] Tensor of labels, if class-conditional.
+    :return: an [N x C x ...] Tensor of outputs.
+    """
     inpaint_fix = None
     if inpaint_worker.current_task is not None:
         inpaint_fix = inpaint_worker.current_task.inpaint_head_feature
 
     transformer_options["original_shape"] = list(x.shape)
     transformer_options["current_index"] = 0
+    transformer_patches = transformer_options.get("patches", {})
 
     assert (y is not None) == (
-            self.num_classes is not None
+        self.num_classes is not None
     ), "must specify y if and only if the model is class-conditional"
     hs = []
     t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False).to(self.dtype)
@@ -352,6 +361,11 @@ def patched_unet_forward(self, x, timesteps=None, context=None, y=None, control=
             ctrl = control['output'].pop()
             if ctrl is not None:
                 hsp += ctrl
+
+        if "output_block_patch" in transformer_patches:
+            patch = transformer_patches["output_block_patch"]
+            for p in patch:
+                h, hsp = p(h, hsp, transformer_options)
 
         h = torch.cat([h, hsp], dim=1)
         del hsp
