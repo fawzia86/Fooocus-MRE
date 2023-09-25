@@ -524,13 +524,13 @@ with shared.gradio_root:
                 sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=30.0, step=0.01, value=settings['sharpness'])
 
                 freeu_enabled = gr.Checkbox(label='FreeU', value=settings['freeu'])
-                freeu_b1 = gr.Slider(label='Backbone Scaling Factor 1', minimum=0, maximum=3, step=0.01,
+                freeu_b1 = gr.Slider(label='Backbone Scaling Factor 1', minimum=0, maximum=2, step=0.01,
                     value=settings['freeu_b1'], visible=settings['freeu'])
-                freeu_b2 = gr.Slider(label='Backbone Scaling Factor 2', minimum=0, maximum=3, step=0.01,
+                freeu_b2 = gr.Slider(label='Backbone Scaling Factor 2', minimum=0, maximum=2, step=0.01,
                     value=settings['freeu_b2'], visible=settings['freeu'])
-                freeu_s1 = gr.Slider(label='Skip Scaling Factor 1', minimum=0, maximum=3, step=0.01,
+                freeu_s1 = gr.Slider(label='Skip Scaling Factor 1', minimum=0, maximum=4, step=0.01,
                     value=settings['freeu_s1'], visible=settings['freeu'])
-                freeu_s2 = gr.Slider(label='Skip Scaling Factor 2', minimum=0, maximum=3, step=0.01,
+                freeu_s2 = gr.Slider(label='Skip Scaling Factor 2', minimum=0, maximum=4, step=0.01,
                     value=settings['freeu_s2'], visible=settings['freeu'])
 
                 def model_refresh_clicked():
