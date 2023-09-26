@@ -15,6 +15,11 @@ def log(img, dic, single_line_number=3, metadata=None, save_metadata_json=False,
         with open(json_path, 'w', encoding='utf-8') as json_file:
             json_file.write(metadata)
             json_file.close()
+        last_path = os.path.dirname(local_temp_filename) + "/../last.json"
+        with open(last_path, 'w', encoding='utf-8') as json_file:
+            json_file.write(metadata)
+            json_file.close()
+        
     
     if output_format == 'png':
         if save_metadata_image:
