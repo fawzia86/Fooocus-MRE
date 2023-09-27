@@ -310,6 +310,13 @@ def worker():
             s1=freeu_s1,
             s2=freeu_s2)
 
+        is_sdxl = pipeline.is_base_sdxl()
+        if not is_sdxl:
+            print('WARNING: using non-SDXL base model (supported in limited scope).')
+            control_lora_canny = False
+            control_lora_depth = False
+            revision_mode = False
+
         pipeline.set_clip_skips(base_clip_skip, refiner_clip_skip)
         if revision_mode:
             pipeline.refresh_clip_vision()
@@ -456,10 +463,12 @@ def worker():
             input_image = None
             if input_image_path != None:
                 img2img_megapixels = width * height * img2img_scale ** 2 / 2**20
-                if img2img_megapixels < constants.MIN_MEGAPIXELS:
-                    img2img_megapixels = constants.MIN_MEGAPIXELS
-                elif img2img_megapixels > constants.MAX_MEGAPIXELS:
-                    img2img_megapixels = constants.MAX_MEGAPIXELS
+                min_mp = constants.MIN_MEGAPIXELS if is_sdxl else constants.MIN_MEGAPIXELS_SD
+                max_mp = constants.MAX_MEGAPIXELS if is_sdxl else constants.MAX_MEGAPIXELS_SD
+                if img2img_megapixels < min_mp:
+                    img2img_megapixels = min_mp
+                elif img2img_megapixels > max_mp:
+                    img2img_megapixels = max_mp
                 input_image = get_image(input_image_path, img2img_megapixels)
 
             try:

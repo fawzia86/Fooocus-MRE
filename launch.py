@@ -85,7 +85,9 @@ controlnet_filenames = [
 
 vae_approx_filenames = [
     ('xlvaeapp.pth',
-     'https://huggingface.co/lllyasviel/misc/resolve/main/xlvaeapp.pth')
+     'https://huggingface.co/lllyasviel/misc/resolve/main/xlvaeapp.pth'),
+    ('taesd_decoder.pth',
+     'https://github.com/madebyollin/taesd/raw/main/taesd_decoder.pth')
 ]
 
 

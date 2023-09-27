@@ -190,6 +190,7 @@ Below things are already inside the software, and **users do not need to do anyt
 25. Support for authentication in --share mode (credentials loaded from auth.json - use auth-example.json as a template).
 26. Support for wildcards (ported from RuinedFooocus - put them in wildcards folder, then try prompts like `__color__ sports car` with different seeds).
 27. Support for [FreeU](https://chenyangsi.top/FreeU/).
+28. Limited support for non-SDXL models (no refiner, Control-LoRAs, Revision, inpainting, outpainting).
 
 ## Thanks
 

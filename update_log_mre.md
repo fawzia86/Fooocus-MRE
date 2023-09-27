@@ -1,3 +1,7 @@
+### 2.0.78.3 MRE
+
+* Added limited support for non-SDXL models (no refiner, Control-LoRAs, Revision, inpainting, outpainting).
+
 ### 2.0.78.2 MRE
 
 * Added support for FreeU.

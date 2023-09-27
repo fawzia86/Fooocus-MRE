@@ -19,7 +19,7 @@ from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cl
 from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
 from comfy_extras.nodes_canny import Canny
 from comfy_extras.nodes_freelunch import FreeU
-from comfy.model_base import SDXLRefiner
+from comfy.model_base import SDXL, SDXLRefiner
 from comfy.lora import model_lora_keys_unet, model_lora_keys_clip, load_lora
 from modules.samplers_advanced import KSamplerBasic, KSamplerWithRefiner
 from modules.path import embeddings_path
@@ -236,14 +236,15 @@ class VAEApprox(torch.nn.Module):
 
 
 VAE_approx_model = None
+taesd = None
 
 
 @torch.no_grad()
 @torch.inference_mode()
-def get_previewer(device, latent_format):
-    global VAE_approx_model
+def get_previewer(device, latent_format, is_sdxl=True):
+    global VAE_approx_model, taesd
 
-    if VAE_approx_model is None:
+    if VAE_approx_model is None and is_sdxl:
         from modules.path import vae_approx_path
         vae_approx_filename = os.path.join(vae_approx_path, 'xlvaeapp.pth')
         sd = torch.load(vae_approx_filename, map_location='cpu')
@@ -271,8 +272,26 @@ def get_previewer(device, latent_format):
             x_sample = x_sample.cpu().numpy().clip(0, 255).astype(np.uint8)
             return x_sample
 
-    return preview_function
+    if taesd is None and not is_sdxl:
+        from latent_preview import TAESD, TAESDPreviewerImpl
+        taesd_decoder_path = os.path.abspath(os.path.realpath(os.path.join("models", "vae_approx", latent_format.taesd_decoder_name)))
 
+        if not os.path.exists(taesd_decoder_path):
+            print(f"Warning: TAESD previews enabled, but could not find {taesd_decoder_path}")
+            return None
+
+        taesd = TAESD(None, taesd_decoder_path).to(device)
+
+    @torch.no_grad()
+    @torch.inference_mode()
+    def preview_function_sd(x0, step, total_steps):
+        with torch.no_grad():
+            x_sample = taesd.decoder(torch.nn.functional.avg_pool2d(x0, kernel_size=(2, 2))).detach() * 255.0
+            x_sample = einops.rearrange(x_sample, 'b c h w -> b h w c')
+            x_sample = x_sample.cpu().numpy().clip(0, 255).astype(np.uint8)
+            return x_sample[0]
+
+    return preview_function if is_sdxl else preview_function_sd
 
 @torch.no_grad()
 @torch.inference_mode()
@@ -299,7 +318,7 @@ def ksampler(model, positive, negative, latent, seed=None, steps=30, cfg=7.0, sa
     if "noise_mask" in latent:
         noise_mask = latent["noise_mask"]
 
-    previewer = get_previewer(device, model.model.latent_format)
+    previewer = get_previewer(device, model.model.latent_format, isinstance(model.model, SDXL))
 
     pbar = comfy.utils.ProgressBar(steps)
 
@@ -372,7 +391,7 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
     if "noise_mask" in latent:
         noise_mask = latent["noise_mask"]
 
-    previewer = get_previewer(device, model.model.latent_format)
+    previewer = get_previewer(device, model.model.latent_format, isinstance(model.model, SDXL))
 
     pbar = comfy.utils.ProgressBar(steps)
 

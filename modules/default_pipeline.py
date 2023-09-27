@@ -7,7 +7,7 @@ import modules.path
 import modules.virtual_memory as virtual_memory
 import comfy.model_management
 
-from comfy.model_base import SDXL, SDXLRefiner
+from comfy.model_base import BaseModel, SDXL, SDXLRefiner
 from modules.settings import default_settings
 from modules.patch import set_comfy_adm_encoding, set_fooocus_adm_encoding, cfg_patched, patched_model_function
 from modules.expansion import FooocusExpansion
@@ -48,8 +48,8 @@ def refresh_base_model(name):
         xl_base = None
 
     xl_base = core.load_model(filename)
-    if not isinstance(xl_base.unet.model, SDXL):
-        print('Model not supported. Fooocus only support SDXL model as the base model.')
+    if not isinstance(xl_base.unet.model, BaseModel):
+        print(f'Model not supported: {name}, using default base model instead.')
         xl_base = None
         xl_base_hash = ''
         refresh_base_model(modules.path.default_base_model_name)
@@ -58,11 +58,19 @@ def refresh_base_model(name):
         xl_base_patched_hash = ''
         return
 
+    if not isinstance(xl_base.unet.model, SDXL):
+        print('WARNING: loading non-SDXL base model.')
+
     xl_base_hash = model_hash
     xl_base_patched = xl_base
     xl_base_patched_hash = ''
     print(f'Base model loaded: {model_hash}')
     return
+
+
+def is_base_sdxl():
+    assert xl_base is not None
+    return isinstance(xl_base.unet.model, SDXL)
 
 
 @torch.no_grad()
@@ -369,7 +377,7 @@ def process_diffusion(positive_cond, negative_cond, steps, switch, width, height
         positive_conditions, negative_conditions = core.apply_controlnet(positive_conditions, negative_conditions,
             controlnet_depth, input_image, depth_strength, depth_start, depth_stop)
 
-    if xl_refiner is not None:
+    if xl_refiner is not None and is_base_sdxl():
         positive_conditions_refiner = positive_cond[1]
         negative_conditions_refiner = negative_cond[1]
 
