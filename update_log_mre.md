@@ -1,5 +1,6 @@
 ### 2.0.78.4 MRE
 
+* Added Load Last Prompt button (contribution from sngazm).
 * Fixed hangup in Upscale (Fast 2x).
 * Fixed problems with turning off FreeU in some scenarios.
 

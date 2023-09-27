@@ -257,6 +257,20 @@ def load_prompt_handler(_file, *args):
     return ctrls
 
 
+def load_last_prompt_handler(*args):
+    ctrls = list(args)
+    if exists(modules.path.last_prompt_path):
+        with open(modules.path.last_prompt_path, encoding='utf-8') as json_file:
+            try:
+                json_obj = json.load(json_file)
+                metadata_to_ctrls(json_obj, ctrls)
+            except Exception as e:
+                print('load_last_prompt_handler, e: ' + str(e))
+            finally:
+                json_file.close()
+    return ctrls
+
+
 def load_input_images_handler(files):
     return list(map(lambda x: x.name, files)), gr.update(selected=GALLERY_ID_INPUT), gr.update(value=len(files))
 
@@ -377,7 +391,9 @@ with shared.gradio_root:
                    seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
                    same_seed_for_all = gr.Checkbox(label='Same seed for all images', value=settings['same_seed_for_all'])
                 image_seed = gr.Textbox(label='Seed', value=settings['seed'], max_lines=1, visible=not settings['seed_random'])
-                load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png', '.jpg'], elem_classes='type_small_row', min_width=0)
+                with gr.Row():
+                    load_prompt_button = gr.UploadButton(label='Load Prompt', file_count='single', file_types=['.json', '.png', '.jpg'], elem_classes='type_small_row', min_width=0)
+                    load_last_prompt_button = gr.Button(label='Load Last Prompt', value='Load Last Prompt', elem_classes='type_small_row', min_width=0)
 
                 def get_current_links():
                     return '<a href="https://github.com/lllyasviel/Fooocus/discussions/117">&#128212; Fooocus Advanced</a>' \
@@ -589,6 +605,8 @@ with shared.gradio_root:
         ctrls += [save_metadata_json, save_metadata_image] + img2img_ctrls + [same_seed_for_all, output_format]
         ctrls += canny_ctrls + depth_ctrls + [prompt_expansion] + freeu_ctrls
         load_prompt_button.upload(fn=load_prompt_handler, inputs=[load_prompt_button] + ctrls + [seed_random], outputs=ctrls + [seed_random])
+        load_last_prompt_button.click(fn=load_last_prompt_handler, inputs=ctrls + [seed_random], outputs=ctrls + [seed_random])
+
         ctrls += [input_image_checkbox, current_tab]
         ctrls += [uov_method, uov_input_image]
         ctrls += [outpaint_selections, inpaint_input_image]

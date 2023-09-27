@@ -1,8 +1,8 @@
 import os
 import json
 
-from os.path import exists
 from modules.model_loader import load_file_from_url
+
 
 def load_paths(paths_filename):
     paths_dict = {
@@ -20,7 +20,7 @@ def load_paths(paths_filename):
         'temp_outputs_path': '../outputs/'
     }
 
-    if exists(paths_filename):
+    if os.path.exists(paths_filename):
         with open(paths_filename, encoding='utf-8') as paths_file:
             try:
                 paths_obj = json.load(paths_file)
@@ -100,6 +100,7 @@ fooocus_expansion_path = get_config_or_set_default('fooocus_expansion_path',
                                                    '../models/prompt_expansion/fooocus_expansion')
 
 temp_outputs_path = get_config_or_set_default('temp_outputs_path', '../outputs/')
+last_prompt_path = os.path.join(temp_outputs_path, 'last_prompt.json')
 
 with open(config_path, "w", encoding="utf-8") as json_file:
     json.dump(config_dict, json_file, indent=4)
