@@ -589,8 +589,8 @@ def worker():
                 print('User stopped')
                 break
 
-        outputs.append(['results', results])
         outputs.append(['metadatas', metadata_strings])
+        outputs.append(['results', results])
 
         pipeline.clear_all_caches() # cleanup after generation
 

@@ -1,5 +1,6 @@
 ### 2.0.78.4 MRE
 
+* Fixed hangup in Upscale (Fast 2x).
 * Fixed problems with turning off FreeU in some scenarios.
 
 ### 2.0.78.3 MRE

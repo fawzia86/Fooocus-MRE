@@ -55,6 +55,8 @@ def generate_clicked(*args):
                     gr.update(), \
                     gr.update(), \
                     gr.update()
+            if flag == 'metadatas':
+                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=GALLERY_ID_OUTPUT)
             if flag == 'results':
                 yield gr.update(visible=False), \
                     gr.update(visible=False), \
@@ -62,8 +64,6 @@ def generate_clicked(*args):
                     gr.update(value=product), \
                     gr.update(), \
                     gr.update()
-            if flag == 'metadatas':
-                yield gr.update(), gr.update(), gr.update(), gr.update(), gr.update(value=product), gr.update(selected=GALLERY_ID_OUTPUT)
                 finished = True
 
     execution_time = time.perf_counter() - execution_start_time
