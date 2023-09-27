@@ -187,7 +187,8 @@ def detect_edge(image, low_threshold, high_threshold):
 @torch.no_grad()
 @torch.inference_mode()
 def freeu(model, b1, b2, s1, s2):
-    return opFreeU.patch(model=model, b1=b1, b2=b2, s1=s1, s2=s2)[0]
+    unet = opFreeU.patch(model=model.unet, b1=b1, b2=b2, s1=s1, s2=s2)[0]
+    return StableDiffusionModel(unet=unet, clip=model.clip, vae=model.vae, clip_vision=model.clip_vision)
 
 
 @torch.no_grad()

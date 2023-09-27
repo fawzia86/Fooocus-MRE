@@ -130,9 +130,10 @@ def patch_base(loras, freeu, b1, b2, s1, s2):
         assert os.path.exists(filename), 'Lora file not found!'
 
         model = core.load_sd_lora(model, filename, strength_model=weight, strength_clip=weight)
-    xl_base_patched = model
     if freeu:
-        xl_base_patched.unet = core.freeu(xl_base_patched.unet, b1, b2, s1, s2)
+        xl_base_patched = core.freeu(model, b1, b2, s1, s2)
+    else:
+        xl_base_patched = model
     xl_base_patched_hash = str(loras + [freeu, b1, b2, s1, s2])
     print(f'LoRAs loaded: {loras}')
     if freeu:
