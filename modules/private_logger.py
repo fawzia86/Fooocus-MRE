@@ -11,13 +11,14 @@ def log(img, dic, single_line_number=3, metadata=None, save_metadata_json=False,
     date_string, local_temp_filename, only_name = generate_temp_filename(folder=modules.path.temp_outputs_path, extension=output_format, base=input_image_filename if keep_input_names else None)
     os.makedirs(os.path.dirname(local_temp_filename), exist_ok=True)
 
-    with open(modules.path.last_prompt_path, 'w', encoding='utf-8') as json_file:
-        json_file.write(metadata)
-        json_file.close()
+    if metadata != None:
+        with open(modules.path.last_prompt_path, 'w', encoding='utf-8') as json_file:
+            json_file.write(metadata)
+            json_file.close()
 
-    if save_metadata_json:
-        json_path = local_temp_filename.replace(f'.{output_format}', '.json')
-        copy(modules.path.last_prompt_path, json_path)
+        if save_metadata_json:
+            json_path = local_temp_filename.replace(f'.{output_format}', '.json')
+            copy(modules.path.last_prompt_path, json_path)
 
     if output_format == 'png':
         if save_metadata_image:
