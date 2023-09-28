@@ -185,7 +185,7 @@ def worker():
 
                     if direct_return:
                         d = [('Upscale (Fast)', '2x')]
-                        log(uov_input_image, d, single_line_number=1)
+                        log(uov_input_image, d, single_line_number=1, output_format=output_format)
                         outputs.append(['results', [uov_input_image]])
                         return
 
