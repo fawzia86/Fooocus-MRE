@@ -3,6 +3,8 @@
 * Added Load Last Prompt button (contribution from sngazm).
 * Fixed hangup in Upscale (Fast 2x).
 * Fixed problems with turning off FreeU in some scenarios.
+* Fixed loading prompts from JPG files processed by external apps.
+* Fixed fast upscale always saving as PNG.
 
 ### 2.0.78.3 MRE
 

@@ -244,7 +244,8 @@ def load_prompt_handler(_file, *args):
             if path.endswith('.png') and 'Comment' in image.info:
                 metadata_string = image.info['Comment']
             elif path.endswith('.jpg') and 'comment' in image.info:
-                metadata_string = image.info['comment']
+                metadata_bytes = image.info['comment']
+                metadata_string = metadata_bytes.decode('utf-8').split('\0')[0]
             else:
                 metadata_string = None
 
