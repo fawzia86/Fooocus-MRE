@@ -44,8 +44,10 @@ def refresh_base_model(name):
         return
 
     if xl_base is not None:
-        xl_base.to_meta()
         xl_base = None
+
+    if xl_base_patched is not None:
+        xl_base_patched = None
 
     xl_base = core.load_model(filename)
     if not isinstance(xl_base.unet.model, BaseModel):
@@ -91,7 +93,6 @@ def refresh_refiner_model(name):
         return
 
     if xl_refiner is not None:
-        xl_refiner.to_meta()
         xl_refiner = None
 
     xl_refiner = core.load_model(filename)
@@ -105,7 +106,6 @@ def refresh_refiner_model(name):
     xl_refiner_hash = model_hash
     print(f'Refiner model loaded: {model_hash}')
 
-    xl_refiner.vae.first_stage_model.to('meta')
     xl_refiner.vae = None
     return
 

@@ -1,3 +1,7 @@
+### 2.0.78.5 MRE
+
+* Removed meta tensor usage.
+
 ### 2.0.78.4 MRE
 
 * Added Load Last Prompt button (contribution from sngazm).
