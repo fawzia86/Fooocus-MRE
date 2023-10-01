@@ -2,6 +2,7 @@
 
 * Added Style Iterator.
 * Removed meta tensor usage.
+* Fixed loading TAESD decoder for SD from custom path.
 
 ### 2.0.78.4 MRE
 

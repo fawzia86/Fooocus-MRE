@@ -267,7 +267,8 @@ def get_previewer(device, latent_format, is_sdxl=True):
 
     if taesd is None and not is_sdxl:
         from latent_preview import TAESD, TAESDPreviewerImpl
-        taesd_decoder_path = os.path.abspath(os.path.realpath(os.path.join("models", "vae_approx", latent_format.taesd_decoder_name)))
+        from modules.path import vae_approx_path
+        taesd_decoder_path = os.path.join(vae_approx_path, latent_format.taesd_decoder_name)
 
         if not os.path.exists(taesd_decoder_path):
             print(f"Warning: TAESD previews enabled, but could not find {taesd_decoder_path}")
