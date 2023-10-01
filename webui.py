@@ -385,8 +385,10 @@ with shared.gradio_root:
                     custom_switch = gr.Slider(label='Custom Switch', minimum=0.2, maximum=1.0, step=0.01, value=settings['custom_switch'])
                 resolution = gr.Dropdown(label='Resolution (width × height)', choices=list(resolutions.keys()), value=settings['resolution'], allow_custom_value=True)
                 style_selections = gr.Dropdown(label='Image Style(s)', choices=style_keys, value=settings['styles'], multiselect=True, max_choices=8)
-                prompt_expansion = gr.Checkbox(label=fooocus_expansion, value=settings['prompt_expansion'])
-                image_number = gr.Slider(label='Image Number', minimum=1, maximum=128, step=1, value=settings['image_number'])
+                with gr.Row():
+                    prompt_expansion = gr.Checkbox(label=fooocus_expansion, value=settings['prompt_expansion'])
+                    style_iterator = gr.Checkbox(label='Style Iterator', value=False)
+                image_number = gr.Slider(label='Image Number', minimum=1, maximum=256, step=1, value=settings['image_number'])
                 negative_prompt = gr.Textbox(label='Negative Prompt', show_label=True, placeholder="What you don't want to see.", value=settings['negative_prompt'])
                 with gr.Row():
                    seed_random = gr.Checkbox(label='Random', value=settings['seed_random'])
@@ -424,6 +426,23 @@ with shared.gradio_root:
                     return gr.update(visible=value == 'Custom')
 
                 performance.change(fn=performance_changed, inputs=[performance], outputs=[custom_row])
+
+                def style_iterator_changed(_style_iterator, _style_selections):
+                    if _style_iterator:
+                        combinations_count = 1 + len(style_keys) - len(_style_selections) # original style selection + all remaining style combinations
+                        return gr.update(interactive=False, value=combinations_count)
+                    else:
+                        return gr.update(interactive=True, value=settings['image_number'])
+
+                def style_selections_changed(_style_iterator, _style_selections):
+                    if _style_iterator:
+                        combinations_count = 1 + len(style_keys) - len(_style_selections) # original style selection + all remaining style combinations
+                        return gr.update(value=combinations_count)
+                    else:
+                        return gr.update()
+
+                style_iterator.change(style_iterator_changed, inputs=[style_iterator, style_selections], outputs=[image_number])
+                style_selections.change(style_selections_changed, inputs=[style_iterator, style_selections], outputs=[image_number])
 
             with gr.Tab(label='Image-2-Image'):
                 revision_mode = gr.Checkbox(label='Revision (prompting with images)', value=settings['revision_mode'])
@@ -611,6 +630,7 @@ with shared.gradio_root:
         ctrls += [input_image_checkbox, current_tab]
         ctrls += [uov_method, uov_input_image]
         ctrls += [outpaint_selections, inpaint_input_image]
+        ctrls += [style_iterator]
         generate_button.click(lambda: (gr.update(visible=True, interactive=True), gr.update(visible=False), []), outputs=[stop_button, generate_button, output_gallery]) \
             .then(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=verify_enhance_image, inputs=[input_image_checkbox, img2img_mode], outputs=[img2img_mode]) \

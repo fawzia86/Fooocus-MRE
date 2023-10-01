@@ -30,7 +30,7 @@ def worker():
     from PIL import Image, ImageOps
     from modules.settings import default_settings
     from modules.resolutions import annotate_resolution_string, get_resolution_string, resolutions, string_to_dimensions
-    from modules.sdxl_styles import apply_style, apply_wildcards
+    from modules.sdxl_styles import apply_style, apply_wildcards, style_keys
     from modules.private_logger import log
     from modules.expansion import safe_str
     from modules.util import join_prompts, remove_empty_str, HWC3, resize_image, image_is_generated_in_current_ui
@@ -80,18 +80,20 @@ def worker():
         freeu, freeu_b1, freeu_b2, freeu_s1, freeu_s2, \
         input_image_checkbox, current_tab, \
         uov_method, uov_input_image, outpaint_selections, inpaint_input_image, \
-        input_gallery, revision_gallery, keep_input_names = task
+        use_style_iterator, input_gallery, revision_gallery, keep_input_names = task
 
         outpaint_selections = [o.lower() for o in outpaint_selections]
 
         loras = [(l1, w1), (l2, w2), (l3, w3), (l4, w4), (l5, w5)]
         loras_user_raw_input = copy.deepcopy(loras)
 
-        raw_style_selections = copy.deepcopy(style_selections)
+        if use_style_iterator:
+            style_iterator_pool = style_keys.copy()
+            for s in style_selections:
+                style_iterator_pool.remove(s)
 
         uov_method = uov_method.lower()
 
-        use_style = len(style_selections) > 0
         modules.patch.sharpness = sharpness
         modules.patch.negative_adm = True
         initial_latent = None
@@ -353,8 +355,15 @@ def worker():
             task_seed = seed if same_seed_for_all else seed + i
             task_prompt = apply_wildcards(prompt, task_seed)
 
+            if use_style_iterator and i > 0: # original styles selection goes as 0th image
+                task_style_selections = style_selections + [style_iterator_pool[i - 1]]
+            else:
+                task_style_selections = style_selections
+
+            use_style = len(task_style_selections) > 0
+
             if use_style:
-                for s in style_selections:
+                for s in task_style_selections:
                     p, n = apply_style(s, positive=task_prompt)
                     positive_basic_workloads.append(p)
                     negative_basic_workloads.append(n)
@@ -372,6 +381,7 @@ def worker():
             tasks.append(dict(
                 task_seed=task_seed,
                 prompt=task_prompt,
+                style_selections=task_style_selections,
                 positive=positive_basic_workloads,
                 negative=negative_basic_workloads,
                 positive_top_k=len(positive_basic_workloads),
@@ -510,7 +520,7 @@ def worker():
                 print(f'Diffusion time: {execution_time:.2f} seconds')
     
                 metadata = {
-                    'prompt': raw_prompt, 'negative_prompt': raw_negative_prompt, 'styles': raw_style_selections,
+                    'prompt': raw_prompt, 'negative_prompt': raw_negative_prompt, 'styles': task['style_selections'],
                     'real_prompt': task['positive'], 'real_negative_prompt': task['negative'],
                     'seed': task['task_seed'], 'width': width, 'height': height,
                     'sampler': sampler_name, 'scheduler': scheduler, 'performance': performance,
@@ -557,7 +567,7 @@ def worker():
                         ('Prompt', raw_prompt),
                         ('Negative Prompt', raw_negative_prompt),
                         ('Fooocus V2 (Prompt Expansion)', task['expansion']),
-                        ('Styles', str(raw_style_selections)),
+                        ('Styles', str(task['style_selections'])),
                         ('Real Prompt', task['positive']),
                         ('Real Negative Prompt', task['negative']),
                         ('Seed', task['task_seed']),

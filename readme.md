@@ -191,6 +191,7 @@ Below things are already inside the software, and **users do not need to do anyt
 26. Support for wildcards (ported from RuinedFooocus - put them in wildcards folder, then try prompts like `__color__ sports car` with different seeds).
 27. Support for [FreeU](https://chenyangsi.top/FreeU/).
 28. Limited support for non-SDXL models (no refiner, Control-LoRAs, Revision, inpainting, outpainting).
+29. Style Iterator (iterates over selected style(s) combined with remaining styles - S1, S1 + S2, S1 + S3, S1 + S4, and so on; for comparing styles pick no initial style, and use same seed for all images).
 
 ## Thanks
 

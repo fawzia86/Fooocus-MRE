@@ -1,5 +1,6 @@
 ### 2.0.78.5 MRE
 
+* Added Style Iterator.
 * Removed meta tensor usage.
 
 ### 2.0.78.4 MRE
