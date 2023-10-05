@@ -69,8 +69,10 @@ Please open an issue if you use similar devices but still cannot achieve accepta
 
 | Colab | Info
 | --- | --- |
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lllyasviel/Fooocus/blob/main/colab.ipynb) | Fooocus Colab (Official Version)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lllyasviel/Fooocus/blob/colab/colab.ipynb) | Fooocus Colab (Official Version)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MoonRide303/Fooocus-MRE/blob/moonride-main/colab.ipynb) | Fooocus-MRE Colab (MoonRide Edition)
+
+Note that official version link is optimized for Google Colab - the codes may be different from offline Fooocus for better Colab experience.
 
 Thanks to [camenduru](https://github.com/camenduru)!
 
@@ -132,7 +134,7 @@ Or if you want to open a remote port, use
 
 ### Linux (AMD GPUs)
 
-Installation is the same as Linux part. It has been tested for 6700XT. Works for both Pytorch 1.13 and Pytorch 2. 
+Coming soon ...
 
 ### Mac/Windows(AMD GPUs)
 
@@ -156,6 +158,11 @@ Below things are already inside the software, and **users do not need to do anyt
 11. A carefully designed system for balancing multiple styles as well as prompt expansion.
 12. Using automatic1111's method to normalize prompt emphasizing. This significantly improve results when users directly copy prompts from civitai.
 13. The joint swap system of refiner now also support img2img and upscale in a seamless way.
+14. CFG Scale and TSNR correction (tuned for SDXL) when CFG is bigger than 10.
+
+## Changing Model Path
+
+After the first time you run Fooocus, a config file will be generated at `Fooocus\user_path_config.txt`. This file can be edited for changing the model path.
 
 ## Advanced Features
 
@@ -163,13 +170,13 @@ Below things are already inside the software, and **users do not need to do anyt
 
 ## MoonRide Edition Features
 
-1. Support for Image-2-Image mode.
+1. Enhanced support for Image-2-Image mode (multiple inputs, controllable denoise).
 2. Support for Control-LoRA: Canny Edge (guiding diffusion using edge detection on input, see [Canny Edge description from SAI](https://huggingface.co/stabilityai/control-lora#canny-edge)).
 3. Support for Control-LoRA: Depth (guiding diffusion using depth information from input, see [Depth description from SAI](https://huggingface.co/stabilityai/control-lora#midas-and-clipdrop-depth)).
 4. Support for Control-LoRA: Revision (prompting with images, see [Revision description from SAI](https://huggingface.co/stabilityai/control-lora#revision)).
 5. Adjustable text prompt strengths (useful in Revision mode).
 6. Support for embeddings (use "embedding:embedding_name" syntax, ComfyUI style).
-7. Customizable sampling parameters (sampler, scheduler, steps, base / refiner switch point, CFG, CLIP Skip).
+7. Enhanced control of sampling parameters (steps, base / refiner switch point, CLIP Skip).
 8. Displaying full metadata for generated images in the UI.
 9. Support for JPEG format.
 10. Ability to save full metadata for generated images (as JSON or embedded in image, disabled by default).

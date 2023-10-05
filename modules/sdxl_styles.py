@@ -5,7 +5,6 @@ import random
 
 from os.path import exists
 from modules.path import styles_path, wildcards_path, get_files_from_folder
-from modules.util import join_prompts
 
 
 fooocus_expansion = "Prompt Expansion (Fooocus V2)"

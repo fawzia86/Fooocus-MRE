@@ -48,7 +48,6 @@ class FooocusExpansion:
         print(f'Fooocus Expansion engine loaded for {load_device}.')
 
     def __call__(self, prompt, seed):
-        model_management.load_model_gpu(self.patcher)
         seed = int(seed) % constants.SEED_LIMIT_NUMPY
         set_seed(seed)
         origin = safe_str(prompt)

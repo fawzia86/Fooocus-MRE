@@ -22,7 +22,6 @@ def worker():
     import modules.path
     import modules.patch
     import fooocus_version
-    import modules.virtual_memory as virtual_memory
     import comfy.model_management
     import modules.inpaint_worker as inpaint_worker
     import modules.constants as constants
@@ -67,9 +66,11 @@ def worker():
     @torch.no_grad()
     @torch.inference_mode()
     def handler(task):
+        execution_start_time = time.perf_counter()
+
         prompt, negative_prompt, style_selections, performance, resolution, image_number, image_seed, \
-        sharpness, sampler_name, scheduler, custom_steps, custom_switch, cfg, \
-        base_model_name, refiner_model_name, base_clip_skip, refiner_clip_skip, \
+        sharpness, sampler_name, scheduler_name, custom_steps, custom_switch, cfg, adaptive_cfg, adm_scaler_positive, adm_scaler_negative, \
+        base_model_name, refiner_model_name, base_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, \
         save_metadata_json, save_metadata_image, \
         img2img_mode, img2img_start_step, img2img_denoise, img2img_scale, \
@@ -94,8 +95,19 @@ def worker():
 
         uov_method = uov_method.lower()
 
+        modules.patch.adaptive_cfg = adaptive_cfg
+        print(f'[Parameters] Adaptive CFG = {modules.patch.adaptive_cfg}')
+
         modules.patch.sharpness = sharpness
-        modules.patch.negative_adm = True
+        print(f'[Parameters] Sharpness = {modules.patch.sharpness}')
+
+        modules.patch.positive_adm_scale = adm_scaler_positive
+        modules.patch.negative_adm_scale = adm_scaler_negative
+        print(f'[Parameters] ADM Scale = {modules.patch.positive_adm_scale} / {modules.patch.negative_adm_scale}')
+
+        cfg_scale = float(cfg)
+        print(f'[Parameters] CFG = {cfg_scale}')
+
         initial_latent = None
         denoising_strength = 1.0
         tiled = False
@@ -204,7 +216,6 @@ def worker():
                     height = H * 8
                     print(f'Final resolution is {str((height, width))}.')
             if current_tab == 'inpaint' and isinstance(inpaint_input_image, dict):
-                sampler_name = 'dpmpp_fooocus_2m_sde_inpaint_seamless'
                 inpaint_image = inpaint_input_image['image']
                 inpaint_mask = inpaint_input_image['mask'][:, :, 0]
                 if isinstance(inpaint_image, np.ndarray) and isinstance(inpaint_mask, np.ndarray) \
@@ -266,6 +277,10 @@ def worker():
                     height, width = inpaint_worker.current_task.image_raw.shape[:2]
                     print(f'Final resolution is {str((height, width))}, latent is {str((H * 8, W * 8))}.')
 
+                    sampler_name = 'dpmpp_fooocus_2m_sde_inpaint_seamless'
+
+        print(f'[Parameters] Sampler = {sampler_name} - {scheduler_name}')
+
 
         input_gallery_size = len(input_gallery)
         if input_gallery_size == 0:
@@ -311,6 +326,7 @@ def worker():
             b2=freeu_b2,
             s1=freeu_s1,
             s2=freeu_s2)
+        pipeline.prepare_text_encoder(async_call=False)
 
         is_sdxl = pipeline.is_base_sdxl()
         if not is_sdxl:
@@ -319,7 +335,7 @@ def worker():
             control_lora_depth = False
             revision_mode = False
 
-        pipeline.set_clip_skips(base_clip_skip, refiner_clip_skip)
+        pipeline.set_clip_skips(base_clip_skip)
         if revision_mode:
             pipeline.refresh_clip_vision()
         if control_lora_canny:
@@ -411,19 +427,13 @@ def worker():
                                               pool_top_k=t['negative_top_k'])
 
         if pipeline.xl_refiner is not None:
-            virtual_memory.load_from_virtual_memory(pipeline.xl_refiner.clip.cond_stage_model)
-
             for i, t in enumerate(tasks):
                 progressbar(11, f'Encoding refiner positive #{i + 1} ...')
-                t['c'][1] = pipeline.clip_encode(sd=pipeline.xl_refiner, texts=t['positive'],
-                                                 pool_top_k=t['positive_top_k'])
+                t['c'][1] = pipeline.clip_separate(t['c'][0])
 
             for i, t in enumerate(tasks):
                 progressbar(13, f'Encoding refiner negative #{i + 1} ...')
-                t['uc'][1] = pipeline.clip_encode(sd=pipeline.xl_refiner, texts=t['negative'],
-                                                  pool_top_k=t['negative_top_k'])
-
-            virtual_memory.try_move_to_virtual_memory(pipeline.xl_refiner.clip.cond_stage_model)
+                t['uc'][1] = pipeline.clip_separate(t['uc'][0])
 
 
         for i, t in enumerate(tasks):
@@ -444,18 +454,19 @@ def worker():
 
         def callback(step, x0, x, total_steps, y):
             comfy.model_management.throw_exception_if_processing_interrupted()
-            done_steps = current_task_idx * steps + step
+            done_steps = current_task_id * steps + step
             outputs.append(['preview', (
                 int(15.0 + 85.0 * float(done_steps) / float(all_steps)),
-                f'Step {step}/{total_steps} in the {current_task_idx + 1}-th Sampling',
+                f'Step {step}/{total_steps} in the {current_task_id + 1}-th Sampling',
                 y)])
 
-        print(f'[ADM] Negative ADM = {modules.patch.negative_adm}')
+        preparation_time = time.perf_counter() - execution_start_time
+        print(f'Preparation time: {preparation_time:.2f} seconds')
 
         outputs.append(['preview', (13, 'Starting tasks ...', None)])
-        for current_task_idx, task in enumerate(tasks):
+        for current_task_id, task in enumerate(tasks):
             if img2img_mode or control_lora_canny or control_lora_depth:
-                input_gallery_entry = input_gallery[current_task_idx % input_gallery_size]
+                input_gallery_entry = input_gallery[current_task_id % input_gallery_size]
                 input_image_path = input_gallery_entry['name']
                 input_image_filename = None if input_image_path == None else os.path.basename(input_image_path)
             else:
@@ -465,10 +476,9 @@ def worker():
 
             if img2img_mode:
                 start_step = round(steps * img2img_start_step)
-                denoise = img2img_denoise
+                denoising_strength = img2img_denoise
             else:
                 start_step = 0
-                denoise = denoising_strength
 
             input_image = None
             if input_image_path != None:
@@ -492,9 +502,6 @@ def worker():
                     width=width,
                     height=height,
                     image_seed=task['task_seed'],
-                    sampler_name=sampler_name,
-                    scheduler=scheduler,
-                    cfg=cfg,
                     img2img=img2img_mode, #? -> latent
                     input_image=input_image, #? -> latent
                     start_step=start_step,
@@ -509,23 +516,27 @@ def worker():
                     depth_stop=depth_stop,
                     depth_strength=depth_strength,
                     callback=callback,
+                    sampler_name=sampler_name,
+                    scheduler_name=scheduler_name,
                     latent=initial_latent,
-                    denoise=denoise,
-                    tiled=tiled)
+                    denoise=denoising_strength,
+                    tiled=tiled,
+                    cfg_scale=cfg_scale
+                )
 
                 if inpaint_worker.current_task is not None:
                     imgs = [inpaint_worker.current_task.post_process(x) for x in imgs]
 
                 execution_time = time.perf_counter() - execution_start_time
-                print(f'Diffusion time: {execution_time:.2f} seconds')
-    
+                print(f'Generation time: {execution_time:.2f} seconds')
+
                 metadata = {
                     'prompt': raw_prompt, 'negative_prompt': raw_negative_prompt, 'styles': task['style_selections'],
                     'real_prompt': task['positive'], 'real_negative_prompt': task['negative'],
                     'seed': task['task_seed'], 'width': width, 'height': height,
-                    'sampler': sampler_name, 'scheduler': scheduler, 'performance': performance,
+                    'sampler': sampler_name, 'scheduler': scheduler_name, 'performance': performance,
                     'steps': steps, 'switch': switch, 'sharpness': sharpness, 'cfg': cfg,
-                    'base_clip_skip': base_clip_skip, 'refiner_clip_skip': refiner_clip_skip,
+                    'base_clip_skip': base_clip_skip,
                     'base_model': base_model_name, 'refiner_model': refiner_model_name,
                     'l1': l1, 'w1': w1, 'l2': l2, 'w2': w2, 'l3': l3, 'w3': w3,
                     'l4': l4, 'w4': w4, 'l5': l5, 'w5': w5, 'freeu': freeu,
@@ -570,14 +581,17 @@ def worker():
                         ('Styles', str(task['style_selections'])),
                         ('Real Prompt', task['positive']),
                         ('Real Negative Prompt', task['negative']),
-                        ('Seed', task['task_seed']),
-                        ('Resolution', get_resolution_string(width, height)),
                         ('Performance', (performance, steps, switch)),
-                        ('Sampler & Scheduler', (sampler_name, scheduler)),
+                        ('Resolution', get_resolution_string(width, height)),
+                        ('CFG, Adaptive CFG', (cfg, adaptive_cfg)),
+                        ('Base CLIP Skip', base_clip_skip),
                         ('Sharpness', sharpness),
-                        ('CFG & CLIP Skips', (cfg, base_clip_skip, refiner_clip_skip)),
+                        ('ADM Guidance', str((adm_scaler_positive, adm_scaler_negative))),
                         ('Base Model', base_model_name),
                         ('Refiner Model', refiner_model_name),
+                        ('Sampler', sampler_name),
+                        ('Scheduler', scheduler_name),
+                        ('Seed', task['task_seed']),
                         ('FreeU', (freeu, freeu_b1, freeu_b2, freeu_s1, freeu_s2) if freeu else (freeu)),
                         ('Image-2-Image', (img2img_mode, start_step, denoise, img2img_scale, input_image_filename) if img2img_mode else (img2img_mode)),
                         ('Revision', (revision_mode, revision_strength_1, revision_strength_2, revision_strength_3,
@@ -591,7 +605,7 @@ def worker():
                         if n != 'None':
                             d.append((f'LoRA [{n}] weight', w))
                     d.append(('Software', fooocus_version.full_version))
-                    d.append(('Execution Time', f'{execution_time:.2f} seconds'))
+                    d.append(('Generation Time', f'{execution_time:.2f} seconds'))
                     log(x, d, 3, metadata_string, save_metadata_json, save_metadata_image, keep_input_names, input_image_filename, output_format)
 
                 results += imgs
@@ -603,7 +617,7 @@ def worker():
         outputs.append(['results', results])
 
         pipeline.clear_all_caches() # cleanup after generation
-
+        pipeline.prepare_text_encoder(async_call=True)
         return
 
     while True:

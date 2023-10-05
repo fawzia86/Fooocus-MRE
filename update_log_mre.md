@@ -1,3 +1,7 @@
+### 2.0.85 MRE
+
+* Removed Refiner CLIP Skip (refiner CLIP is no longer loaded)
+
 ### 2.0.78.5 MRE
 
 * Added Style Iterator.

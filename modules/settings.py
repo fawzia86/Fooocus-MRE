@@ -50,9 +50,11 @@ def load_settings():
     settings['sampler'] = 'dpmpp_2m_sde_gpu'
     settings['scheduler'] = 'karras'
     settings['cfg'] = 7.0
+    settings['adaptive_cfg'] = 7.0
     settings['base_clip_skip'] = -2
-    settings['refiner_clip_skip'] = -2
     settings['sharpness'] = 2.0
+    settings['adm_scaler_positive'] = 1.5
+    settings['adm_scaler_negative'] = 0.8
     settings['base_model'] = modules.path.default_base_model_name
     settings['refiner_model'] = modules.path.default_refiner_model_name
     settings['lora_1_model'] = modules.path.default_lora_name

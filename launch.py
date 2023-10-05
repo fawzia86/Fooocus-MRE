@@ -13,7 +13,8 @@ from modules.path import modelfile_path, lorafile_path, clip_vision_path, contro
 
 
 REINSTALL_ALL = False
-DEFAULT_ARGS = ['--disable-smart-memory', '--disable-cuda-malloc']
+DEFAULT_ARGS = ['--disable-smart-memory', '--disable-cuda-malloc', '--disable-auto-launch']
+
 
 def prepare_environment():
     torch_index_url = os.environ.get('TORCH_INDEX_URL', "https://download.pytorch.org/whl/cu118")
@@ -24,7 +25,7 @@ def prepare_environment():
     xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.21')
 
     comfy_repo = os.environ.get('COMFY_REPO', "https://github.com/comfyanonymous/ComfyUI")
-    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "2381d36e6db8e8150e42ff2ede628db5b00ae26f")
+    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "2ef459b1d4d627929c84d11e5e0cbe3ded9c9f48")
 
     print(f"Python {sys.version}")
     print(f"Fooocus version: {fooocus_version.version}")
@@ -132,10 +133,6 @@ def parse_args():
     parser.add_argument("--listen", type=str, default=None, metavar="IP", nargs="?", const="0.0.0.0", help="Set the listen interface.")
 
     comfy.cli_args.args = parser.parse_args()
-
-
-def cuda_malloc():
-    import cuda_malloc
 
 
 prepare_environment()

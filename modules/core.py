@@ -10,6 +10,8 @@ import torch
 import numpy as np
 
 import comfy.model_management
+import comfy.model_detection
+import comfy.model_patcher
 import comfy.utils
 
 from comfy.sd import load_checkpoint_guess_config
@@ -20,7 +22,9 @@ from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
 from comfy_extras.nodes_canny import Canny
 from comfy_extras.nodes_freelunch import FreeU
 from comfy.model_base import SDXL, SDXLRefiner
+from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cleanup_additional_models
 from comfy.lora import model_lora_keys_unet, model_lora_keys_clip, load_lora
+from modules.patch import patched_sampler_cfg_function, patched_model_function_wrapper
 from modules.samplers_advanced import KSamplerBasic, KSamplerWithRefiner
 from modules.path import embeddings_path
 
@@ -42,15 +46,7 @@ opControlNetApplyAdvanced = ControlNetApplyAdvanced()
 
 
 class StableDiffusionModel:
-    def __init__(self, unet, vae, clip, clip_vision, model_filename=None):
-        if isinstance(model_filename, str):
-            is_refiner = isinstance(unet.model, SDXLRefiner)
-            if unet is not None:
-                unet.model.model_file = dict(filename=model_filename, prefix='model')
-            if clip is not None:
-                clip.cond_stage_model.model_file = dict(filename=model_filename, prefix='refiner_clip' if is_refiner else 'base_clip')
-            if vae is not None:
-                vae.first_stage_model.model_file = dict(filename=model_filename, prefix='first_stage_model')
+    def __init__(self, unet, vae, clip, clip_vision):
         self.unet = unet
         self.vae = vae
         self.clip = clip
@@ -59,9 +55,52 @@ class StableDiffusionModel:
 
 @torch.no_grad()
 @torch.inference_mode()
+def load_unet_only(unet_path):
+    sd_raw = comfy.utils.load_torch_file(unet_path)
+    sd = {}
+    flag = 'model.diffusion_model.'
+    for k in list(sd_raw.keys()):
+        if k.startswith(flag):
+            sd[k[len(flag):]] = sd_raw[k]
+        del sd_raw[k]
+
+    parameters = comfy.utils.calculate_parameters(sd)
+    fp16 = comfy.model_management.should_use_fp16(model_params=parameters)
+    if "input_blocks.0.0.weight" in sd:
+        # ldm
+        model_config = comfy.model_detection.model_config_from_unet(sd, "", fp16)
+        if model_config is None:
+            raise RuntimeError("ERROR: Could not detect model type of: {}".format(unet_path))
+        new_sd = sd
+    else:
+        # diffusers
+        model_config = comfy.model_detection.model_config_from_diffusers_unet(sd, fp16)
+        if model_config is None:
+            print("ERROR UNSUPPORTED UNET", unet_path)
+            return None
+
+        diffusers_keys = comfy.utils.unet_to_diffusers(model_config.unet_config)
+
+        new_sd = {}
+        for k in diffusers_keys:
+            if k in sd:
+                new_sd[diffusers_keys[k]] = sd.pop(k)
+            else:
+                print(diffusers_keys[k], k)
+    offload_device = comfy.model_management.unet_offload_device()
+    model = model_config.get_model(new_sd, "")
+    model = model.to(offload_device)
+    model.load_model_weights(new_sd, "")
+    return comfy.model_patcher.ModelPatcher(model, load_device=comfy.model_management.get_torch_device(), offload_device=offload_device)
+
+
+@torch.no_grad()
+@torch.inference_mode()
 def load_model(ckpt_filename):
     unet, clip, vae, clip_vision = load_checkpoint_guess_config(ckpt_filename, embedding_directory=embeddings_path)
-    return StableDiffusionModel(unet=unet, clip=clip, vae=vae, clip_vision=clip_vision, model_filename=ckpt_filename)
+    unet.model_options['sampler_cfg_function'] = patched_sampler_cfg_function
+    unet.model_options['model_function_wrapper'] = patched_model_function_wrapper
+    return StableDiffusionModel(unet=unet, clip=clip, vae=vae, clip_vision=clip_vision)
 
 
 @torch.no_grad()
@@ -79,20 +118,19 @@ def load_sd_lora(model, lora_filename, strength_model=1.0, strength_clip=1.0):
         key_map = model_lora_keys_clip(model.clip.cond_stage_model, key_map)
         loaded = load_lora(lora, key_map)
 
-    new_modelpatcher = model.unet.clone()
-    k = new_modelpatcher.add_patches(loaded, strength_model)
+    new_unet = model.unet.clone()
+    loaded_unet_keys = new_unet.add_patches(loaded, strength_model)
 
     new_clip = model.clip.clone()
-    k1 = new_clip.add_patches(loaded, strength_clip)
+    loaded_clip_keys = new_clip.add_patches(loaded, strength_clip)
 
-    k = set(k)
-    k1 = set(k1)
+    loaded_keys = set(list(loaded_unet_keys) + list(loaded_clip_keys))
+
     for x in loaded:
-        if (x not in k) and (x not in k1):
-            print("Lora missed: ", x)
+        if x not in loaded_keys:
+            print("Lora key not loaded: ", x)
 
-    unet, clip = new_modelpatcher, new_clip
-    return StableDiffusionModel(unet=unet, clip=clip, vae=model.vae, clip_vision=model.clip_vision)
+    return StableDiffusionModel(unet=new_unet, clip=new_clip, vae=model.vae, clip_vision=model.clip_vision)
 
 
 @torch.no_grad()
@@ -292,11 +330,6 @@ def get_previewer(device, latent_format, is_sdxl=True):
 def ksampler(model, positive, negative, latent, seed=None, steps=30, cfg=7.0, sampler_name='dpmpp_fooocus_2m_sde_inpaint_seamless',
              scheduler='karras', denoise=1.0, disable_noise=False, start_step=None, last_step=None,
              force_full_denoise=False, callback_function=None):
-    # SCHEDULERS = ["normal", "karras", "exponential", "sgm_uniform", "simple", "ddim_uniform"]
-    # SAMPLERS = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral",
-    #             "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_sde_gpu",
-    #             "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddpm", "ddim", "uni_pc", "uni_pc_bh2"]
-
     seed = seed if isinstance(seed, int) else random.randint(0, 2**63 - 1)
 
     device = comfy.model_management.get_torch_device()
@@ -317,6 +350,7 @@ def ksampler(model, positive, negative, latent, seed=None, steps=30, cfg=7.0, sa
     pbar = comfy.utils.ProgressBar(steps)
 
     def callback(step, x0, x, total_steps):
+        comfy.model_management.throw_exception_if_processing_interrupted()
         y = None
         if previewer is not None:
             y = previewer(x0, step, total_steps)
@@ -365,11 +399,6 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
                           seed=None, steps=30, refiner_switch_step=20, cfg=7.0, sampler_name='dpmpp_fooocus_2m_sde_inpaint_seamless',
                           scheduler='karras', denoise=1.0, disable_noise=False, start_step=None, last_step=None,
                           force_full_denoise=False, callback_function=None):
-    # SCHEDULERS = ["normal", "karras", "exponential", "sgm_uniform", "simple", "ddim_uniform"]
-    # SAMPLERS = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral",
-    #             "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_sde_gpu",
-    #             "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddpm", "ddim", "uni_pc", "uni_pc_bh2"]
-
     seed = seed if isinstance(seed, int) else random.randint(0, 2**63 - 1)
 
     device = comfy.model_management.get_torch_device()
@@ -390,6 +419,7 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
     pbar = comfy.utils.ProgressBar(steps)
 
     def callback(step, x0, x, total_steps):
+        comfy.model_management.throw_exception_if_processing_interrupted()
         y = None
         if previewer is not None:
             y = previewer(x0, step, total_steps)
