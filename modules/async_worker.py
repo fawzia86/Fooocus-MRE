@@ -10,6 +10,7 @@ def worker():
 
     import os
     import json
+    import traceback
     import numpy as np
     import torch
     import time
@@ -69,7 +70,8 @@ def worker():
         execution_start_time = time.perf_counter()
 
         prompt, negative_prompt, style_selections, performance, resolution, image_number, image_seed, \
-        sharpness, sampler_name, scheduler_name, custom_steps, custom_switch, cfg, adaptive_cfg, adm_scaler_positive, adm_scaler_negative, \
+        sharpness, sampler_name, scheduler_name, custom_steps, custom_switch, cfg, adaptive_cfg, \
+        adm_scaler_positive, adm_scaler_negative, adm_scaler_end, \
         base_model_name, refiner_model_name, base_clip_skip, \
         l1, w1, l2, w2, l3, w3, l4, w4, l5, w5, \
         save_metadata_json, save_metadata_image, \
@@ -103,7 +105,8 @@ def worker():
 
         modules.patch.positive_adm_scale = adm_scaler_positive
         modules.patch.negative_adm_scale = adm_scaler_negative
-        print(f'[Parameters] ADM Scale = {modules.patch.positive_adm_scale} / {modules.patch.negative_adm_scale}')
+        modules.patch.adm_scaler_end = adm_scaler_end
+        print(f'[Parameters] ADM Scale = {modules.patch.positive_adm_scale} : {modules.patch.negative_adm_scale} : {modules.patch.adm_scaler_end}')
 
         cfg_scale = float(cfg)
         print(f'[Parameters] CFG = {cfg_scale}')
@@ -207,6 +210,7 @@ def worker():
                     denoising_strength = 1.0 - 0.618
                     steps = int(steps * 0.618)
                     switch = int(steps * 0.67)
+
                     initial_pixels = core.numpy_to_pytorch(uov_input_image)
                     progressbar(0, 'VAE encoding ...')
 
@@ -624,7 +628,11 @@ def worker():
         time.sleep(0.01)
         if len(buffer) > 0:
             task = buffer.pop(0)
-            handler(task)
+            try:
+                handler(task)
+            except:
+                traceback.print_exc()
+                outputs.append(['results', []])
     pass
 
 

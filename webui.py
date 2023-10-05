@@ -92,7 +92,7 @@ def metadata_to_ctrls(metadata, ctrls):
     # image_number
     if 'seed' in metadata:
         ctrls[6] = metadata['seed']
-        ctrls[62] = False
+        ctrls[63] = False
     if 'sharpness' in metadata:
         ctrls[7] = metadata['sharpness']
     if 'sampler_name' in metadata:
@@ -121,109 +121,111 @@ def metadata_to_ctrls(metadata, ctrls):
         ctrls[14] = metadata['adm_scaler_positive']
     if 'adm_scaler_negative' in metadata:
         ctrls[15] = metadata['adm_scaler_negative']
+    if 'adm_scaler_end' in metadata:
+        ctrls[16] = metadata['adm_scaler_end']
     if 'base_model' in metadata:
-        ctrls[16] = metadata['base_model']
+        ctrls[17] = metadata['base_model']
     elif 'base_model_name' in metadata:
-        ctrls[16] = metadata['base_model_name']
+        ctrls[17] = metadata['base_model_name']
     if 'refiner_model' in metadata:
-        ctrls[17] = metadata['refiner_model']
+        ctrls[18] = metadata['refiner_model']
     elif 'refiner_model_name' in metadata:
-        ctrls[17] = metadata['refiner_model_name']
+        ctrls[18] = metadata['refiner_model_name']
     if 'base_clip_skip' in metadata:
-        ctrls[18] = metadata['base_clip_skip']
+        ctrls[19] = metadata['base_clip_skip']
     if 'l1' in metadata:
-        ctrls[19] = metadata['l1']
+        ctrls[20] = metadata['l1']
     if 'w1' in metadata:
-        ctrls[20] = metadata['w1']
+        ctrls[21] = metadata['w1']
     if 'l2' in metadata:
-        ctrls[21] = metadata['l2']
+        ctrls[22] = metadata['l2']
     if 'w2' in metadata:
-        ctrls[22] = metadata['w2']
+        ctrls[23] = metadata['w2']
     if 'l3' in metadata:
-        ctrls[23] = metadata['l3']
+        ctrls[24] = metadata['l3']
     if 'w3' in metadata:
-        ctrls[24] = metadata['w3']
+        ctrls[25] = metadata['w3']
     if 'l4' in metadata:
-        ctrls[25] = metadata['l4']
+        ctrls[26] = metadata['l4']
     if 'w4' in metadata:
-        ctrls[26] = metadata['w4']
+        ctrls[27] = metadata['w4']
     if 'l5' in metadata:
-        ctrls[27] = metadata['l5']
+        ctrls[28] = metadata['l5']
     if 'w5' in metadata:
-        ctrls[28] = metadata['w5']
+        ctrls[29] = metadata['w5']
     # save_metadata_json
     # save_metadata_image
     if 'img2img' in metadata:
-        ctrls[31] = metadata['img2img']
+        ctrls[32] = metadata['img2img']
         if 'start_step' in metadata:
             if ctrls[3] == 'Speed':
-                ctrls[32] = round(metadata['start_step'] / constants.STEPS_SPEED, 2)
+                ctrls[33] = round(metadata['start_step'] / constants.STEPS_SPEED, 2)
             elif ctrls[3] == 'Quality':
-                ctrls[32] = round(metadata['start_step'] / constants.STEPS_QUALITY, 2)
+                ctrls[33] = round(metadata['start_step'] / constants.STEPS_QUALITY, 2)
             else:
-                ctrls[32] = round(metadata['start_step'] / ctrls[10], 2)
+                ctrls[33] = round(metadata['start_step'] / ctrls[10], 2)
         if 'denoise' in metadata:
-            ctrls[33] = metadata['denoise']
+            ctrls[34] = metadata['denoise']
         if 'scale' in metadata:
-            ctrls[34] = metadata['scale']
+            ctrls[35] = metadata['scale']
     if 'revision' in metadata:
-        ctrls[35] = metadata['revision']
+        ctrls[36] = metadata['revision']
     if 'positive_prompt_strength' in metadata:
-        ctrls[36] = metadata['positive_prompt_strength']
+        ctrls[37] = metadata['positive_prompt_strength']
     elif 'zero_out_positive' in metadata:
-        ctrls[36] = 0.0 if metadata['zero_out_positive'] else 1.0
+        ctrls[37] = 0.0 if metadata['zero_out_positive'] else 1.0
     if 'negative_prompt_strength' in metadata:
-        ctrls[37] = metadata['negative_prompt_strength']
+        ctrls[38] = metadata['negative_prompt_strength']
     elif 'zero_out_negative' in metadata:
-        ctrls[37] = 0.0 if metadata['zero_out_negative'] else 1.0
+        ctrls[38] = 0.0 if metadata['zero_out_negative'] else 1.0
     if 'revision_strength_1' in metadata:
-        ctrls[38] = metadata['revision_strength_1']
+        ctrls[39] = metadata['revision_strength_1']
     if 'revision_strength_2' in metadata:
-        ctrls[39] = metadata['revision_strength_2']
+        ctrls[40] = metadata['revision_strength_2']
     if 'revision_strength_3' in metadata:
-        ctrls[40] = metadata['revision_strength_3']
+        ctrls[41] = metadata['revision_strength_3']
     if 'revision_strength_4' in metadata:
-        ctrls[41] = metadata['revision_strength_4']
+        ctrls[42] = metadata['revision_strength_4']
     # same_seed_for_all
     # output_format
     if 'control_lora_canny' in metadata:
-        ctrls[44] = metadata['control_lora_canny']
+        ctrls[45] = metadata['control_lora_canny']
     if 'canny_edge_low' in metadata:
-        ctrls[45] = metadata['canny_edge_low']
+        ctrls[46] = metadata['canny_edge_low']
     if 'canny_edge_high' in metadata:
-        ctrls[46] = metadata['canny_edge_high']
+        ctrls[47] = metadata['canny_edge_high']
     if 'canny_start' in metadata:
-        ctrls[47] = metadata['canny_start']
+        ctrls[48] = metadata['canny_start']
     if 'canny_stop' in metadata:
-        ctrls[48] = metadata['canny_stop']
+        ctrls[49] = metadata['canny_stop']
     if 'canny_strength' in metadata:
-        ctrls[49] = metadata['canny_strength']
+        ctrls[50] = metadata['canny_strength']
     if 'canny_model' in metadata:
-        ctrls[50] = metadata['canny_model']
+        ctrls[51] = metadata['canny_model']
     if 'control_lora_depth' in metadata:
-        ctrls[51] = metadata['control_lora_depth']
+        ctrls[52] = metadata['control_lora_depth']
     if 'depth_start' in metadata:
-        ctrls[52] = metadata['depth_start']
+        ctrls[53] = metadata['depth_start']
     if 'depth_stop' in metadata:
-        ctrls[53] = metadata['depth_stop']
+        ctrls[54] = metadata['depth_stop']
     if 'depth_strength' in metadata:
-        ctrls[54] = metadata['depth_strength']
+        ctrls[55] = metadata['depth_strength']
     if 'depth_model' in metadata:
-        ctrls[55] = metadata['depth_model']
+        ctrls[56] = metadata['depth_model']
     if 'prompt_expansion' in metadata:
-        ctrls[56] = metadata['prompt_expansion']
+        ctrls[57] = metadata['prompt_expansion']
     elif 'software' in metadata and metadata['software'].startswith('Fooocus 1.'):
-        ctrls[56] = False
+        ctrls[57] = False
     if 'freeu' in metadata:
-        ctrls[57] = metadata['freeu']
+        ctrls[58] = metadata['freeu']
     if 'freeu_b1' in metadata:
-        ctrls[58] = metadata['freeu_b1']
+        ctrls[59] = metadata['freeu_b1']
     if 'freeu_b2' in metadata:
-        ctrls[59] = metadata['freeu_b2']
+        ctrls[60] = metadata['freeu_b2']
     if 'freeu_s1' in metadata:
-        ctrls[60] = metadata['freeu_s1']
+        ctrls[61] = metadata['freeu_s1']
     if 'freeu_s2' in metadata:
-        ctrls[61] = metadata['freeu_s2']
+        ctrls[62] = metadata['freeu_s2']
     # seed_random
     return ctrls    
 
@@ -555,27 +557,30 @@ with shared.gradio_root:
                 depth_ctrls = [control_lora_depth, depth_start, depth_stop, depth_strength, depth_model]
 
             with gr.Tab(label='Sampling'):
-                cfg = gr.Slider(label='CFG (Classifier‐Free Guidance)', minimum=1.0, maximum=30.0, step=0.01, value=settings['cfg'])
-                adaptive_cfg = gr.Slider(label='CFG Mimicking from TSNR', minimum=1.0, maximum=30.0, step=0.01, value=settings['adaptive_cfg'],
-                    info='Enabling Fooocus\'s implementation of CFG mimicking for TSNR (effective when real CFG > mimicked CFG).')
-                base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=settings['base_clip_skip'])
-                sampler_name = gr.Dropdown(label='Sampler', choices=flags.sampler_list, value=settings['sampler'])
-                scheduler_name = gr.Dropdown(label='Scheduler', choices=flags.scheduler_list, value=settings['scheduler'])
-                sharpness = gr.Slider(label='Sampling Sharpness', minimum=0.0, maximum=30.0, step=0.01, value=settings['sharpness'])
-                adm_scaler_positive = gr.Slider(label='Positive ADM Guidance Scaler', minimum=0.1, maximum=3.0,
-                    step=0.01, value=1.5, info='The scaler multiplied to positive ADM (use 1.0 to disable). ')
-                adm_scaler_negative = gr.Slider(label='Negative ADM Guidance Scaler', minimum=0.1, maximum=3.0,
-                    step=0.01, value=0.8, info='The scaler multiplied to negative ADM (use 1.0 to disable). ')
+                with gr.Group():
+                    with gr.Row():
+                        cfg = gr.Slider(label='CFG', minimum=1.0, maximum=30.0, step=0.01, value=settings['cfg'])
+                        adaptive_cfg = gr.Slider(label='CFG Mimicking', minimum=1.0, maximum=30.0, step=0.01, value=settings['adaptive_cfg'])
+                    with gr.Row():
+                        base_clip_skip = gr.Slider(label='Base CLIP Skip', minimum=-10, maximum=-1, step=1, value=settings['base_clip_skip'])
+                        sharpness = gr.Slider(label='Sharpness', minimum=0.0, maximum=30.0, step=0.01, value=settings['sharpness'])
+                    with gr.Row():
+                        sampler_name = gr.Dropdown(label='Sampler', choices=flags.sampler_list, value=settings['sampler'])
+                        scheduler_name = gr.Dropdown(label='Scheduler', choices=flags.scheduler_list, value=settings['scheduler'])
+                    with gr.Row():
+                        adm_scaler_positive = gr.Slider(label='Positive ADM Scale', minimum=0.1, maximum=3.0, step=0.01, value=1.5)
+                        adm_scaler_negative = gr.Slider(label='Negative ADM Scale', minimum=0.1, maximum=3.0, step=0.01, value=0.8)
+                    adm_scaler_end = gr.Slider(label='ADM Scaler End', minimum=0.0, maximum=1.0, step=0.01, value=0.3)
 
-                freeu_enabled = gr.Checkbox(label='FreeU', value=settings['freeu'])
-                freeu_b1 = gr.Slider(label='Backbone Scaling Factor 1', minimum=0, maximum=2, step=0.01,
-                    value=settings['freeu_b1'], visible=settings['freeu'])
-                freeu_b2 = gr.Slider(label='Backbone Scaling Factor 2', minimum=0, maximum=2, step=0.01,
-                    value=settings['freeu_b2'], visible=settings['freeu'])
-                freeu_s1 = gr.Slider(label='Skip Scaling Factor 1', minimum=0, maximum=4, step=0.01,
-                    value=settings['freeu_s1'], visible=settings['freeu'])
-                freeu_s2 = gr.Slider(label='Skip Scaling Factor 2', minimum=0, maximum=4, step=0.01,
-                    value=settings['freeu_s2'], visible=settings['freeu'])
+                    freeu_enabled = gr.Checkbox(label='FreeU', value=settings['freeu'])
+                    freeu_b1 = gr.Slider(label='Backbone Scaling Factor 1', minimum=0, maximum=2, step=0.01,
+                        value=settings['freeu_b1'], visible=settings['freeu'])
+                    freeu_b2 = gr.Slider(label='Backbone Scaling Factor 2', minimum=0, maximum=2, step=0.01,
+                        value=settings['freeu_b2'], visible=settings['freeu'])
+                    freeu_s1 = gr.Slider(label='Skip Scaling Factor 1', minimum=0, maximum=4, step=0.01,
+                        value=settings['freeu_s1'], visible=settings['freeu'])
+                    freeu_s2 = gr.Slider(label='Skip Scaling Factor 2', minimum=0, maximum=4, step=0.01,
+                        value=settings['freeu_s2'], visible=settings['freeu'])
 
                 def model_refresh_clicked():
                     modules.path.update_all_model_names()
@@ -627,7 +632,7 @@ with shared.gradio_root:
         ctrls = [
             prompt, negative_prompt, style_selections,
             performance, resolution, image_number, image_seed, sharpness, sampler_name, scheduler_name,
-            custom_steps, custom_switch, cfg, adaptive_cfg, adm_scaler_positive, adm_scaler_negative
+            custom_steps, custom_switch, cfg, adaptive_cfg, adm_scaler_positive, adm_scaler_negative, adm_scaler_end
         ]
         ctrls += [base_model, refiner_model, base_clip_skip] + lora_ctrls
         ctrls += [save_metadata_json, save_metadata_image] + img2img_ctrls + [same_seed_for_all, output_format]

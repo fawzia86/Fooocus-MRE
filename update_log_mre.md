@@ -1,6 +1,11 @@
+### 2.0.93 MRE
+
+* Made settings in Sampling tab a bit more compact.
+* Removed "overwrite" debug parameters from vanilla (already available in MRE, just in different places).
+
 ### 2.0.85 MRE
 
-* Removed Refiner CLIP Skip (refiner CLIP is no longer loaded)
+* Removed Refiner CLIP Skip (refiner CLIP is no longer loaded).
 
 ### 2.0.78.5 MRE
 

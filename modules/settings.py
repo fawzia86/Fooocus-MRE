@@ -55,6 +55,7 @@ def load_settings():
     settings['sharpness'] = 2.0
     settings['adm_scaler_positive'] = 1.5
     settings['adm_scaler_negative'] = 0.8
+    settings['adm_scaler_end'] = 0.3
     settings['base_model'] = modules.path.default_base_model_name
     settings['refiner_model'] = modules.path.default_refiner_model_name
     settings['lora_1_model'] = modules.path.default_lora_name

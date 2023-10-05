@@ -170,13 +170,13 @@ After the first time you run Fooocus, a config file will be generated at `Fooocu
 
 ## MoonRide Edition Features
 
-1. Enhanced support for Image-2-Image mode (multiple inputs, controllable denoise).
+1. Enhanced support for Image-2-Image mode (multiple inputs, usable with Control-LoRAs).
 2. Support for Control-LoRA: Canny Edge (guiding diffusion using edge detection on input, see [Canny Edge description from SAI](https://huggingface.co/stabilityai/control-lora#canny-edge)).
 3. Support for Control-LoRA: Depth (guiding diffusion using depth information from input, see [Depth description from SAI](https://huggingface.co/stabilityai/control-lora#midas-and-clipdrop-depth)).
 4. Support for Control-LoRA: Revision (prompting with images, see [Revision description from SAI](https://huggingface.co/stabilityai/control-lora#revision)).
 5. Adjustable text prompt strengths (useful in Revision mode).
 6. Support for embeddings (use "embedding:embedding_name" syntax, ComfyUI style).
-7. Enhanced control of sampling parameters (steps, base / refiner switch point, CLIP Skip).
+7. Enhanced control over sampling parameters (CLIP Skip, [FreeU](https://chenyangsi.top/FreeU/)).
 8. Displaying full metadata for generated images in the UI.
 9. Support for JPEG format.
 10. Ability to save full metadata for generated images (as JSON or embedded in image, disabled by default).
@@ -193,12 +193,11 @@ After the first time you run Fooocus, a config file will be generated at `Fooocu
 21. Support for custom styles (loaded from sdxl_styles folder on start).
 22. Support for playing audio when generation is finished (ported from SD web UI - use notification.ogg or notification.mp3).
 23. Starting generation via Ctrl-ENTER hotkey (ported from SD web UI).
-24. Support for loading models from subfolders (ported from RuinedFooocus).
+24. Support for loading models from subfolders (ported from [RuinedFooocus](https://github.com/runew0lf/RuinedFooocus)).
 25. Support for authentication in --share mode (credentials loaded from auth.json - use auth-example.json as a template).
-26. Support for wildcards (ported from RuinedFooocus - put them in wildcards folder, then try prompts like `__color__ sports car` with different seeds).
-27. Support for [FreeU](https://chenyangsi.top/FreeU/).
-28. Limited support for non-SDXL models (no refiner, Control-LoRAs, Revision, inpainting, outpainting).
-29. Style Iterator (iterates over selected style(s) combined with remaining styles - S1, S1 + S2, S1 + S3, S1 + S4, and so on; for comparing styles pick no initial style, and use same seed for all images).
+26. Support for wildcards (ported from [RuinedFooocus](https://github.com/runew0lf/RuinedFooocus) - put them in wildcards folder, then try prompts like `__color__ sports car` with different seeds).
+27. Limited support for non-SDXL models (no refiner, Control-LoRAs, Revision, inpainting, outpainting).
+28. Style Iterator (iterates over selected style(s) combined with remaining styles - S1, S1 + S2, S1 + S3, S1 + S4, and so on; for comparing styles pick no initial style, and use same seed for all images).
 
 ## Thanks
 
@@ -206,7 +205,7 @@ The codebase starts from an odd mixture of [Stable Diffusion web UI](https://git
 
 Thanks to [Stability AI](https://github.com/Stability-AI) for researching and opening their Stable Diffusion model series, [OpenAI](https://github.com/openai) for CLIP and [mlfoundations](https://github.com/mlfoundations) for OpenCLIP, and [LAION AI](https://github.com/LAION-AI) for data sets on which those models could learn.
 
-Special thanks to [twri](https://github.com/twri) and [3Diva](https://github.com/3Diva) for creating additional SDXL styles available in Fooocus.
+Special thanks to [twri](https://github.com/twri) and [3Diva](https://github.com/3Diva) for creating additional SDXL styles available in Fooocus, and also to [runew0lf](https://github.com/runew0lf) for additional inspiration :).
 
 ## Update Log
 
