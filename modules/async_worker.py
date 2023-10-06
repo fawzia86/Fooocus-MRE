@@ -555,7 +555,7 @@ def worker():
                     }
                 if img2img_mode:
                     metadata |= {
-                        'start_step': start_step, 'denoise': denoise, 'scale': img2img_scale, 'input_image': input_image_filename
+                        'start_step': start_step, 'denoise': denoising_strength, 'scale': img2img_scale, 'input_image': input_image_filename
                     }
                 if revision_mode:
                     metadata |= {
@@ -597,7 +597,7 @@ def worker():
                         ('Scheduler', scheduler_name),
                         ('Seed', task['task_seed']),
                         ('FreeU', (freeu, freeu_b1, freeu_b2, freeu_s1, freeu_s2) if freeu else (freeu)),
-                        ('Image-2-Image', (img2img_mode, start_step, denoise, img2img_scale, input_image_filename) if img2img_mode else (img2img_mode)),
+                        ('Image-2-Image', (img2img_mode, start_step, denoising_strength, img2img_scale, input_image_filename) if img2img_mode else (img2img_mode)),
                         ('Revision', (revision_mode, revision_strength_1, revision_strength_2, revision_strength_3,
                             revision_strength_4, revision_images_filenames) if revision_mode else (revision_mode)),
                         ('Prompt Strengths', (positive_prompt_strength, negative_prompt_strength)),
